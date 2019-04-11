@@ -1,0 +1,5 @@
+*.sw[po]
+/tmp
+/venv
+
+__pycache__/
