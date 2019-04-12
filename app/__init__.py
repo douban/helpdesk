@@ -8,16 +8,12 @@ from app.views.web import bp as web_bp
 from app.views.api import bp as api_bp
 
 
-# web_bp.mount('/', StaticFiles(directory="app/static"))
-
-
 def create_app():
-    app = Starlette()
-
-    print(api_bp)
+    static = StaticFiles(directory="app/static")
 
     app = Router([
         Mount('/api', app=api_bp),
+        Mount('/static', app=static),
         Mount('/', app=web_bp),
     ])
     return app
