@@ -12,9 +12,9 @@ def create_app():
     static = StaticFiles(directory="app/static")
 
     app = Router([
-        Mount('/api', app=api_bp),
-        Mount('/static', app=static),
-        Mount('/', app=web_bp),
+        Mount('/api', app=api_bp, name='api'),
+        Mount('/static', app=static, name='static'),
+        Mount('/', app=web_bp, name='web'),
     ])
     return app
 
