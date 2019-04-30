@@ -30,5 +30,20 @@ class ActionTree:
             self.action = Action(*config)
             self.is_leaf = True
 
+    def first(self):
+        if self.action:
+            return self
+        if not self.nexts:
+            return self
+        return self.nexts[0].first()
+
+    def find(self, obj):
+        if self.action:
+            return self if self.action.target_object == obj else None
+        for sub in self.nexts:
+            ret = sub.find(obj)
+            if ret is not None:
+                return ret
+
 
 action_tree = ActionTree(ACTION_TREE_CONFIG)
