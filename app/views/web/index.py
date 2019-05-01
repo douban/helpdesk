@@ -3,8 +3,8 @@
 # from starlette.responses import PlainTextResponse
 
 from app.libs.template import render
-
 from app.models.action_tree import action_tree
+from app.config import DEBUG
 
 from . import bp
 
@@ -17,4 +17,5 @@ def index(request):
     return render('action_form.html',
                   dict(request=request,
                        action_tree=action_tree,
-                       action=action))
+                       action=action,
+                       debug=DEBUG))

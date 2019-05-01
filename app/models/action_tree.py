@@ -15,6 +15,7 @@ class ActionTree:
 
         self.build_from_config(tree_config)
 
+    # TODO: resolve pack
     def build_from_config(self, config):
         assert type(config) is list
         if not config:
@@ -37,7 +38,10 @@ class ActionTree:
             return self
         return self.nexts[0].first()
 
+    # TODO: resolve action
     def find(self, obj):
+        if not obj:
+            return None
         if self.action:
             return self if self.action.target_object == obj else None
         for sub in self.nexts:

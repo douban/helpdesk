@@ -23,12 +23,12 @@ class Action:
         '''
         return detailed action infos from the provider
         '''
-        return self.provider.get_action(self.target_object)
+        return self.provider.get_action(self.target_object) or {}
 
     @property
     def description(self):
-        return self.get_action()['description']
+        return self.get_action().get('description')
 
     @property
     def parameters(self):
-        return self.get_action()['parameters']
+        return self.get_action().get('parameters', {})

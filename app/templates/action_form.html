@@ -5,10 +5,6 @@
 <hr />
 <div class="alert alert-info">
     <p>{{ action.desc }}</p>
-
-    {# debug:  #}
-    <p>{{ action.description }}</p>
-    <p>{{ action.parameters }}</p>
 </div>
 
 {#
@@ -62,5 +58,12 @@ TODO:
     </div>
 
 </form>
+
+{% if debug %}
+<div class="alert alert-info">
+    <p>{{ action.description }}</p>
+    <p>{{ action.parameters }}</p>
+</div>
+{% endif %}
 
 {% endblock subcontainer %}
