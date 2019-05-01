@@ -13,7 +13,7 @@
     </div>
     <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
       <ul class="nav navbar-nav">
-        <li><a class="nav-item" href="{{ url_for('web:index') }}">Helpdesk</a></li>
+        <li><a class="nav-item" href="{{ url_for('web:index', full_path='/') }}">Helpdesk</a></li>
       </ul>
       {% if request.uid %}
       <ul class="nav navbar-nav navbar-right">
@@ -47,7 +47,7 @@
         <label class="label label-default">{{ tree.name }}</label>
     {% for sub in tree.nexts %}
         {% if sub.action %}
-        <a class="list-group-item" href="" title="{{ sub.action.desc }}">{{ sub.action.name }}</a>
+        <a class="list-group-item" href="{{ url_for('web:index', full_path=sub.action.target_object) }}" title="{{ sub.action.desc }}">{{ sub.action.name }}</a>
         {% endif %}
         {% if sub.nexts %}
             {{ render_action_tree(sub) }}

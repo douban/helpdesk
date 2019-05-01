@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{{ action.name }}{% endblock %}
+{% block subcontainer %}
+<h3>{{ action.name }}</h3>
+<hr />
+<div class="alert alert-info">
+    <p>{{ action.desc }}</p>
+</div>
+
+{#
+TODO:
+1. property 支持 label，作为中文参数名
+1. validate type
+1. default value? placeholder?
+#}
+{% macro render_param(name, property) %}
+    {% if not property['immutable'] %}
+    <div class="form-group">
+        <label class="col-sm-2 control-label">{{ name }}</label>
+        <div class="col-sm-6">
+
+            {% if property['type'] == 'boolean' %}
+            <div class="checkbox">
+                <label><input type="checkbox" name="{{ name }}"></label>
+            </div>
+            {% else %}
+
+            {% if not property['enum'] %}
+            <input type="text" class="form-control" name="{{ name }}"
+                placeholder="{% if property['required'] %} 必填 {% else %} 可不填 {% endif %}" />
+            {% else %}
+            <select name="{{ name }}" class="form-control">
+                {% for choice in property['enum'] %}
+                <option value="{{ choice }}">{{ choice }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+
+            {% endif %}
+
+            <span class="help-block">{{ property['description']}}</span>
+
+        </div>
+    </div>
+    {% endif %}
+{% endmacro %}
+
+<form action="" method="POST" class="form-horizontal">
+
+    {% for name, param_property in action.parameters.items() %}
+        {{ render_param(name, param_property) }}
+    {% endfor %}
+
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-6">
+            <button type="submit" class="btn btn-primary">提交</button>
+        </div>
+    </div>
+
+</form>
+
+{% if debug %}
+<div class="alert alert-info">
+    <p>{{ action.description }}</p>
+    <p>{{ action.parameters }}</p>
+</div>
+{% endif %}
+
+{% endblock subcontainer %}
