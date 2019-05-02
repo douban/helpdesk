@@ -48,12 +48,14 @@ class Action:
                 if live_value is not None:
                     logger.warn('get a value for an immutable parameter, ignoring.')
                 continue
-            if v.get('required') and v.get('default') is None and live_value is None:
+            if v.get('required') and v.get('default') is None and not live_value:
                 msg = 'miss a value for a required parameter, aborting.'
                 logger.error(msg)
                 return None, msg
             if live_value is not None:
                 # TODO: validate type
+                if v.get('type') == 'boolean' and live_value == 'on':
+                    live_value = True
                 params[k] = live_value
 
         logger.info('run action %s, params: %s', self.target_object, params)
