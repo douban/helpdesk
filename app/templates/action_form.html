@@ -3,6 +3,11 @@
 {% block subcontainer %}
 <h3>{{ action.name }}</h3>
 <hr />
+{% if msg %}
+<div class="alert alert-{{ msg_level }}">
+    <p>{{ msg }}</p>
+</div>
+{% endif %}
 <div class="alert alert-info">
     <p>{{ action.desc }}</p>
 </div>
@@ -61,8 +66,10 @@ TODO:
 
 {% if debug %}
 <div class="alert alert-info">
-    <p>{{ action.description }}</p>
-    <p>{{ action.parameters }}</p>
+    <p>action.description: {{ action.description }}</p>
+    <p>action.parameters: {{ action.parameters }}</p>
+    <p>action: {{ action.get_action() }}</p>
+    <p>execution: {{ execution }}</p>
 </div>
 {% endif %}
 

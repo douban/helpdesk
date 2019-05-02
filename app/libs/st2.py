@@ -2,6 +2,7 @@
 
 
 from st2client.client import Client
+from st2client.models.action import Execution  # NOQA
 
 from app.config import (ST2_BASE_URL, ST2_API_URL,
                         ST2_AUTH_URL, ST2_STREAM_URL,

@@ -16,6 +16,12 @@ ST2_CACERT = None
 
 ST2_DEFAULT_PACK = ''
 
+ST2_WORKFLOW_RUNNER_TYPES = [
+    'action-chain',
+    'mistral-v2',
+    'orquesta'
+]
+
 # Action Tree Config
 # action name, description/tips, st2 pack/action
 

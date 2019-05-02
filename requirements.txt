@@ -5,6 +5,8 @@ cffi==1.12.3
 Click==7.0
 cryptography==2.6.1
 decorator==4.4.0
+entrypoints==0.3
+flake8==3.7.7
 gunicorn==19.9.0
 h11==0.8.1
 httptools==0.0.13
@@ -13,13 +15,17 @@ Jinja2==2.10.1
 jsonpath-rw==1.4.0
 jsonschema==2.6.0
 MarkupSafe==1.1.1
+mccabe==0.6.1
 ply==3.11
 prettytable==0.7.2
 prompt-toolkit==1.0.15
+pycodestyle==2.5.0
 pycparser==2.19
+pyflakes==2.1.1
 pyOpenSSL==19.0.0
 python-dateutil==2.8.0
 python-editor==1.0.4
+python-multipart==0.0.5
 pytz==2019.1
 PyYAML==5.1
 requests==2.14.2
