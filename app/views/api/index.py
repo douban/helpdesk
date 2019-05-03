@@ -6,5 +6,5 @@ from . import bp
 
 
 @bp.route('/')
-def index(request):
+async def index(request):
     return PlainTextResponse('Hello API')

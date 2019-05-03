@@ -3,6 +3,11 @@
 {% block subcontainer %}
 <h3>{{ action.name }}</h3>
 <hr />
+{% if msg %}
+<div class="alert alert-{{ msg_level }}">
+    <p>{% autoescape false %}{{ msg }}{% endautoescape %}</p>
+</div>
+{% endif %}
 <div class="alert alert-info">
     <p>{{ action.desc }}</p>
 </div>
@@ -27,7 +32,9 @@ TODO:
 
             {% if not property['enum'] %}
             <input type="text" class="form-control" name="{{ name }}"
-                placeholder="{% if property['required'] %} 必填 {% else %} 可不填 {% endif %}" />
+                placeholder="{% if property['required'] %} 必填 {% else %} 可不填 {% endif %}"
+                required="{% if property['required'] %}required{% else %}{% endif %}"
+                />
             {% else %}
             <select name="{{ name }}" class="form-control">
                 {% for choice in property['enum'] %}
@@ -38,7 +45,7 @@ TODO:
 
             {% endif %}
 
-            <span class="help-block">{{ property['description']}}</span>
+            <span class="help-block">{{ property['description'] }}</span>
 
         </div>
     </div>
@@ -47,7 +54,7 @@ TODO:
 
 <form action="" method="POST" class="form-horizontal">
 
-    {% for name, param_property in action.parameters.items() %}
+    {% for name, param_property in action.parameters(provider).items() %}
         {{ render_param(name, param_property) }}
     {% endfor %}
 
@@ -61,8 +68,10 @@ TODO:
 
 {% if debug %}
 <div class="alert alert-info">
-    <p>{{ action.description }}</p>
-    <p>{{ action.parameters }}</p>
+    <p>action: {{ action.get_action(provider)|tojson }}</p>
+    {% if execution %}
+    <p>execution: {{ execution|tojson }}</p>
+    {% endif %}
 </div>
 {% endif %}
 
