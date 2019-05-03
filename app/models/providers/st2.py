@@ -56,8 +56,13 @@ class ST2Provider(Provider):
         execution_kwargs = dict(action=ref,
                                 action_is_workflow=action['runner_type'] in ST2_WORKFLOW_RUNNER_TYPES,
                                 parameters=parameters)
-        execution = self.st2.executions.create(Execution(**execution_kwargs))
-        return execution.to_dict() if execution else None
+        execution = None
+        msg = ''
+        try:
+            execution = self.st2.executions.create(Execution(**execution_kwargs))
+        except requests.exceptions.HTTPError as e:
+            msg = str(e)
+        return (execution.to_dict() if execution else None, msg)
 
     def authenticate(self, user, password):
         kwargs = dict(ttl=ST2_TOKEN_TTL)

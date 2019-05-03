@@ -51,5 +51,7 @@ class Action:
                 params[k] = live_value
 
         logger.info('run action %s, params: %s', self.target_object, params)
-        execution = provider.run_action(self.target_object, params)
+        execution, msg = provider.run_action(self.target_object, params)
+        if not execution:
+            return execution, msg
         return execution, 'success, <a href="%s" target="_blank">result</a>' % (execution['web_url'],)
