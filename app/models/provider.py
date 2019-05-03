@@ -15,6 +15,12 @@ class Provider:
     def get_action(self, ref):
         pass
 
+    def run_action(self, ref, parameters):
+        pass
+
+    def authenticate(self):
+        pass
+
 
 def get_provider(provider):
     from app.models.providers.st2 import ST2Provider

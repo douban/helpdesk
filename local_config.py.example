@@ -3,6 +3,12 @@
 
 DEBUG = DEVELOP_MODE = True
 
+SENTRY_DSN = ''
+
+SESSION_SECRET_KEY = 'NVzLYJSMyw'
+
+SESSION_TTL = 24 * 3600
+
 PROVIDER = 'st2'
 
 ST2_BASE_URL = 'https://st2.example.com'
@@ -21,6 +27,8 @@ ST2_WORKFLOW_RUNNER_TYPES = [
     'mistral-v2',
     'orquesta'
 ]
+
+ST2_TOKEN_TTL = 24 * 3600
 
 # Action Tree Config
 # action name, description/tips, st2 pack/action

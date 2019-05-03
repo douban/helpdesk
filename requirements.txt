@@ -1,6 +1,7 @@
 aiofiles==0.4.0
 argcomplete==1.9.5
 asn1crypto==0.24.0
+certifi==2019.3.9
 cffi==1.12.3
 Click==7.0
 cryptography==2.6.1
@@ -11,6 +12,7 @@ gunicorn==19.9.0
 h11==0.8.1
 httptools==0.0.13
 idna==2.8
+itsdangerous==1.1.0
 Jinja2==2.10.1
 jsonpath-rw==1.4.0
 jsonschema==2.6.0
@@ -29,10 +31,13 @@ python-multipart==0.0.5
 pytz==2019.1
 PyYAML==5.1
 requests==2.14.2
+sentry-asgi==0.1.5
+sentry-sdk==0.7.14
 six==1.12.0
 sseclient==0.0.19
 st2client==3.0.0
 starlette==0.11.4
+urllib3==1.25.2
 uvicorn==0.6.1
 uvloop==0.12.2
 wcwidth==0.1.7

@@ -1,7 +1,8 @@
 # coding: utf-8
 
 
-from app.config import ST2_DEFAULT_PACK, ST2_WORKFLOW_RUNNER_TYPES
+from app.config import (ST2_DEFAULT_PACK, ST2_WORKFLOW_RUNNER_TYPES,
+                        ST2_TOKEN_TTL)
 from app.libs.st2 import (client as st2,
                           Execution)
 from app.models.provider import Provider
@@ -51,3 +52,6 @@ class ST2Provider(Provider):
                                 parameters=parameters)
         execution = st2.executions.create(Execution(**execution_kwargs))
         return execution.to_dict() if execution else None
+
+    def authenticate(self):
+        ST2_TOKEN_TTL

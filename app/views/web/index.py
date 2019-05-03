@@ -35,3 +35,6 @@ async def index(request):
                        action=action,
                        debug=DEBUG,
                        **extra_context))
+
+# async def
+# request.session

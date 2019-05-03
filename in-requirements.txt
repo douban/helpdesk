@@ -5,3 +5,5 @@ starlette>=0.11.4
 uvicorn>=0.6.1
 st2client
 python-multipart>=0.0.5
+itsdangerous>=1.1.0
+sentry-asgi>=0.1.5
