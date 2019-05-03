@@ -1,10 +1,11 @@
 # coding: utf-8
 
+import requests
 
 from app.config import (ST2_DEFAULT_PACK, ST2_WORKFLOW_RUNNER_TYPES,
                         ST2_TOKEN_TTL)
 from app.libs.st2 import (client as st2,
-                          Execution)
+                          Execution, Token)
 from app.models.provider import Provider
 
 
@@ -53,5 +54,13 @@ class ST2Provider(Provider):
         execution = st2.executions.create(Execution(**execution_kwargs))
         return execution.to_dict() if execution else None
 
-    def authenticate(self):
-        ST2_TOKEN_TTL
+    def authenticate(self, user, password):
+        kwargs = dict(ttl=ST2_TOKEN_TTL)
+        token = None
+        msg = ''
+        try:
+            token = st2.tokens.create(Token(**kwargs), auth=(user, password))
+            token = token.token
+        except requests.exceptions.HTTPError as e:
+            msg = str(e)
+        return token, msg

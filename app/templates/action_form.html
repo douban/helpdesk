@@ -32,7 +32,9 @@ TODO:
 
             {% if not property['enum'] %}
             <input type="text" class="form-control" name="{{ name }}"
-                placeholder="{% if property['required'] %} 必填 {% else %} 可不填 {% endif %}" />
+                placeholder="{% if property['required'] %} 必填 {% else %} 可不填 {% endif %}"
+                required="{% if property['required'] %}required{% else %}{% endif %}"
+                />
             {% else %}
             <select name="{{ name }}" class="form-control">
                 {% for choice in property['enum'] %}

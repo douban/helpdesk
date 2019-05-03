@@ -18,7 +18,7 @@ class Provider:
     def run_action(self, ref, parameters):
         pass
 
-    def authenticate(self):
+    def authenticate(self, user, password):
         pass
 
 
