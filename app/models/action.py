@@ -2,9 +2,6 @@
 
 import logging
 
-from app.config import PROVIDER
-from app.models.provider import get_provider
-
 logger = logging.getLogger(__name__)
 
 
@@ -16,32 +13,27 @@ class Action:
         self.desc = desc
         self.target_object = provider_object
 
-        self.provider = get_provider(PROVIDER)
-
     def __repr__(self):
         return 'Action(%s, %s, %s)' % (self.name, self.desc, self.target_object)
 
     __str__ = __repr__
 
-    def get_action(self):
-        '''
-        return detailed action infos from the provider
-        '''
-        return self.provider.get_action(self.target_object) or {}
+    def get_action(self, provider):
+        """return detailed action infos from the provider
+        """
+        return provider.get_action(self.target_object) or {}
 
-    @property
-    def description(self):
-        return self.get_action().get('description')
+    def description(self, provider):
+        return self.get_action(provider).get('description')
 
-    @property
-    def parameters(self):
-        return self.get_action().get('parameters', {})
+    def parameters(self, provider):
+        return self.get_action(provider).get('parameters', {})
 
-    def run(self, form):
+    def run(self, provider, form):
 
         # FIXME: too many st2 details
         params = {}
-        for k, v in self.parameters.items():
+        for k, v in self.parameters(provider).items():
             live_value = form.get(k)
             logger.debug('k: %s, v: %s, live_value: %s', k, v, live_value)
             if v.get('immutable'):
@@ -59,5 +51,5 @@ class Action:
                 params[k] = live_value
 
         logger.info('run action %s, params: %s', self.target_object, params)
-        execution = self.provider.run_action(self.target_object, params)
-        return execution, 'success, %s' % (execution['web_url'],)
+        execution = provider.run_action(self.target_object, params)
+        return execution, 'success, <a href="%s" target="_blank">result</a>' % (execution['web_url'],)

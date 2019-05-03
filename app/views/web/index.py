@@ -8,8 +8,9 @@ from starlette.authentication import requires, has_required_scope  # NOQA
 
 from app.libs.auth import authenticate, unauth
 from app.libs.template import render
+from app.models.provider import get_provider
 from app.models.action_tree import action_tree
-from app.config import DEBUG, NO_AUTH_TARGET_OBJECTS, URL_RESET_PASSWORD, avatar_url_func
+from app.config import DEBUG, PROVIDER, NO_AUTH_TARGET_OBJECTS, URL_RESET_PASSWORD, avatar_url_func
 
 from . import bp
 
@@ -47,22 +48,23 @@ async def index(request):
     full_path = request.path_params['full_path']
     target_object = full_path.strip('/')
 
-    authed = has_required_scope(request, ['authenticated'])
-    logger.debug('authed: %s, user: %s', authed, request.user)
     action_tree_leaf = action_tree.find(target_object) or action_tree.first()
     action = action_tree_leaf.action
 
+    # auth
     _action_tree = action_tree
-    if not authed:
+    if not has_required_scope(request, ['authenticated']):
         if action.target_object in NO_AUTH_TARGET_OBJECTS:
             _action_tree = action_tree_leaf
         else:
             return RedirectResponse(url=request.url_for('web:login') + '?r=' + urllib.parse.quote(request.url.path))
 
+    provider = get_provider(PROVIDER, token=request.session.get('token'))
+
     extra_context = {}
     if request.method == 'POST':
         form = await request.form()
-        execution, msg = action.run(form)
+        execution, msg = action.run(provider, form)
         msg_level = 'success' if bool(execution) else 'danger'
 
         extra_context = dict(execution=execution,
@@ -74,5 +76,6 @@ async def index(request):
                        avatar_url=avatar_url_func(request.user.display_name),
                        action_tree=_action_tree,
                        action=action,
+                       provider=provider,
                        debug=DEBUG,
                        **extra_context))

@@ -5,7 +5,7 @@
 <hr />
 {% if msg %}
 <div class="alert alert-{{ msg_level }}">
-    <p>{{ msg }}</p>
+    <p>{% autoescape false %}{{ msg }}{% endautoescape %}</p>
 </div>
 {% endif %}
 <div class="alert alert-info">
@@ -45,7 +45,7 @@ TODO:
 
             {% endif %}
 
-            <span class="help-block">{{ property['description']}}</span>
+            <span class="help-block">{{ property['description'] }}</span>
 
         </div>
     </div>
@@ -54,7 +54,7 @@ TODO:
 
 <form action="" method="POST" class="form-horizontal">
 
-    {% for name, param_property in action.parameters.items() %}
+    {% for name, param_property in action.parameters(provider).items() %}
         {{ render_param(name, param_property) }}
     {% endfor %}
 
@@ -68,10 +68,10 @@ TODO:
 
 {% if debug %}
 <div class="alert alert-info">
-    <p>action.description: {{ action.description }}</p>
-    <p>action.parameters: {{ action.parameters }}</p>
-    <p>action: {{ action.get_action() }}</p>
-    <p>execution: {{ execution }}</p>
+    <p>action: {{ action.get_action(provider)|tojson }}</p>
+    {% if execution %}
+    <p>execution: {{ execution|tojson }}</p>
+    {% endif %}
 </div>
 {% endif %}
 
