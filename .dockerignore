@@ -1,0 +1,12 @@
+*.sw[po]
+/tmp
+/venv
+
+**/__pycache__/
+
+local_config.py
+
+# helm chart pkgs
+/helpdesk-*.tgz
+# helm chart override values
+/values.yaml
