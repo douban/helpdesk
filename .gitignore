@@ -5,3 +5,6 @@
 __pycache__/
 
 local_config.py
+
+# helm chart pkgs
+helpdesk-*.tgz
