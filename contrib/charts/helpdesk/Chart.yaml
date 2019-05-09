@@ -1,0 +1,16 @@
+apiVersion: v1
+appVersion: "0.1"
+description: A Helm chart for Douban Helpdesk
+name: helpdesk
+version: 0.1.0
+keywords:
+- douban
+- helpdesk
+- self-service
+- stackstorm
+home: https://github.com/douban/helpdesk
+sources:
+- https://github.com/douban/helpdesk
+maintainers:
+- name: Douban Sysadmin
+  email: sysadmin@douban.com
