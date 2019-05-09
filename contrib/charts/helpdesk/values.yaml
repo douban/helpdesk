@@ -19,7 +19,8 @@ ingress:
   annotations:
     kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
-  paths: []
+  paths:
+    - /
   hosts:
     - helpdesk.example.com
   tls: []

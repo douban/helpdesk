@@ -7,4 +7,6 @@ __pycache__/
 local_config.py
 
 # helm chart pkgs
-helpdesk-*.tgz
+/helpdesk-*.tgz
+# helm chart override values
+/values.yaml
