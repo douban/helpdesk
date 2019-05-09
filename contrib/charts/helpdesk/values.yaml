@@ -1,0 +1,116 @@
+# Default values for helpdesk chart.
+
+replicaCount: 2
+
+image:
+  repository: tclh123/helpdesk
+  tag: stable
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  paths:
+    - /
+  hosts:
+    - helpdesk.example.com
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+config: |
+  # coding: utf-8
+  
+  
+  DEBUG = DEVELOP_MODE = True
+  
+  SENTRY_DSN = ''
+  
+  SESSION_SECRET_KEY = 'NVzLYJSMyw'
+  
+  SESSION_TTL = 24 * 3600
+  
+  PROVIDER = 'st2'
+  
+  ST2_BASE_URL = 'https://st2.example.com'
+  ST2_API_URL = 'https://st2.example.com/api'
+  ST2_AUTH_URL = 'https://st2.example.com/auth'
+  ST2_STREAM_URL = 'https://st2.example.com/stream'
+  
+  ST2_API_KEY = None
+  
+  ST2_CACERT = None
+  
+  ST2_DEFAULT_PACK = ''
+  
+  ST2_WORKFLOW_RUNNER_TYPES = [
+      'action-chain',
+      'mistral-v2',
+      'orquesta'
+  ]
+  
+  ST2_TOKEN_TTL = 24 * 3600
+  
+  NO_AUTH_TARGET_OBJECTS = ['ldap_pass_reset']
+  
+  URL_RESET_PASSWORD = ''
+  
+  
+  def avatar_url_func(ldap_id):
+      import hashlib
+      GRAVATAR_URL = '//www.gravatar.com/avatar/%s'
+      email = '%s@example.com' % ldap_id
+      return GRAVATAR_URL % hashlib.md5(email.encode('utf-8').lower()).hexdigest()
+  
+  
+  # Action Tree Config
+  # action name, description/tips, st2 pack/action
+  
+  ACCOUNT_SUBTREE = ['账号相关', [
+      # ['', '', ''],
+      ['申请服务器账号/重置密码', '申请 ssh 登录服务器的账号，或者重置密码', ''],
+      ['申请创建分布式文件系统用户目录', '跑分布式计算脚本常用的前置条件', ''],
+      ['申请加入用户组', '', ''],
+      ]]
+  
+  PACKAGE_SUBTREE = ['包管理相关', [
+      # ['', '', ''],
+      ['查询服务器上包版本', '可查询的信息有 ebuild 版本号、编译/部署时间，VCS 版本', ''],
+      ['在部分机器上用 nobinpkg 测试包', '常用于在部分服务器上测试新版本，观察可用性与稳定性时', ''],
+      ['build binpkg 并全量更新', '常用于使用 nobinpkg 测试完毕，可以上线到生产环境时', ''],
+      ['将已有的 binpkg 装到指定机器', '常用于将当前稳定版本安装到之前并未部署此包的机器上时', ''],
+      ['仅 build binpkg 而不安装', '此功能并不常用，请慎用，仅用于为即将被部署的包打 binpkg 时', ''],
+      ['使用现有的 binpkg 全量更新', '常用于已在 binhost 上生成 binpkg 的大型软件包', ''],
+      ['回滚包到指定 VCS 版本', '常用于将 9999 包回滚到某个 VCS 版本', ''],
+      ]]
+  
+  ACTION_TREE_CONFIG = ['功能导航', [ACCOUNT_SUBTREE, PACKAGE_SUBTREE]]
+
