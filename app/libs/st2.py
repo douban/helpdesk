@@ -1,5 +1,7 @@
 # coding: utf-8
 
+import os
+
 from functools import partial
 
 from st2client.client import Client
@@ -32,7 +34,15 @@ class ST2ClientProxy:
 make_client = partial(Client, base_url=ST2_BASE_URL, api_url=ST2_API_URL,
                       auth_url=ST2_AUTH_URL, stream_url=ST2_STREAM_URL,
                       cacert=ST2_CACERT)
-make_client_proxy = lambda **kw: ST2ClientProxy(make_client(**kw), **kw)  # NOQA
+
+
+def make_client_proxy(**kw):
+    c = make_client(**kw)
+    # fix env
+    os.environ.pop('ST2_AUTH_TOKEN', None)
+    os.environ.pop('ST2_API_KEY', None)
+    return ST2ClientProxy(c, **kw)
+
 
 client = make_client_proxy(api_key=ST2_API_KEY)
 
