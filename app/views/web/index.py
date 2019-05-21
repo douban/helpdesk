@@ -66,9 +66,14 @@ async def index(request):
         form = await request.form()
         execution_or_ticket, msg = await action.run(provider, form)
         msg_level = 'success' if bool(execution_or_ticket) else 'danger'
+        execution = ticket = None
+        if execution_or_ticket.get('_class') == 'Ticket':
+            ticket = execution_or_ticket
+        else:
+            execution = execution_or_ticket
 
-        # TODO: distinguish execution or ticket
-        extra_context = dict(execution=execution_or_ticket,
+        extra_context = dict(execution=execution,
+                             ticket=ticket,
                              msg=msg,
                              msg_level=msg_level)
 
