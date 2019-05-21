@@ -59,15 +59,16 @@ async def index(request):
         else:
             return RedirectResponse(url=request.url_for('web:login') + '?r=' + urllib.parse.quote(request.url.path))
 
-    provider = get_provider(PROVIDER, token=request.session.get('token'))
+    provider = get_provider(PROVIDER, token=request.session.get('token'), user=request.session.get('user'))
 
     extra_context = {}
     if request.method == 'POST':
         form = await request.form()
-        execution, msg = action.run(provider, form)
-        msg_level = 'success' if bool(execution) else 'danger'
+        execution_or_ticket, msg = await action.run(provider, form)
+        msg_level = 'success' if bool(execution_or_ticket) else 'danger'
 
-        extra_context = dict(execution=execution,
+        # TODO: distinguish execution or ticket
+        extra_context = dict(execution=execution_or_ticket,
                              msg=msg,
                              msg_level=msg_level)
 

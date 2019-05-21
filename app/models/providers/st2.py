@@ -11,8 +11,10 @@ from app.models.provider import Provider
 
 
 class ST2Provider(Provider):
-    def __init__(self, token=None):
-        super().__init__(token=token)
+    provider_type = 'st2'
+
+    def __init__(self, token=None, user=None):
+        super().__init__(token=token, user=user)
         self.st2 = get_client(token) if token else service_client
 
     def _ref(self, ref):

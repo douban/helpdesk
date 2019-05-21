@@ -2,8 +2,11 @@
 
 
 class Provider:
-    def __init__(self, token=None, **kw):
+    provider_type = ''
+
+    def __init__(self, token=None, user=None, **kw):
         self.token = token
+        self.user = user
 
     def get_actions(self, pack=None):
         '''

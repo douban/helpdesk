@@ -1,6 +1,9 @@
 # coding: utf-8
 
 import logging
+from datetime import datetime
+
+from app.models.db.ticket import Ticket
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +32,7 @@ class Action:
     def parameters(self, provider):
         return self.get_action(provider).get('parameters', {})
 
-    def run(self, provider, form):
+    async def run(self, provider, form):
 
         # FIXME: too many st2 details
         params = {}
@@ -50,8 +53,26 @@ class Action:
                     live_value = True
                 params[k] = live_value
 
+        ticket = Ticket(provider_type=provider.provider_type,
+                        provider_object=self.target_object,
+                        params=params,
+                        submitter=provider.user,
+                        reason=params.get('reason'),
+                        created_at=datetime.now())
+
+        # TODO: auto approval, annotation
+        # AUTO_APPROVAL_TARGET_OBJECTS
+
+        ret = await ticket.save()
+
+        if ret is None:
+            return ret, 'Failed to create ticket.'
+
+        return ticket.to_dict(), 'Success. Your request has been submitted, please wait for approval.'
+
+        # TODO: approved
         logger.info('run action %s, params: %s', self.target_object, params)
         execution, msg = provider.run_action(self.target_object, params)
         if not execution:
             return execution, msg
-        return execution, 'success, <a href="%s" target="_blank">result</a>' % (execution['web_url'],)
+        return execution, 'Success. <a href="%s" target="_blank">result</a>' % (execution['web_url'],)

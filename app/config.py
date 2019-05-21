@@ -10,6 +10,10 @@ APP_BASE = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 avatar_url_func = lambda username: ''  # NOQA
 
+DATABASE_URL = 'sqlite:///tmp/helpdesk.db'
+# postgres://user:pass@localhost/dbname
+# mysql://user:pass@localhost/dbname
+
 
 try:
     from local_config import *   # NOQA
