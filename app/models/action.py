@@ -63,12 +63,13 @@ class Action:
         # TODO: auto approval, annotation
         # AUTO_APPROVAL_TARGET_OBJECTS
 
-        ret = await ticket.save()
+        id_ = await ticket.save()
+        ticket_added = await Ticket.get(id_)
 
-        if ret is None:
-            return ret, 'Failed to create ticket.'
+        if ticket_added is None:
+            return ticket_added, 'Failed to create ticket.'
 
-        return ticket.to_dict(), 'Success. Your request has been submitted, please wait for approval.'
+        return ticket_added.to_dict(), 'Success. Your request has been submitted, please wait for approval.'
 
         # TODO: approved
         logger.info('run action %s, params: %s', self.target_object, params)

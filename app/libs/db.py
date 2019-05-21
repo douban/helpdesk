@@ -5,12 +5,14 @@ from databases import Database
 
 from app.config import DATABASE_URL
 
+engine = sqlalchemy.create_engine(DATABASE_URL, convert_unicode=True)
 metadata = sqlalchemy.MetaData()
 
 _database = None
 
 
 async def get_db():
+    # see https://www.starlette.io/database/#queries
     global _database
     if not _database:
         _database = Database(DATABASE_URL)
@@ -26,10 +28,14 @@ async def close_db():
     _database = None
 
 
+def get_sync_conn():
+    # see https://docs.sqlalchemy.org/en/13/core/tutorial.html#executing
+    return engine.connect()
+
+
 def init_db():
     from sqlalchemy_utils import database_exists, create_database
     if not database_exists(DATABASE_URL):
         create_database(DATABASE_URL)
 
-    engine = sqlalchemy.create_engine(DATABASE_URL, convert_unicode=True)
     metadata.create_all(bind=engine)
