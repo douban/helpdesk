@@ -29,9 +29,9 @@ class BasicAuthBackend(AuthenticationBackend):
             raise AuthenticationError('Invalid basic auth credentials')
 
         username, _, password = decoded.partition(":")
-        # TODO: You'd want to verify the username and password here,
-        #       possibly by installing `DatabaseMiddleware`
-        #       and retrieving user information from `request.database`.
+        # You'd want to verify the username and password here,
+        # possibly by installing `DatabaseMiddleware`
+        # and retrieving user information from `request.database`.
 
         # scopes
         return AuthCredentials(["authenticated"]), SimpleUser(username)
