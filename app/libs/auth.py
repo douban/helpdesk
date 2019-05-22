@@ -61,8 +61,8 @@ async def authenticate(request):
 
     logger.debug('form: %s, user: %s, password: %s', form, user, password)
 
-    provider = get_provider(PROVIDER)
-    token, msg = provider.authenticate(user, password)
+    system_provider = get_provider(PROVIDER)
+    token, msg = system_provider.authenticate(user, password)
 
     request.session['user'] = user
     request.session['token'] = token

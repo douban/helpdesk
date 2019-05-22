@@ -14,6 +14,8 @@ DATABASE_URL = 'sqlite:///tmp/helpdesk.db'
 # postgres://user:pass@localhost/dbname
 # mysql://user:pass@localhost/dbname
 
+SYSTEM_USER = 'admin'
+
 
 try:
     from local_config import *   # NOQA

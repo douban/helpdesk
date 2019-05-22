@@ -14,6 +14,8 @@ class ST2Provider(Provider):
     provider_type = 'st2'
 
     def __init__(self, token=None, user=None):
+        '''if token is not None, get token client; otherwise get service client
+        '''
         super().__init__(token=token, user=user)
         self.st2 = get_client(token) if token else service_client
 
@@ -66,12 +68,19 @@ class ST2Provider(Provider):
             msg = str(e)
         return (execution.to_dict() if execution else None, msg)
 
-    def authenticate(self, user, password):
-        kwargs = dict(ttl=ST2_TOKEN_TTL)
+    def authenticate(self, user, password=None):
+        token_kw = dict(ttl=ST2_TOKEN_TTL)
+        if password:
+            kw = dict(auth=(user, password))
+        else:
+            kw = {}
+            # if no password, use service account to request impersonated tokens
+            token_kw['user'] = user
+
         token = None
         msg = ''
         try:
-            token = self.st2.tokens.create(Token(**kwargs), auth=(user, password))
+            token = self.st2.tokens.create(Token(**token_kw), **kw)
             token = token.token
         except requests.exceptions.HTTPError as e:
             msg = str(e)

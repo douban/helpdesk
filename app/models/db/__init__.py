@@ -33,28 +33,28 @@ class Model(Base):
     async def get(cls, id_):
         t = cls.__table__
         query = select([t]).where(t.c.id == id_)
-        rs = await cls.fetchall(query)
+        rs = await cls._fetchall(query)
         return cls(**rs[0]) if rs else None
 
     async def save(self):
-        query = self.__table__.insert().values(**self.fields())
-        return await self.execute(query)
+        query = self.__table__.insert().values(**self._fields())
+        return await self._execute(query)
 
     @classmethod
-    async def execute(cls, query):
+    async def _execute(cls, query):
         database = await get_db()
         return await database.execute(query)
 
     @classmethod
-    async def fetchall(cls, query):
+    async def _fetchall(cls, query):
         database = await get_db()
         return await database.fetch_all(query)
 
-    def fields(self):
+    def _fields(self):
         return {k: getattr(self, k) for k in self.__table__.columns.keys()}
 
     def to_dict(self, show=None, **kw):
-        d = self.fields()
+        d = self._fields()
         d['_class'] = self.__class__.__name__
         return json_unpack(d)
         # return json_unpack(self)

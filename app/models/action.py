@@ -4,6 +4,7 @@ import logging
 from datetime import datetime
 
 from app.models.db.ticket import Ticket
+from app.config import AUTO_APPROVAL_TARGET_OBJECTS
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +34,7 @@ class Action:
         return self.get_action(provider).get('parameters', {})
 
     async def run(self, provider, form):
-
-        # FIXME: too many st2 details
+        # NOTE: too many st2 details, maybe make this as the standard
         params = {}
         for k, v in self.parameters(provider).items():
             live_value = form.get(k)
@@ -60,8 +60,8 @@ class Action:
                         reason=params.get('reason'),
                         created_at=datetime.now())
 
-        # TODO: auto approval, annotation
-        # AUTO_APPROVAL_TARGET_OBJECTS
+        if self.target_object in AUTO_APPROVAL_TARGET_OBJECTS:
+            ticket.approve(auto=True)
 
         id_ = await ticket.save()
         ticket_added = await Ticket.get(id_)
@@ -69,9 +69,9 @@ class Action:
         if ticket_added is None:
             return ticket_added, 'Failed to create ticket.'
 
-        return ticket_added.to_dict(), 'Success. Your request has been submitted, please wait for approval.'
+        if not ticket.is_approved:
+            return ticket_added.to_dict(), 'Success. Your request has been submitted, please wait for approval.'
 
-        # TODO: approved
         logger.info('run action %s, params: %s', self.target_object, params)
         execution, msg = provider.run_action(self.target_object, params)
         if not execution:
