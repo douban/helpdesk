@@ -19,6 +19,16 @@ from . import bp
 logger = logging.getLogger(__name__)
 
 
+@bp.exception_handler(404)
+async def not_found(request, exc):
+    return render('404.html', dict(request=request), status_code=exc.status_code)
+
+
+@bp.exception_handler(500)
+async def server_error(request, exc):
+    return render('500.html', dict(request=request), status_code=exc.status_code)
+
+
 @bp.route('/favicon.ico', methods=['GET'])
 async def favicon(request):
     return RedirectResponse(url=request.url_for('static', path='/images/favicon.ico'))
