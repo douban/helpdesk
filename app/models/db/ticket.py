@@ -25,10 +25,13 @@ class Ticket(db.Model):
     #   become False when rejected
     is_approved = db.Column(db.Boolean)
     confirmed_by = db.Column(db.String(length=32))
+    confirmed_at = db.Column(db.DateTime)
+
+    # TODO: if this provider_object is bound to an approver rule
+    #   then do the rule and store the state to the annotation
 
     annotation = db.Column(db.JSON)
     created_at = db.Column(db.DateTime)
-    confirmed_at = db.Column(db.DateTime)
     executed_at = db.Column(db.DateTime)
 
     def annotate(self, dict_=None, **kw):
