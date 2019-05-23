@@ -76,4 +76,7 @@ class Action:
         execution, msg = provider.run_action(self.target_object, params)
         if not execution:
             return execution, msg
+
+        ticket.executed_at = datetime.now()
+        ticket.save()
         return execution, 'Success. <a href="%s" target="_blank">result</a>' % (execution['web_url'],)

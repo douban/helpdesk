@@ -37,7 +37,15 @@ class Model(Base):
         return cls(**rs[0]) if rs else None
 
     async def save(self):
+        obj = self.get(self.id)
+        if obj:
+            return await self.update(**self._fields())
         query = self.__table__.insert().values(**self._fields())
+        return await self._execute(query)
+
+    async def update(self, **kw):
+        t = self.__table__
+        query = t.update().where(t.c.id == self.id).values(**kw)
         return await self._execute(query)
 
     @classmethod

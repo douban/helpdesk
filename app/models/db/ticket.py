@@ -31,11 +31,15 @@ class Ticket(db.Model):
     confirmed_at = db.Column(db.DateTime)
     executed_at = db.Column(db.DateTime)
 
+    def annotate(self, dict_=None, **kw):
+        d = dict_ or {}
+        d.update(kw)
+        self.annotation = self.annotation or {}
+        self.annotation.update(d)
+
     def approve(self, by_user=None, auto=False):
         if auto:
-            if not self.annotation:
-                self.annotation = {}
-            self.annotation['auto_approved'] = True
+            self.annotate(auto_approved=True)
             self.confirmed_by = SYSTEM_USER
         else:
             self.confirmed_by = by_user
@@ -60,4 +64,6 @@ class Ticket(db.Model):
         execution, msg = provider.run_action(self.provider_object, self.params)
         if not execution:
             return execution, msg
+
+        self.executed_at = datetime.now()
         return execution, 'Success. <a href="%s" target="_blank">result</a>' % (execution['web_url'],)
