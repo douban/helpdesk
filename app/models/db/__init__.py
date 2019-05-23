@@ -31,22 +31,30 @@ class Model(Base):
 
     @classmethod
     async def get(cls, id_):
+        if id_ is None:
+            return None
         t = cls.__table__
         query = select([t]).where(t.c.id == id_)
         rs = await cls._fetchall(query)
         return cls(**rs[0]) if rs else None
 
     async def save(self):
-        obj = self.get(self.id)
+        obj = await self.get(self.id)
+        logger.debug('Saving %s, checking if obj exists: %s', self, obj)
         if obj:
             return await self.update(**self._fields())
+
         query = self.__table__.insert().values(**self._fields())
         return await self._execute(query)
 
     async def update(self, **kw):
+        '''try to return last modified row id
+        see also https://docs.python.org/3/library/sqlite3.html#sqlite3.Cursor.lastrowid
+        '''
         t = self.__table__
+        kw.pop('id', None)
         query = t.update().where(t.c.id == self.id).values(**kw)
-        return await self._execute(query)
+        return await self._execute(query) or self.id
 
     @classmethod
     async def _execute(cls, query):

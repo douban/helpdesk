@@ -42,7 +42,11 @@ class SessionAuthBackend(AuthenticationBackend):
         logger.debug('request.session: %s, user: %s', request.session, request.session.get('user'))
         if not request.session.get('user'):
             return
-        return AuthCredentials(["authenticated"]), SimpleUser(request.session['user'])
+
+        from app.models.user import User
+        # TODO: more user auth
+
+        return AuthCredentials(["authenticated"]), User(request.session['user'])
 
 
 async def authenticate(request):

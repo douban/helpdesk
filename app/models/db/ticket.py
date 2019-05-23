@@ -40,7 +40,22 @@ class Ticket(db.Model):
         self.annotation = self.annotation or {}
         self.annotation.update(d)
 
+    @property
+    def is_confirmed(self):
+        return self.confirmed_by or self.is_approved is not None
+
+    def check_confirmed(self):
+        if self.is_confirmed:
+            op = 'approved' if self.is_approved else 'rejected'
+            msg = 'already %s by %s' % (op, self.confirmed_by)
+            return True, msg
+        return False, 'not confirmed yet'
+
     def approve(self, by_user=None, auto=False):
+        is_confirmed, msg = self.check_confirmed()
+        if is_confirmed:
+            return False, msg
+
         if auto:
             self.annotate(auto_approved=True)
             self.confirmed_by = SYSTEM_USER
@@ -49,13 +64,18 @@ class Ticket(db.Model):
 
         self.is_approved = True
         self.confirmed_at = datetime.now()
+        return True, 'Success'
 
     def reject(self, by_user):
+        is_confirmed, msg = self.check_confirmed()
+        if is_confirmed:
+            return False, msg
+
         self.confirmed_by = by_user
         self.is_approved = False
         self.confirmed_at = datetime.now()
+        return True, 'Success'
 
-    # TODO: open a new view to get ticket, approve and execute it
     def execute(self):
         system_provider = get_provider(self.provider_type)
         token, msg = system_provider.authenticate(self.submitter)

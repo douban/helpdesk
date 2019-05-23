@@ -15,6 +15,7 @@ DATABASE_URL = 'sqlite:///tmp/helpdesk.db'
 # mysql://user:pass@localhost/dbname
 
 SYSTEM_USER = 'admin'
+SYSTEM_USER_PASSWORD = 'password'
 
 
 try:

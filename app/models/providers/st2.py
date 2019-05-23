@@ -3,7 +3,8 @@
 import requests
 
 from app.config import (ST2_DEFAULT_PACK, ST2_WORKFLOW_RUNNER_TYPES,
-                        ST2_TOKEN_TTL, NO_AUTH_TARGET_OBJECTS)
+                        ST2_TOKEN_TTL, NO_AUTH_TARGET_OBJECTS,
+                        SYSTEM_USER, SYSTEM_USER_PASSWORD)
 from app.libs.st2 import (client as service_client,
                           get_client,
                           Execution, Token)
@@ -73,8 +74,8 @@ class ST2Provider(Provider):
         if password:
             kw = dict(auth=(user, password))
         else:
-            kw = {}
             # if no password, use service account to request impersonated tokens
+            kw = dict(auth=(SYSTEM_USER, SYSTEM_USER_PASSWORD))
             token_kw['user'] = user
 
         token = None

@@ -61,7 +61,9 @@ class Action:
                         created_at=datetime.now())
 
         if self.target_object in AUTO_APPROVAL_TARGET_OBJECTS:
-            ticket.approve(auto=True)
+            ret, msg = ticket.approve(auto=True)
+            if not ret:
+                return None, msg
 
         id_ = await ticket.save()
         ticket_added = await Ticket.get(id_)
@@ -78,5 +80,5 @@ class Action:
             return execution, msg
 
         ticket.executed_at = datetime.now()
-        ticket.save()
+        await ticket.save()
         return execution, 'Success. <a href="%s" target="_blank">result</a>' % (execution['web_url'],)
