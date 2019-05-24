@@ -60,6 +60,7 @@ class Action:
                         reason=params.get('reason'),
                         created_at=datetime.now())
 
+        # TODO: admin role auto pass
         if self.target_object in AUTO_APPROVAL_TARGET_OBJECTS:
             ret, msg = ticket.approve(auto=True)
             if not ret:

@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import logging
 import requests
 
 from app.config import (ST2_DEFAULT_PACK, ST2_WORKFLOW_RUNNER_TYPES,
@@ -9,6 +10,8 @@ from app.libs.st2 import (client as service_client,
                           get_client,
                           Execution, Token)
 from app.models.provider import Provider
+
+logger = logging.getLogger(__name__)
 
 
 class ST2Provider(Provider):
@@ -86,3 +89,36 @@ class ST2Provider(Provider):
         except requests.exceptions.HTTPError as e:
             msg = str(e)
         return token, msg
+
+    def get_user_roles(self):
+        '''return a list of roles,
+            e.g. ["admin"]
+
+        st2 GET/api/v1/user, returns
+
+        {
+            "username": "xxx",
+            "rbac": {
+                "is_admin": true,
+                "enabled": true,
+                "roles": [
+                    "admin"
+                ]
+            },
+            "authentication": {
+                "token_expire": "2019-05-25T06:03:47Z",
+                "method": "authentication token",
+                "location": "header"
+            },
+            "impersonate": {
+                "nicknames": {
+                    "slack": "xxx"
+                },
+                "is_service": false
+            }
+        }
+        '''
+        user_info = self.st2.get_user_info()
+        roles = user_info.get('rbac', {}).get('roles', [])
+        logger.debug('Get user roles: %s.get_user_roles(): %s', self, roles)
+        return roles

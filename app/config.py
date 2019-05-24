@@ -17,6 +17,8 @@ DATABASE_URL = 'sqlite:///tmp/helpdesk.db'
 SYSTEM_USER = 'admin'
 SYSTEM_USER_PASSWORD = 'password'
 
+ADMIN_ROLES = ['admin', 'system_admin']
+
 
 try:
     from local_config import *   # NOQA

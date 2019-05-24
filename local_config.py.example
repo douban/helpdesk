@@ -12,6 +12,8 @@ SESSION_TTL = 24 * 3600
 SYSTEM_USER = 'admin'
 SYSTEM_USER_PASSWORD = 'admin'
 
+ADMIN_ROLES = ['admin', 'system_admin']
+
 PROVIDER = 'st2'
 
 ST2_BASE_URL = 'https://st2.example.com'

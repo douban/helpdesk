@@ -39,14 +39,31 @@ class BasicAuthBackend(AuthenticationBackend):
 
 class SessionAuthBackend(AuthenticationBackend):
     async def authenticate(self, request):
+        from app.models.user import User
+        from app.models.provider import get_provider
+        from app.config import PROVIDER, ADMIN_ROLES
+
         logger.debug('request.session: %s, user: %s', request.session, request.session.get('user'))
         if not request.session.get('user'):
             return
+        auths = ["authenticated"]
 
-        from app.models.user import User
-        # TODO: more user auth
+        user = request.session['user']
+        token = request.session.get('token')
 
-        return AuthCredentials(["authenticated"]), User(request.session['user'])
+        try:
+            provider = get_provider(PROVIDER, token=token, user=user)
+            user_roles = provider.get_user_roles()
+        except Exception:
+            logger.exception('Failed to get user roles')
+            return AuthCredentials(auths), User(username=user)
+
+        is_admin = any(role in ADMIN_ROLES for role in user_roles)
+        auths += ['admin'] if is_admin else []
+        roles = ['role:' + r for r in user_roles]
+        auths += roles
+
+        return AuthCredentials(auths), User(username=user)
 
 
 async def authenticate(request):
