@@ -60,8 +60,8 @@ async def logout(request):
     return RedirectResponse(url=request.url_for('web:index', full_path=''))
 
 
-# TODO: auth approver
 @bp.route('/ticket/{ticket_id:int}/{op}', methods=['GET'])
+@requires(['authenticated', 'admin'])
 async def ticket_op(request):
     ticket_id = request.path_params['ticket_id']
     op = request.path_params['op']
@@ -110,11 +110,14 @@ async def index(request):
             return RedirectResponse(url=request.url_for('web:login') + '?r=' + urllib.parse.quote(request.url.path))
 
     provider = get_provider(PROVIDER, token=request.session.get('token'), user=request.user.display_name)
+    system_provider = get_provider(PROVIDER)
 
     extra_context = {}
     if request.method == 'POST':
         form = await request.form()
-        execution_or_ticket, msg = await action.run(provider, form)
+        execution_or_ticket, msg = await action.run(provider, form,
+                                                    is_admin=has_required_scope(request, ['admin']),
+                                                    system_provider=system_provider)
         msg_level = 'success' if bool(execution_or_ticket) else 'danger'
         execution = ticket = None
         if execution_or_ticket and execution_or_ticket.get('_class') == 'Ticket':

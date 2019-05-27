@@ -4,7 +4,7 @@ import logging
 import requests
 
 from app.config import (ST2_DEFAULT_PACK, ST2_WORKFLOW_RUNNER_TYPES,
-                        ST2_TOKEN_TTL, NO_AUTH_TARGET_OBJECTS,
+                        ST2_TOKEN_TTL,
                         SYSTEM_USER, SYSTEM_USER_PASSWORD)
 from app.libs.st2 import (client as service_client,
                           get_client,
@@ -56,9 +56,6 @@ class ST2Provider(Provider):
         return action.to_dict() if action else None
 
     def run_action(self, ref, parameters):
-        if ref not in NO_AUTH_TARGET_OBJECTS:
-            assert(self.token)
-
         ref = self._ref(ref)
         action = self.get_action(ref)
         execution_kwargs = dict(action=ref,

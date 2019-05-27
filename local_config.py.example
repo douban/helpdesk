@@ -1,4 +1,5 @@
 # coding: utf-8
+# vi: ft=python
 
 
 DEBUG = DEVELOP_MODE = True
@@ -13,6 +14,11 @@ SYSTEM_USER = 'admin'
 SYSTEM_USER_PASSWORD = 'admin'
 
 ADMIN_ROLES = ['admin', 'system_admin']
+
+PARAM_FILLUP = {
+    # 'reason': 'hehe',
+    'ldap_id': lambda provider: provider.user,
+}
 
 PROVIDER = 'st2'
 
@@ -71,4 +77,3 @@ PACKAGE_SUBTREE = ['包管理相关', [
     ]]
 
 ACTION_TREE_CONFIG = ['功能导航', [ACCOUNT_SUBTREE, PACKAGE_SUBTREE]]
-

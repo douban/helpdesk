@@ -19,6 +19,8 @@ SYSTEM_USER_PASSWORD = 'password'
 
 ADMIN_ROLES = ['admin', 'system_admin']
 
+PARAM_FILLUP = {}
+
 
 try:
     from local_config import *   # NOQA

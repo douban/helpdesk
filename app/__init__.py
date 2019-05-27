@@ -34,6 +34,8 @@ def create_app():
         Mount('/', app=web_bp, name='web'),
     ])
 
+    # maybe skip some middleware for static?
+
     app.add_middleware(AuthenticationMiddleware, backend=SessionAuthBackend())
     app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY, max_age=SESSION_TTL)
     app.add_middleware(GZipMiddleware)

@@ -78,13 +78,14 @@ class Ticket(db.Model):
 
     def execute(self):
         system_provider = get_provider(self.provider_type)
-        token, msg = system_provider.authenticate(self.submitter)
-        logger.debug('get token: %s, msg: %s', token, msg)
 
-        provider = get_provider(self.provider_type, token=token, user=self.submitter)
+        # token, msg = system_provider.authenticate(self.submitter)
+        # logger.debug('get token: %s, msg: %s', token, msg)
+        # provider = get_provider(self.provider_type, token=token, user=self.submitter)
+        # execution, msg = provider.run_action(self.provider_object, self.params)
 
         logger.info('run action %s, params: %s', self.provider_object, self.params)
-        execution, msg = provider.run_action(self.provider_object, self.params)
+        execution, msg = system_provider.run_action(self.provider_object, self.params)
         if not execution:
             return execution, msg
 

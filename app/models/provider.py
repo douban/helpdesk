@@ -24,7 +24,8 @@ class Provider:
 
     def get_actions(self, pack=None):
         '''
-        return a list of action dict
+        return a list of action dict,
+        should follow st2 specs.
         '''
         raise NotImplementedError()
 
