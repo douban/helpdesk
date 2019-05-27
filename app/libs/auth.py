@@ -3,6 +3,7 @@
 import base64
 import logging
 import binascii
+from datetime import datetime, timedelta
 
 from starlette.authentication import (AuthenticationBackend,
                                       AuthenticationError, SimpleUser,
@@ -44,12 +45,19 @@ class SessionAuthBackend(AuthenticationBackend):
         from app.config import PROVIDER, ADMIN_ROLES
 
         logger.debug('request.session: %s, user: %s', request.session, request.session.get('user'))
-        if not request.session.get('user'):
+        if not all([request.session.get('user'), request.session.get('token'), request.session.get('expiry')]):
             return
+        # check token expiry, e.g. '2019-05-28T10:34:03.240708Z'
+        expiry = request.session['expiry']
+        if datetime.strptime(expiry, "%Y-%m-%dT%H:%M:%S.%fZ") < datetime.utcnow() + timedelta(minutes=1):
+            logger.debug('token expiry time is in 1 minute, unauth.')
+            unauth(request)
+            return
+
         auths = ["authenticated"]
 
         user = request.session['user']
-        token = request.session.get('token')
+        token = request.session['token']
 
         try:
             provider = get_provider(PROVIDER, token=token, user=user)
@@ -80,19 +88,19 @@ async def authenticate(request):
     user = form.get('user')
     password = form.get('password')
 
-    logger.debug('form: %s, user: %s, password: %s', form, user, password)
-
     system_provider = get_provider(PROVIDER)
     token, msg = system_provider.authenticate(user, password)
 
-    request.session['user'] = user
-    request.session['token'] = token
-
     logger.debug('get token: %s, msg: %s', token, msg)
+
+    request.session['user'] = user
+    request.session['token'] = token['token']
+    request.session['expiry'] = token['expiry']
 
     return token, msg
 
 
 def unauth(request):
     request.session.pop('token', None)
+    request.session.pop('expiry', None)
     return request.session.pop('user', None)

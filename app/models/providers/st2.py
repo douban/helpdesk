@@ -70,6 +70,12 @@ class ST2Provider(Provider):
         return (execution.to_dict() if execution else None, msg)
 
     def authenticate(self, user, password=None):
+        ''' return a token dict and msg.
+
+        st2 POST /auth/v1/tokens, returns
+        {'service': False, 'expiry': '2019-05-28T10:34:03.240708Z', 'token': '48951e681dd64b4380a19998d6ec655e',
+         'user': 'xxx', 'id': '5cebbd1b7865303ddd77d503', 'metadata': {}}
+        '''
         token_kw = dict(ttl=ST2_TOKEN_TTL)
         if password:
             kw = dict(auth=(user, password))
@@ -82,16 +88,15 @@ class ST2Provider(Provider):
         msg = ''
         try:
             token = self.st2.tokens.create(Token(**token_kw), **kw)
-            token = token.token
         except requests.exceptions.HTTPError as e:
             msg = str(e)
-        return token, msg
+        return token.to_dict(), msg
 
     def get_user_roles(self):
         '''return a list of roles,
             e.g. ["admin"]
 
-        st2 GET/api/v1/user, returns
+        st2 GET /api/v1/user, returns
 
         {
             "username": "xxx",
