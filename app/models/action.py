@@ -3,13 +3,14 @@
 import logging
 from datetime import datetime
 
+from app.libs.rest import DictSerializableClassMixin
 from app.models.db.ticket import Ticket
 from app.config import AUTO_APPROVAL_TARGET_OBJECTS, PARAM_FILLUP
 
 logger = logging.getLogger(__name__)
 
 
-class Action:
+class Action(DictSerializableClassMixin):
     """action name, description/tips, st2 pack/action
     """
     def __init__(self, name, desc, provider_object):
@@ -63,7 +64,9 @@ class Action:
                     live_value = True
                 params[k] = live_value
 
-        ticket = Ticket(provider_type=provider.provider_type,
+        # create ticket
+        ticket = Ticket(title=self.name,
+                        provider_type=provider.provider_type,
                         provider_object=self.target_object,
                         params=params,
                         submitter=provider.user,
@@ -93,6 +96,6 @@ class Action:
         if not execution:
             return execution, msg
 
-        ticket.executed_at = datetime.now()
-        await ticket.save()
+        ticket_added.executed_at = datetime.now()
+        await ticket_added.save()
         return execution, 'Success. <a href="%s" target="_blank">result</a>' % (execution['web_url'],)

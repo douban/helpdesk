@@ -10,10 +10,12 @@ from app.config import SYSTEM_USER
 logger = logging.getLogger(__name__)
 
 
+# TODO: index submitter
 class Ticket(db.Model):
     __tablename__ = 'ticket'
 
     id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(length=64))
     provider_type = db.Column(db.String(length=16))
     provider_object = db.Column(db.String(length=64))
     params = db.Column(db.JSON)

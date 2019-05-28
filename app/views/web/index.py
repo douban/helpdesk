@@ -12,7 +12,8 @@ from app.libs.template import render
 from app.models.provider import get_provider
 from app.models.action_tree import action_tree
 from app.models.db.ticket import Ticket
-from app.config import DEBUG, PROVIDER, NO_AUTH_TARGET_OBJECTS, URL_RESET_PASSWORD, avatar_url_func
+from app.config import (DEBUG, PROVIDER, NO_AUTH_TARGET_OBJECTS, URL_RESET_PASSWORD,
+                        TICKETS_PER_PAGE)
 
 from . import bp
 
@@ -41,7 +42,7 @@ async def login(request):
         token, msg = await authenticate(request)
 
         if token:
-            return_url = request.query_params.get('r', request.url_for('web:index', full_path=''))
+            return_url = request.query_params.get('r', request.url_for('web:index'))
             return RedirectResponse(url=return_url)
 
         extra_context = dict(msg=msg,
@@ -57,7 +58,7 @@ async def login(request):
 @bp.route('/logout', methods=['GET', 'POST'])
 async def logout(request):
     unauth(request)
-    return RedirectResponse(url=request.url_for('web:index', full_path=''))
+    return RedirectResponse(url=request.url_for('web:index'))
 
 
 @bp.route('/ticket/{ticket_id:int}/{op}', methods=['GET'])
@@ -91,9 +92,40 @@ async def ticket_op(request):
     return PlainTextResponse('Success')
 
 
+@bp.route('/ticket', methods=['GET'])
+@bp.route('/ticket/{ticket_id:int}', methods=['GET', 'POST'])
+@requires(['authenticated'])
+async def ticket(request):
+    ticket_id = request.path_params.get('ticket_id')
+    ticket = await Ticket.get(ticket_id) if ticket_id else None
+
+    extra_context = {}
+    if request.method == 'POST':
+        pass
+
+    page = request.query_params.get('page')
+    if page and page.isdigit():
+        page = max(1, int(page))
+    else:
+        page = 1
+
+    # TODO: only show self tickets if not admin
+    tickets = ([ticket] if ticket
+               else await Ticket.get_all(desc=True,
+                                         limit=TICKETS_PER_PAGE,
+                                         offset=(page - 1) * TICKETS_PER_PAGE))
+    return render('ticket.html',
+                  dict(request=request,
+                       tickets=tickets,
+                       page=page,
+                       debug=DEBUG,
+                       **extra_context))
+
+
+@bp.route('/', methods=['GET', 'POST'])
 @bp.route('/{full_path:path}', methods=['GET', 'POST'])
 async def index(request):
-    full_path = request.path_params['full_path']
+    full_path = request.path_params.get('full_path', '')
     target_object = full_path.strip('/')
 
     action_tree_leaf = action_tree.find(target_object) if target_object != '' else action_tree.first()
@@ -132,7 +164,6 @@ async def index(request):
 
     return render('action_form.html',
                   dict(request=request,
-                       avatar_url=avatar_url_func(request.user.display_name),
                        action_tree=_action_tree,
                        action=action,
                        provider=provider,

@@ -9,14 +9,14 @@ from sqlalchemy.sql import select
 from sqlalchemy.ext.declarative import declarative_base
 
 from app.libs.db import metadata, get_db
-from app.libs.rest import json_unpack
+from app.libs.rest import json_unpack, DictSerializableClassMixin
 
 logger = logging.getLogger(__name__)
 
 Base = declarative_base(metadata=metadata)
 
 
-class Model(Base):
+class Model(DictSerializableClassMixin, Base):
     __abstract__ = True
 
     def __str__(self):
@@ -38,6 +38,22 @@ class Model(Base):
         rs = await cls._fetchall(query)
         return cls(**rs[0]) if rs else None
 
+    @classmethod
+    async def get_all(cls, ids=None, desc=False, limit=None, offset=None):
+        t = cls.__table__
+        query = select([t])
+        if ids:
+            # see https://docs.sqlalchemy.org/en/13/core/sqlelement.html?highlight=in_#sqlalchemy.sql.expression.ColumnElement.in_
+            query = query.where(t.c.id.in_(ids))
+        if desc:
+            query = query.order_by(t.c.id.desc())
+        if limit:
+            query = query.limit(limit)
+        if offset:
+            query = query.offset(offset)
+        rs = await cls._fetchall(query)
+        return [cls(**r) for r in rs] if rs else []
+
     async def save(self):
         obj = await self.get(self.id)
         logger.debug('Saving %s, checking if obj exists: %s', self, obj)
@@ -45,7 +61,9 @@ class Model(Base):
             return await self.update(**self._fields())
 
         query = self.__table__.insert().values(**self._fields())
-        return await self._execute(query)
+        id_ = await self._execute(query)
+        self.id = id_
+        return id_
 
     async def update(self, **kw):
         '''try to return last modified row id
@@ -73,7 +91,6 @@ class Model(Base):
         d = self._fields()
         d['_class'] = self.__class__.__name__
         return json_unpack(d)
-        # return json_unpack(self)
 
     def from_dict(self, **kw):
         pass

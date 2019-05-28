@@ -27,6 +27,8 @@ ST2_API_URL = 'https://st2.example.com/api'
 ST2_AUTH_URL = 'https://st2.example.com/auth'
 ST2_STREAM_URL = 'https://st2.example.com/stream'
 
+ST2_EXECUTION_RESULT_URL_PATTERN = ST2_BASE_URL + '/#/code/result/{execution_id}'
+
 ST2_API_KEY = None
 
 ST2_CACERT = None
@@ -46,6 +48,8 @@ NO_AUTH_TARGET_OBJECTS = ['ldap_pass_reset']
 URL_RESET_PASSWORD = ''
 
 AUTO_APPROVAL_TARGET_OBJECTS = []
+
+TICKETS_PER_PAGE = 50
 
 
 def avatar_url_func(ldap_id):

@@ -90,7 +90,7 @@ class ST2Provider(Provider):
             token = self.st2.tokens.create(Token(**token_kw), **kw)
         except requests.exceptions.HTTPError as e:
             msg = str(e)
-        return token.to_dict(), msg
+        return token.to_dict() if token else None, msg
 
     def get_user_roles(self):
         '''return a list of roles,

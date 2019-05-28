@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Helpdesk | Tickets{% endblock %}
+{% block container %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+
+      <div class="table-responsive">
+        <table class="table table-striped table-hover table-condensed">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Params</th>
+              <th>Reason</th>
+              <th>Submitter</th>
+              <th>Approved</th>
+              <th>By</th>
+              <th>Create Time</th>
+              <th>Execute Time</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ticket in tickets %}
+                {% if ticket.is_approved is none %}
+                <tr class='warning'>
+                {% elif ticket.is_approved %}
+                <tr class='success'>
+                {% else %}
+                <tr>
+                {% endif %}
+                <td><a href="{{ url_for('web:ticket', ticket_id=ticket.id) }}">{{ ticket.id }}</a>
+                </td>
+                <td>{{ ticket.title }}
+                </td>
+                <td>{{ ticket.params }}
+                </td>
+                <td>{{ ticket.reason }}
+                </td>
+                <td>{{ ticket.submitter }}
+                </td>
+                <td>{{ ticket.is_approved }}
+                </td>
+                <td>{{ ticket.confirmed_by }}
+                </td>
+                <td>
+                  {{ ticket.created_at.strftime('%Y-%m-%d %H:%M:%S') }}<br />
+                </td>
+                <td>
+                  {% if ticket.executed_at %}
+                  {{ ticket.executed_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                  {% else %}
+                  N/A
+                  {% endif %}
+                </td>
+                <td>
+                  {% if request.user.is_admin %}
+                    {% if ticket.is_approved is none %}
+                    <a href="{{ url_for('web:ticket_op', ticket_id=ticket.id, op='approve') }}">approve</a>
+                    <a href="{{ url_for('web:ticket_op', ticket_id=ticket.id, op='reject') }}">reject</a>
+                    {% endif %}
+                  {% endif %}
+                  <a href="{{ url_for('api:ticket', ticket_id=ticket.id) }}">detail</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <nav aria-label="...">
+        <ul class="pager">
+          <li class="previous {{ 'disabled' if not page or page <= 1 else ''}}"><a href="?page={{ page - 1 }}"><span aria-hidden="true">&larr;</span> Older</a></li>
+          <li class="next"><a href="?page={{ page + 1 }}">Newer <span aria-hidden="true">&rarr;</span></a></li>
+        </ul>
+      </nav>
+
+    </div>
+  </div>
+</div>
+{% endblock container %}

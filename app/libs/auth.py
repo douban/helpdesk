@@ -71,7 +71,7 @@ class SessionAuthBackend(AuthenticationBackend):
         roles = ['role:' + r for r in user_roles]
         auths += roles
 
-        return AuthCredentials(auths), User(username=user)
+        return AuthCredentials(auths), User(username=user, auths=auths)
 
 
 async def authenticate(request):
@@ -93,9 +93,10 @@ async def authenticate(request):
 
     logger.debug('get token: %s, msg: %s', token, msg)
 
-    request.session['user'] = user
-    request.session['token'] = token['token']
-    request.session['expiry'] = token['expiry']
+    if token:
+        request.session['user'] = user
+        request.session['token'] = token['token']
+        request.session['expiry'] = token['expiry']
 
     return token, msg
 

@@ -1,21 +1,41 @@
 # -*- coding: utf-8 -*-
 
 import re
+import logging
+import asyncio
 from functools import wraps
 from datetime import datetime
 from collections import Iterable
 
 from starlette.responses import JSONResponse
 
+logger = logging.getLogger(__name__)
+
 
 def jsonize(func):
-    @wraps(func)
-    def _(*args, **kwargs):
-        ret = func(*args, **kwargs)
-        data = json_unpack(ret)
+    if asyncio.iscoroutinefunction(func):
+        @wraps(func)
+        async def _(*args, **kwargs):
+            ret = await func(*args, **kwargs)
+            data = json_unpack(ret)
+            # logger.debug('jsonize: args: %s, kwargs: %s, ret: %s, data: %s', args, kwargs, ret, data)
+            status_code = data.get('status_code') if data else None
+            return JSONResponse(dict(data=data), status_code=status_code or 200)
+        return _
+    else:
+        @wraps(func)
+        def _(*args, **kwargs):
+            ret = func(*args, **kwargs)
+            data = json_unpack(ret)
+            # logger.debug('jsonize: args: %s, kwargs: %s, ret: %s, data: %s', args, kwargs, ret, data)
+            status_code = data.get('status_code') if data else None
+            return JSONResponse(dict(data=data), status_code=status_code or 200)
+        return _
 
-        return JSONResponse(dict(data=data))
-    return _
+
+class DictSerializableClassMixin(object):
+    def to_dict(self, show=None, **kw):
+        return json_unpack(self)
 
 
 def dictify(obj):
@@ -51,9 +71,9 @@ def json_unpack(obj, visited=None):
 
 class ApiError(Exception):
     def __init__(self, error, description=""):
-        code, message, status = error
-        self.code = code
-        self.status = status
+        error_code, message, status_code = error
+        self.error_code = error_code
+        self.status_code = status_code
         self.message = message
         self.description = description
 
@@ -64,8 +84,8 @@ class ApiError(Exception):
 
     def to_dict(self):
         return {
-            'code': self.code,
-            'status': self.status,
+            'error_code': self.error_code,
+            'status_code': self.status_code,
             'message': self.message,
             'description': self.description,
         }
