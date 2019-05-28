@@ -88,14 +88,9 @@ class Action(DictSerializableClassMixin):
         if not ticket.is_approved:
             return ticket_added.to_dict(), 'Success. Your request has been submitted, please wait for approval.'
 
-        logger.info('run action %s, params: %s', self.target_object, params)
-        if is_admin:
-            execution, msg = provider.run_action(self.target_object, params)
-        else:
-            execution, msg = system_provider.run_action(self.target_object, params)
-        if not execution:
-            return execution, msg
+        # if this ticket is auto approved, execute it immediately
+        execution, msg = ticket_added.execute(provider=provider, is_admin=is_admin)
+        if execution:
+            await ticket_added.save()
 
-        ticket_added.executed_at = datetime.now()
-        await ticket_added.save()
-        return execution, 'Success. <a href="%s" target="_blank">result</a>' % (execution['web_url'],)
+        return execution, msg

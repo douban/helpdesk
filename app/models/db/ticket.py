@@ -5,7 +5,7 @@ from datetime import datetime
 
 from app.models import db
 from app.models.provider import get_provider
-from app.config import SYSTEM_USER
+from app.config import SYSTEM_USER, ST2_EXECUTION_RESULT_URL_PATTERN
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +46,12 @@ class Ticket(db.Model):
     def is_confirmed(self):
         return self.confirmed_by or self.is_approved is not None
 
+    @property
+    def execution_result_url(self):
+        if not self.annotation:
+            return None
+        return self.annotation.get('execution', {}).get('result_url')
+
     def check_confirmed(self):
         if self.is_confirmed:
             op = 'approved' if self.is_approved else 'rejected'
@@ -78,19 +84,25 @@ class Ticket(db.Model):
         self.confirmed_at = datetime.now()
         return True, 'Success'
 
-    def execute(self):
+    def execute(self, provider=None, is_admin=False):
         system_provider = get_provider(self.provider_type)
 
-        # token, msg = system_provider.authenticate(self.submitter)
-        # logger.debug('get token: %s, msg: %s', token, msg)
-        # token = token['token']
-        # provider = get_provider(self.provider_type, token=token, user=self.submitter)
-        # execution, msg = provider.run_action(self.provider_object, self.params)
-
         logger.info('run action %s, params: %s', self.provider_object, self.params)
-        execution, msg = system_provider.run_action(self.provider_object, self.params)
+        # admin use self provider, otherwise use system_provider
+        if is_admin:
+            if not provider:
+                token, msg = system_provider.authenticate(self.submitter)
+                logger.debug('get token: %s, msg: %s', token, msg)
+                token = token['token']
+                provider = get_provider(self.provider_type, token=token, user=self.submitter)
+            execution, msg = provider.run_action(self.provider_object, self.params)
+        else:
+            execution, msg = system_provider.run_action(self.provider_object, self.params)
         if not execution:
             return execution, msg
 
         self.executed_at = datetime.now()
+        self.annotate(execution=dict(id=execution['id'], result_url=ST2_EXECUTION_RESULT_URL_PATTERN.format(execution_id=execution['id'])))
+
+        # we don't save the ticket here, we leave it outside
         return execution, 'Success. <a href="%s" target="_blank">result</a>' % (execution['web_url'],)
