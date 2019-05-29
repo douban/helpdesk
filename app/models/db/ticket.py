@@ -10,7 +10,6 @@ from app.config import SYSTEM_USER, ST2_EXECUTION_RESULT_URL_PATTERN
 logger = logging.getLogger(__name__)
 
 
-# TODO: index submitter
 class Ticket(db.Model):
     __tablename__ = 'ticket'
 
@@ -20,7 +19,7 @@ class Ticket(db.Model):
     provider_object = db.Column(db.String(length=64))
     params = db.Column(db.JSON)
     extra_params = db.Column(db.JSON)
-    submitter = db.Column(db.String(length=32))
+    submitter = db.Column(db.String(length=32), index=True)
     reason = db.Column(db.String(length=128))
 
     # is_approved default is None, it will become True when approved,
@@ -35,6 +34,14 @@ class Ticket(db.Model):
     annotation = db.Column(db.JSON)
     created_at = db.Column(db.DateTime)
     executed_at = db.Column(db.DateTime)
+
+    @classmethod
+    def get_all_by_submitter(cls, submitter, desc=False, limit=None, offset=None):
+        filter_ = cls.__table__.c.submitter == submitter
+        return cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset)
+
+    def can_view(self, user):
+        return user.is_admin or self.submitter == user.display_name
 
     def annotate(self, dict_=None, **kw):
         d = dict_ or {}

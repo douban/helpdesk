@@ -97,7 +97,11 @@ async def ticket_op(request):
 @requires(['authenticated'])
 async def ticket(request):
     ticket_id = request.path_params.get('ticket_id')
-    ticket = await Ticket.get(ticket_id) if ticket_id else None
+    ticket = None
+    if ticket_id:
+        ticket = await Ticket.get(ticket_id)
+        if not ticket:
+            raise HTTPException(status_code=404)
 
     extra_context = {}
     if request.method == 'POST':
@@ -108,12 +112,18 @@ async def ticket(request):
         page = max(1, int(page))
     else:
         page = 1
+    kw = dict(desc=True, limit=TICKETS_PER_PAGE, offset=(page - 1) * TICKETS_PER_PAGE)
 
-    # TODO: only show self tickets if not admin
-    tickets = ([ticket] if ticket
-               else await Ticket.get_all(desc=True,
-                                         limit=TICKETS_PER_PAGE,
-                                         offset=(page - 1) * TICKETS_PER_PAGE))
+    if ticket:
+        if not ticket.can_view(request.user):
+            raise HTTPException(status_code=403)
+        tickets = [ticket]
+    elif request.user.is_admin:
+        tickets = await Ticket.get_all(**kw)
+    else:
+        # only show self tickets if not admin
+        tickets = await Ticket.get_all_by_submitter(submitter=request.user.display_name, **kw)
+
     return render('ticket.html',
                   dict(request=request,
                        tickets=tickets,

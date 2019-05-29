@@ -39,12 +39,15 @@ class Model(DictSerializableClassMixin, Base):
         return cls(**rs[0]) if rs else None
 
     @classmethod
-    async def get_all(cls, ids=None, desc=False, limit=None, offset=None):
+    async def get_all(cls, ids=None, filter_=None, desc=False, limit=None, offset=None):
+        # logger.debug('%s.get_all(ids=%s, filter_=%s, desc=%s, limit=%s, offset=%s', cls.__name__, ids, filter_, desc, limit, offset)
         t = cls.__table__
         query = select([t])
         if ids:
             # see https://docs.sqlalchemy.org/en/13/core/sqlelement.html?highlight=in_#sqlalchemy.sql.expression.ColumnElement.in_
             query = query.where(t.c.id.in_(ids))
+        elif filter_ is not None:
+            query = query.where(filter_)
         if desc:
             query = query.order_by(t.c.id.desc())
         if limit:

@@ -34,6 +34,8 @@ async def ticket(request):
     ticket = await Ticket.get(ticket_id)
     if not ticket:
         raise ApiError(ApiErrors.not_found)
+    if not ticket.can_view(request.user):
+        raise ApiError(ApiErrors.forbidden)
     return ticket
 
 

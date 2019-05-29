@@ -79,7 +79,7 @@
 
       <nav aria-label="...">
         <ul class="pager">
-          <li class="previous {{ 'disabled' if not page or page <= 1 else ''}}"><a href="?page={{ page - 1 }}"><span aria-hidden="true">&larr;</span> Older</a></li>
+          <li class="previous {{ 'disabled' if not page or page <= 1 else ''}}"><a href="?page={{ (page - 1) or 1 }}"><span aria-hidden="true">&larr;</span> Older</a></li>
           <li class="next"><a href="?page={{ page + 1 }}">Newer <span aria-hidden="true">&rarr;</span></a></li>
         </ul>
       </nav>
