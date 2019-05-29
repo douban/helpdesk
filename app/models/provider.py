@@ -1,25 +1,49 @@
 # coding: utf-8
 
+from datetime import datetime
+
 
 class Provider:
-    def __init__(self, token=None, **kw):
+    provider_type = ''
+
+    def __init__(self, token=None, user=None, **kw):
         self.token = token
+        self.user = user
+
+    def __str__(self):
+        attrs = []
+        for k in sorted(self.__dict__):
+            if k.startswith('_'):
+                continue
+            v = getattr(self, k)
+            v = '"%s"' % str(v) if type(v) in (str, datetime) else str(v)
+            attrs.append('%s=%s' % (k, v))
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(attrs))
+
+    __repr__ = __str__
 
     def get_actions(self, pack=None):
         '''
-        return a list of action dict
+        return a list of action dict,
+        should follow st2 specs.
         '''
-        pass
+        raise NotImplementedError()
 
     # TODO: cache result, ttl
     def get_action(self, ref):
-        pass
+        raise NotImplementedError()
 
     def run_action(self, ref, parameters):
-        pass
+        raise NotImplementedError()
 
     def authenticate(self, user, password):
-        pass
+        raise NotImplementedError()
+
+    def get_user_roles(self):
+        '''return a list of roles,
+            e.g. ["admin"]
+        '''
+        raise NotImplementedError()
 
 
 # TODO: cache in pool by kw, ttl

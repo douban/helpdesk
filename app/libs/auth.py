@@ -3,6 +3,7 @@
 import base64
 import logging
 import binascii
+from datetime import datetime, timedelta
 
 from starlette.authentication import (AuthenticationBackend,
                                       AuthenticationError, SimpleUser,
@@ -29,9 +30,9 @@ class BasicAuthBackend(AuthenticationBackend):
             raise AuthenticationError('Invalid basic auth credentials')
 
         username, _, password = decoded.partition(":")
-        # TODO: You'd want to verify the username and password here,
-        #       possibly by installing `DatabaseMiddleware`
-        #       and retrieving user information from `request.database`.
+        # You'd want to verify the username and password here,
+        # possibly by installing `DatabaseMiddleware`
+        # and retrieving user information from `request.database`.
 
         # scopes
         return AuthCredentials(["authenticated"]), SimpleUser(username)
@@ -39,10 +40,38 @@ class BasicAuthBackend(AuthenticationBackend):
 
 class SessionAuthBackend(AuthenticationBackend):
     async def authenticate(self, request):
+        from app.models.user import User
+        from app.models.provider import get_provider
+        from app.config import PROVIDER, ADMIN_ROLES
+
         logger.debug('request.session: %s, user: %s', request.session, request.session.get('user'))
-        if not request.session.get('user'):
+        if not all([request.session.get('user'), request.session.get('token'), request.session.get('expiry')]):
             return
-        return AuthCredentials(["authenticated"]), SimpleUser(request.session['user'])
+        # check token expiry, e.g. '2019-05-28T10:34:03.240708Z'
+        expiry = request.session['expiry']
+        if datetime.strptime(expiry, "%Y-%m-%dT%H:%M:%S.%fZ") < datetime.utcnow() + timedelta(minutes=1):
+            logger.debug('token expiry time is in 1 minute, unauth.')
+            unauth(request)
+            return
+
+        auths = ["authenticated"]
+
+        user = request.session['user']
+        token = request.session['token']
+
+        try:
+            provider = get_provider(PROVIDER, token=token, user=user)
+            user_roles = provider.get_user_roles()
+        except Exception:
+            logger.exception('Failed to get user roles')
+            return AuthCredentials(auths), User(username=user)
+
+        is_admin = any(role in ADMIN_ROLES for role in user_roles)
+        auths += ['admin'] if is_admin else []
+        roles = ['role:' + r for r in user_roles]
+        auths += roles
+
+        return AuthCredentials(auths), User(username=user, auths=auths)
 
 
 async def authenticate(request):
@@ -59,19 +88,20 @@ async def authenticate(request):
     user = form.get('user')
     password = form.get('password')
 
-    logger.debug('form: %s, user: %s, password: %s', form, user, password)
-
-    provider = get_provider(PROVIDER)
-    token, msg = provider.authenticate(user, password)
-
-    request.session['user'] = user
-    request.session['token'] = token
+    system_provider = get_provider(PROVIDER)
+    token, msg = system_provider.authenticate(user, password)
 
     logger.debug('get token: %s, msg: %s', token, msg)
+
+    if token:
+        request.session['user'] = user
+        request.session['token'] = token['token']
+        request.session['expiry'] = token['expiry']
 
     return token, msg
 
 
 def unauth(request):
     request.session.pop('token', None)
+    request.session.pop('expiry', None)
     return request.session.pop('user', None)

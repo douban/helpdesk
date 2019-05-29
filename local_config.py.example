@@ -1,4 +1,5 @@
 # coding: utf-8
+# vi: ft=python
 
 
 DEBUG = DEVELOP_MODE = True
@@ -9,12 +10,24 @@ SESSION_SECRET_KEY = 'NVzLYJSMyw'
 
 SESSION_TTL = 24 * 3600
 
+SYSTEM_USER = 'admin'
+SYSTEM_USER_PASSWORD = 'admin'
+
+ADMIN_ROLES = ['admin', 'system_admin']
+
+PARAM_FILLUP = {
+    # 'reason': 'hehe',
+    'ldap_id': lambda provider: provider.user,
+}
+
 PROVIDER = 'st2'
 
 ST2_BASE_URL = 'https://st2.example.com'
 ST2_API_URL = 'https://st2.example.com/api'
 ST2_AUTH_URL = 'https://st2.example.com/auth'
 ST2_STREAM_URL = 'https://st2.example.com/stream'
+
+ST2_EXECUTION_RESULT_URL_PATTERN = ST2_BASE_URL + '/#/code/result/{execution_id}'
 
 ST2_API_KEY = None
 
@@ -33,6 +46,10 @@ ST2_TOKEN_TTL = 24 * 3600
 NO_AUTH_TARGET_OBJECTS = ['ldap_pass_reset']
 
 URL_RESET_PASSWORD = ''
+
+AUTO_APPROVAL_TARGET_OBJECTS = []
+
+TICKETS_PER_PAGE = 50
 
 
 def avatar_url_func(ldap_id):
@@ -64,4 +81,3 @@ PACKAGE_SUBTREE = ['包管理相关', [
     ]]
 
 ACTION_TREE_CONFIG = ['功能导航', [ACCOUNT_SUBTREE, PACKAGE_SUBTREE]]
-
