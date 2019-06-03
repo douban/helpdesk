@@ -23,6 +23,12 @@ PARAM_FILLUP = {}
 
 PROVIDER = ''
 
+# TODO:
+# for LdapProviderMixin, to provide the ability to access user metadata like email addrs.
+# LDAP
+
+DEFAULT_EMAIL_DOMAIN = ''
+
 NO_AUTH_TARGET_OBJECTS = []
 
 URL_RESET_PASSWORD = ''

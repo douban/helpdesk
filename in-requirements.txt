@@ -9,3 +9,4 @@ itsdangerous>=1.1.0
 sentry-asgi>=0.1.5
 databases[postgresql,mysql,sqlite]
 SQLAlchemy-Utils>=0.33.11
+cached-property>=1.5.1

@@ -42,7 +42,7 @@ class SessionAuthBackend(AuthenticationBackend):
     async def authenticate(self, request):
         from app.models.user import User
         from app.models.provider import get_provider
-        from app.config import PROVIDER, ADMIN_ROLES
+        from app.config import PROVIDER
 
         logger.debug('request.session: %s, user: %s', request.session, request.session.get('user'))
         if not all([request.session.get('user'), request.session.get('token'), request.session.get('expiry')]):
@@ -54,24 +54,12 @@ class SessionAuthBackend(AuthenticationBackend):
             unauth(request)
             return
 
-        auths = ["authenticated"]
-
-        user = request.session['user']
+        username = request.session['user']
         token = request.session['token']
 
-        try:
-            provider = get_provider(PROVIDER, token=token, user=user)
-            user_roles = provider.get_user_roles()
-        except Exception:
-            logger.exception('Failed to get user roles')
-            return AuthCredentials(auths), User(username=user)
-
-        is_admin = any(role in ADMIN_ROLES for role in user_roles)
-        auths += ['admin'] if is_admin else []
-        roles = ['role:' + r for r in user_roles]
-        auths += roles
-
-        return AuthCredentials(auths), User(username=user, auths=auths)
+        provider = get_provider(PROVIDER, token=token, user=username)
+        user = User(username=username, provider=provider)
+        return user.auth_credentials, user
 
 
 async def authenticate(request):

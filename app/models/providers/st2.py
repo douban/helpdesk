@@ -5,16 +5,18 @@ import requests
 
 from app.config import (ST2_DEFAULT_PACK, ST2_WORKFLOW_RUNNER_TYPES,
                         ST2_TOKEN_TTL,
-                        SYSTEM_USER, SYSTEM_USER_PASSWORD)
+                        SYSTEM_USER, SYSTEM_USER_PASSWORD,
+                        DEFAULT_EMAIL_DOMAIN)
 from app.libs.st2 import (client as service_client,
                           get_client,
                           Execution, Token)
 from app.models.provider import Provider
+from app.models.providers.ldap import LdapProviderMixin
 
 logger = logging.getLogger(__name__)
 
 
-class ST2Provider(Provider):
+class ST2Provider(LdapProviderMixin, Provider):
     provider_type = 'st2'
 
     def __init__(self, token=None, user=None):
@@ -27,6 +29,10 @@ class ST2Provider(Provider):
         if '.' not in ref:
             ref = '.'.join([ST2_DEFAULT_PACK, ref])
         return ref
+
+    def get_user_email(self, user=None):
+        user = user or self.user
+        return self.get_user_email_from_ldap(user) or '%s@%s' % (user, DEFAULT_EMAIL_DOMAIN)
 
     def get_actions(self, pack=None):
         '''
@@ -92,7 +98,7 @@ class ST2Provider(Provider):
             msg = str(e)
         return token.to_dict() if token else None, msg
 
-    def get_user_roles(self):
+    def get_user_roles(self, user=None):
         '''return a list of roles,
             e.g. ["admin"]
 
