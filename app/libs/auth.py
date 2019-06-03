@@ -42,7 +42,7 @@ class SessionAuthBackend(AuthenticationBackend):
     async def authenticate(self, request):
         from app.models.user import User
         from app.models.provider import get_provider
-        from app.config import PROVIDER, ADMIN_ROLES
+        from app.config import PROVIDER
 
         logger.debug('request.session: %s, user: %s', request.session, request.session.get('user'))
         if not all([request.session.get('user'), request.session.get('token'), request.session.get('expiry')]):

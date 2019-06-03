@@ -46,7 +46,7 @@ class Ticket(db.Model):
         return self.cc.split(',')
 
     def can_view(self, user):
-        return user.is_admin or user.display_name == self.submitter or user.display_name in self.ccs
+        return user.is_admin or user.name == self.submitter or user.name in self.ccs
 
     def annotate(self, dict_=None, **kw):
         d = dict_ or {}

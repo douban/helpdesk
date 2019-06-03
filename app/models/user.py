@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class User(DictSerializableClassMixin, BaseUser):
     def __init__(self, username: str, provider: Provider) -> None:
-        self.username = username
+        self.name = username
         self.provider = provider
 
     @property
@@ -24,7 +24,7 @@ class User(DictSerializableClassMixin, BaseUser):
 
     @property
     def display_name(self) -> str:
-        return self.username
+        return self.name
 
     @cached_property
     def roles(self) -> List[str]:
@@ -43,4 +43,4 @@ class User(DictSerializableClassMixin, BaseUser):
 
     @property
     def avatar_url(self) -> str:
-        return avatar_url_func(self.display_name)
+        return avatar_url_func(self.name)

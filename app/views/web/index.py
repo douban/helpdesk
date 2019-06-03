@@ -74,14 +74,14 @@ async def ticket_op(request):
         return PlainTextResponse('not found', status_code=404)
 
     if op == 'approve':
-        ret, msg = ticket.approve(by_user=request.user.display_name)
+        ret, msg = ticket.approve(by_user=request.user.name)
         if not ret:
             return PlainTextResponse(msg)
         execution, msg = ticket.execute()
         if not execution:
             return PlainTextResponse(msg, status_code=500)
     elif op == 'reject':
-        ret, msg = ticket.reject(by_user=request.user.display_name)
+        ret, msg = ticket.reject(by_user=request.user.name)
         if not ret:
             return PlainTextResponse(msg)
 
@@ -122,7 +122,7 @@ async def ticket(request):
         tickets = await Ticket.get_all(**kw)
     else:
         # only show self tickets if not admin
-        tickets = await Ticket.get_all_by_submitter(submitter=request.user.display_name, **kw)
+        tickets = await Ticket.get_all_by_submitter(submitter=request.user.name, **kw)
 
     return render('ticket.html',
                   dict(request=request,
