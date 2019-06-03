@@ -18,6 +18,8 @@ class User(DictSerializableClassMixin, BaseUser):
         self.name = username
         self.provider = provider
 
+        self.email = self.provider.get_user_email()
+
     @property
     def is_authenticated(self) -> bool:
         return True

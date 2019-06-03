@@ -43,7 +43,7 @@ class Ticket(db.Model):
 
     @property
     def ccs(self):
-        return self.cc.split(',')
+        return self.cc.split(',') if self.cc else []
 
     def can_view(self, user):
         return user.is_admin or user.name == self.submitter or user.name in self.ccs
