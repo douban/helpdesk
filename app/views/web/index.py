@@ -151,7 +151,7 @@ async def index(request):
         else:
             return RedirectResponse(url=request.url_for('web:login') + '?r=' + urllib.parse.quote(request.url.path))
 
-    provider = get_provider(PROVIDER, token=request.session.get('token'), user=request.user.display_name)
+    provider = request.user.provider
     system_provider = get_provider(PROVIDER)
 
     extra_context = {}
