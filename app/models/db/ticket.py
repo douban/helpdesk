@@ -45,6 +45,12 @@ class Ticket(db.Model):
     def ccs(self):
         return self.cc.split(',') if self.cc else []
 
+    @property
+    def display_params(self):
+        if not self.params:
+            return None
+        return '; '.join(['%s: %s' % (k, v) for k, v in self.params.items() if k not in ('reason',)])
+
     def can_view(self, user):
         return user.is_admin or user.name == self.submitter or user.name in self.ccs
 
@@ -63,6 +69,12 @@ class Ticket(db.Model):
         if not self.annotation:
             return None
         return self.annotation.get('execution', {}).get('result_url')
+
+    @property
+    def is_auto_approved(self):
+        if not self.annotation:
+            return False
+        return self.annotation.get('auto_approved', False)
 
     def check_confirmed(self):
         if self.is_confirmed:
@@ -118,3 +130,13 @@ class Ticket(db.Model):
 
         # we don't save the ticket here, we leave it outside
         return execution, 'Success. <a href="%s" target="_blank">result</a>' % (execution['web_url'],)
+
+    def notify(self, phase):
+        # TODO: support custom template bind to action tree
+        from app.libs.template import render_notification
+
+        logger.info('Ticket notify: %s: %s', phase, self)
+        assert phase in ('approval', 'request')
+
+        title, content = render_notification('ticket_%s.html' % phase, context=dict(ticket=self))
+        # TODO: call sa-notify

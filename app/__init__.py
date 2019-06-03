@@ -12,6 +12,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.authentication import AuthenticationMiddleware
 
+import app.libs.template as template
 from app.libs.auth import SessionAuthBackend
 from app.config import DEBUG, SESSION_SECRET_KEY, SESSION_TTL, SENTRY_DSN
 from app.views.web import bp as web_bp
@@ -45,3 +46,4 @@ def create_app():
 
 
 app = create_app()
+template.set_router(app.router)
