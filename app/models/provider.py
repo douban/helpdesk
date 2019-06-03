@@ -39,10 +39,13 @@ class Provider:
     def authenticate(self, user, password):
         raise NotImplementedError()
 
-    def get_user_roles(self):
+    def get_user_roles(self, user=None):
         '''return a list of roles,
             e.g. ["admin"]
         '''
+        raise NotImplementedError()
+
+    def get_user_email(self, user=None):
         raise NotImplementedError()
 
 
