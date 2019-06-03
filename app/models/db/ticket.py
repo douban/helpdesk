@@ -20,7 +20,7 @@ class Ticket(db.Model):
     params = db.Column(db.JSON)
     extra_params = db.Column(db.JSON)
     submitter = db.Column(db.String(length=32), index=True)
-    # cc = db.Column(db.String(length=64))
+    cc = db.Column(db.String(length=64))
     reason = db.Column(db.String(length=128))
 
     # is_approved default is None, it will become True when approved,
@@ -41,8 +41,12 @@ class Ticket(db.Model):
         filter_ = cls.__table__.c.submitter == submitter
         return cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset)
 
+    @property
+    def ccs(self):
+        return self.cc.split(',')
+
     def can_view(self, user):
-        return user.is_admin or self.submitter == user.display_name
+        return user.is_admin or user.display_name == self.submitter or user.display_name in self.ccs
 
     def annotate(self, dict_=None, **kw):
         d = dict_ or {}
