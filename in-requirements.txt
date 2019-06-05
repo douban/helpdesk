@@ -10,3 +10,4 @@ sentry-asgi>=0.1.5
 databases[postgresql,mysql,sqlite]
 SQLAlchemy-Utils>=0.33.11
 cached-property>=1.5.1
+git+https://github.***REMOVED***/sa/sa-tools-core.git@master#egg=sa-tools-core-0.1.0

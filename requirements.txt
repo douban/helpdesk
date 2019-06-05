@@ -29,6 +29,7 @@ prompt-toolkit==1.0.15
 psycopg2-binary==2.8.2
 pycodestyle==2.5.0
 pycparser==2.19
+pycrypto==2.6.1
 pyflakes==2.1.1
 PyMySQL==0.9.3
 pyOpenSSL==19.0.0
@@ -38,6 +39,7 @@ python-multipart==0.0.5
 pytz==2019.1
 PyYAML==5.1
 requests==2.14.2
+-e git+git@github.***REMOVED***:sa/sa-tools-core.git@5563d9c6d83171974878f115ad82f0fe50c92661#egg=sa_tools_core
 sentry-asgi==0.1.5
 sentry-sdk==0.7.14
 six==1.12.0
@@ -51,3 +53,4 @@ uvicorn==0.6.1
 uvloop==0.12.2
 wcwidth==0.1.7
 websockets==7.0
+wechat==0.4.17

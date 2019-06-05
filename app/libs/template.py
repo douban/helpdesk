@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import typing
+import logging
 
 import jinja2
 from starlette.templating import Jinja2Templates as _Jinja2Templates, _TemplateResponse
@@ -8,6 +9,7 @@ from starlette.background import BackgroundTask
 
 from app.config import DEFAULT_BASE_URL
 
+logger = logging.getLogger(__name__)
 
 _router = None
 
@@ -70,7 +72,12 @@ def render(template, context, status_code=200):
 
 
 def render_notification(template, context):
+    import xml.etree.ElementTree as ET
+
     jinja_template = notification_templates.get_template(template)
-    title = ''.join(jinja_template.blocks['title'](jinja_template.new_context(context)))
-    content = ''.join(jinja_template.blocks['content'](jinja_template.new_context(context)))
+    message = jinja_template.render(context)
+    logger.debug('render_notification: message: %s', message)
+    tree = ET.fromstring(message)
+    title = ''.join(piece.text for piece in tree.findall('title'))
+    content = ''.join(piece.text for piece in tree.findall('content'))
     return title, content

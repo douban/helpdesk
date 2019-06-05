@@ -5,7 +5,9 @@ from datetime import datetime
 
 from app.models import db
 from app.models.provider import get_provider
-from app.config import SYSTEM_USER, ST2_EXECUTION_RESULT_URL_PATTERN
+from app.config import (SYSTEM_USER, ST2_EXECUTION_RESULT_URL_PATTERN,
+                        ADMIN_EMAIL_ADDRS,
+                        FROM_EMAIL_ADDR)
 
 logger = logging.getLogger(__name__)
 
@@ -133,10 +135,20 @@ class Ticket(db.Model):
 
     def notify(self, phase):
         # TODO: support custom template bind to action tree
+        from app import config
         from app.libs.template import render_notification
+        from app.libs.notification import notify
 
         logger.info('Ticket notify: %s: %s', phase, self)
-        assert phase in ('approval', 'request')
+        assert phase in ('request', 'approval')
 
-        title, content = render_notification('ticket_%s.html' % phase, context=dict(ticket=self))
-        # TODO: call sa-notify
+        title, content = render_notification('ticket_%s.html' % phase, context=dict(ticket=self, config=config))
+
+        # TODO: make notification methods configurable
+        #   support slack etc.
+        system_provider = get_provider(self.provider_type)
+        email_addrs = [ADMIN_EMAIL_ADDRS] + [system_provider.get_user_email(cc) for cc in self.ccs]
+        if phase == 'approval':
+            email_addrs += [system_provider.get_user_email(self.submitter)]
+        email_addrs = ','.join(addr for addr in email_addrs if addr)
+        notify(email=email_addrs, subject=title, content=content.strip(), from_addr=FROM_EMAIL_ADDR)
