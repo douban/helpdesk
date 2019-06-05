@@ -28,6 +28,12 @@ PROVIDER = ''
 # LDAP
 
 DEFAULT_EMAIL_DOMAIN = ''
+# base url will be used by notifications to show web links
+DEFAULT_BASE_URL = ''
+ADMIN_EMAIL_ADDRS = ''
+FROM_EMAIL_ADDR = ''
+
+NOTIFICATION_TITLE_PREFIX = ''
 
 NO_AUTH_TARGET_OBJECTS = []
 

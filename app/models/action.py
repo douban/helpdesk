@@ -85,7 +85,8 @@ class Action(DictSerializableClassMixin):
         if ticket_added is None:
             return ticket_added, 'Failed to create ticket.'
 
-        if not ticket.is_approved:
+        if not ticket_added.is_approved:
+            ticket_added.notify('request')
             return ticket_added.to_dict(), 'Success. Your request has been submitted, please wait for approval.'
 
         # if this ticket is auto approved, execute it immediately
@@ -93,4 +94,5 @@ class Action(DictSerializableClassMixin):
         if execution:
             await ticket_added.save()
 
+        ticket_added.notify('request')
         return execution, msg

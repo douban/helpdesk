@@ -5,7 +5,9 @@ from datetime import datetime
 
 from app.models import db
 from app.models.provider import get_provider
-from app.config import SYSTEM_USER, ST2_EXECUTION_RESULT_URL_PATTERN
+from app.config import (SYSTEM_USER, ST2_EXECUTION_RESULT_URL_PATTERN,
+                        ADMIN_EMAIL_ADDRS,
+                        FROM_EMAIL_ADDR)
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +45,13 @@ class Ticket(db.Model):
 
     @property
     def ccs(self):
-        return self.cc.split(',')
+        return self.cc.split(',') if self.cc else []
+
+    @property
+    def display_params(self):
+        if not self.params:
+            return None
+        return '; '.join(['%s: %s' % (k, v) for k, v in self.params.items() if k not in ('reason',)])
 
     def can_view(self, user):
         return user.is_admin or user.name == self.submitter or user.name in self.ccs
@@ -63,6 +71,12 @@ class Ticket(db.Model):
         if not self.annotation:
             return None
         return self.annotation.get('execution', {}).get('result_url')
+
+    @property
+    def is_auto_approved(self):
+        if not self.annotation:
+            return False
+        return self.annotation.get('auto_approved', False)
 
     def check_confirmed(self):
         if self.is_confirmed:
@@ -118,3 +132,23 @@ class Ticket(db.Model):
 
         # we don't save the ticket here, we leave it outside
         return execution, 'Success. <a href="%s" target="_blank">result</a>' % (execution['web_url'],)
+
+    def notify(self, phase):
+        # TODO: support custom template bind to action tree
+        from app import config
+        from app.libs.template import render_notification
+        from app.libs.notification import notify
+
+        logger.info('Ticket notify: %s: %s', phase, self)
+        assert phase in ('request', 'approval')
+
+        title, content = render_notification('ticket_%s.html' % phase, context=dict(ticket=self, config=config))
+
+        # TODO: make notification methods configurable
+        #   support slack etc.
+        system_provider = get_provider(self.provider_type)
+        email_addrs = [ADMIN_EMAIL_ADDRS] + [system_provider.get_user_email(cc) for cc in self.ccs]
+        if phase == 'approval':
+            email_addrs += [system_provider.get_user_email(self.submitter)]
+        email_addrs = ','.join(addr for addr in email_addrs if addr)
+        notify(email=email_addrs, subject=title, content=content.strip(), from_addr=FROM_EMAIL_ADDR)
