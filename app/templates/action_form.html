@@ -12,13 +12,6 @@
     <p>{{ action.desc }}</p>
 </div>
 
-{#
-TODO: improve action form template
-1. property 支持 label，作为中文参数名
-1. validate type
-1. default value? placeholder?
-1. textarea
-#}
 {% macro render_param(name, property) %}
     {% if not property['immutable'] %}
     <div class="form-group">
@@ -32,10 +25,10 @@ TODO: improve action form template
             {% else %}
 
             {% if not property['enum'] %}
-            <input type="text" class="form-control" name="{{ name }}"
-                placeholder="{% if property['required'] %} 必填 {% else %} 可不填 {% endif %}"
-                required="{% if property['required'] %}required{% else %}{% endif %}"
-                />
+            <textarea class="form-control" name="{{ name }}"
+                rows="1"
+                placeholder="{% if property['required'] %}required{% else %}optional{% endif %}"
+                required="{% if property['required'] %}required{% else %}{% endif %}"></textarea>
             {% else %}
             <select name="{{ name }}" class="form-control">
                 {% for choice in property['enum'] %}
@@ -66,6 +59,13 @@ TODO: improve action form template
     </div>
 
 </form>
+
+{% block sub_extra_js %}
+<script type="text/javascript" src="{{ url_for('static', path='/js/autosize.js') }}"></script>
+<script>
+  autosize($('textarea'));
+</script>
+{% endblock %}
 
 {% if debug %}
 <div class="alert alert-info">
