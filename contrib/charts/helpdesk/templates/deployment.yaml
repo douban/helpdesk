@@ -28,6 +28,9 @@ spec:
               mountPath: /app/local_config.py
               subPath: local_config.py
               readOnly: true
+            - name: sa-tools-config
+              mountPath: /etc/sa-tools
+              readOnly: true
             - name: usr-local-share
               mountPath: /usr/local/share
               readOnly: true
@@ -61,6 +64,9 @@ spec:
         - name: local-config
           configMap:
             name: {{ include "helpdesk.fullname" . }}
+        - name: sa-tools-config
+          configMap:
+            name: {{ include "helpdesk.fullname" . }}-sa-tools
         - name: usr-local-share
           hostPath:
             path: /usr/local/share
