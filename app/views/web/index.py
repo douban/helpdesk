@@ -144,23 +144,24 @@ async def index(request):
         raise HTTPException(status_code=404)
     action = action_tree_leaf.action
 
+    system_provider = get_provider(PROVIDER)
+
     # auth
     _action_tree = action_tree
     if not has_required_scope(request, ['authenticated']):
         if action.target_object in NO_AUTH_TARGET_OBJECTS:
             _action_tree = action_tree_leaf
+            provider = system_provider
         else:
             return RedirectResponse(url=request.url_for('web:login') + '?r=' + urllib.parse.quote(request.url.path))
-
-    provider = request.user.provider
-    system_provider = get_provider(PROVIDER)
+    else:
+        provider = request.user.provider
 
     extra_context = {}
     if request.method == 'POST':
         form = await request.form()
         execution_or_ticket, msg = await action.run(provider, form,
-                                                    is_admin=has_required_scope(request, ['admin']),
-                                                    system_provider=system_provider)
+                                                    is_admin=has_required_scope(request, ['admin']))
         msg_level = 'success' if bool(execution_or_ticket) else 'danger'
         execution = ticket = None
         if execution_or_ticket and execution_or_ticket.get('_class') == 'Ticket':
