@@ -50,7 +50,6 @@ config: |
   # coding: utf-8
   # vi: ft=python
   
-  
   DEBUG = DEVELOP_MODE = True
   
   SENTRY_DSN = ''
@@ -143,6 +142,21 @@ config: |
       ]]
   
   ACTION_TREE_CONFIG = ['功能导航', [ACCOUNT_SUBTREE, PACKAGE_SUBTREE]]
+
+saToolsConfig: |
+  # coding: utf-8
+  # vi: ft=python
+  
+  CONFIG_DIR = '/etc/sa-tools/'
+  
+  NODE_IRC_CHANNEL = '#sysadmin'
+  NODE_SLACK_CHANNEL = '#sa'
+  NODE_MAIL_TO = 'sa@example.com'
+  
+  SYSADMIN_EMAIL = 'sysadmin@example.com'
+  ICINGA_EMAIL = 'icinga@example.com'
+  
+  SMTP_SERVER = ''
 
 global:
   sql:
