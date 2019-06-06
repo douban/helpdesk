@@ -41,7 +41,7 @@ class Action(DictSerializableClassMixin):
                 parameters[k].update(dict(default=fill, immutable=True))
         return parameters
 
-    async def run(self, provider, form, is_admin=False, system_provider=None):
+    async def run(self, provider, form, is_admin=False):
         # too many st2 details, make this as the standard
         params = {}
         for k, v in self.parameters(provider).items():
