@@ -30,6 +30,7 @@ PROVIDER = ''
 DEFAULT_EMAIL_DOMAIN = ''
 # base url will be used by notifications to show web links
 DEFAULT_BASE_URL = ''
+FORCE_HTTPS = False
 ADMIN_EMAIL_ADDRS = ''
 FROM_EMAIL_ADDR = ''
 
