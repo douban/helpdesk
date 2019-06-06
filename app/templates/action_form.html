@@ -60,14 +60,7 @@
 
 </form>
 
-{% block sub_extra_js %}
-<script type="text/javascript" src="{{ url_for('static', path='/js/autosize.js') }}"></script>
-<script>
-  autosize($('textarea'));
-</script>
-{% endblock %}
-
-{% if debug %}
+{% if debug and request.user.is_admin %}
 <div class="alert alert-info">
     <p>action: {{ action.get_action(provider)|tojson }}</p>
     {% if execution %}
@@ -80,3 +73,12 @@
 {% endif %}
 
 {% endblock subcontainer %}
+
+{% block sub_extra_js %}
+<script type="text/javascript" src="{{ url_for('static', path='/js/autosize.js') }}"></script>
+<script>
+$(function() {
+  autosize($('textarea'));
+});
+</script>
+{% endblock %}
