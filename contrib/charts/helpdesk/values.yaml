@@ -48,6 +48,7 @@ affinity: {}
 
 config: |
   # coding: utf-8
+  # vi: ft=python
   
   
   DEBUG = DEVELOP_MODE = True
@@ -58,12 +59,26 @@ config: |
   
   SESSION_TTL = 24 * 3600
   
+  SYSTEM_USER = 'admin'
+  SYSTEM_USER_PASSWORD = 'admin'
+  
+  ADMIN_ROLES = ['admin', 'system_admin']
+  
+  PARAM_FILLUP = {
+      # 'reason': 'hehe',
+      'ldap_id': lambda provider: provider.user,
+  }
+  
+  DATABASE_URL = 'mysql://helpdesk:he1pde2k@helpdesk-mysql/helpdesk'
+  
   PROVIDER = 'st2'
   
   ST2_BASE_URL = 'https://st2.example.com'
   ST2_API_URL = 'https://st2.example.com/api'
   ST2_AUTH_URL = 'https://st2.example.com/auth'
   ST2_STREAM_URL = 'https://st2.example.com/stream'
+  
+  ST2_EXECUTION_RESULT_URL_PATTERN = ST2_BASE_URL + '/#/code/result/{execution_id}'
   
   ST2_API_KEY = None
   
@@ -79,9 +94,24 @@ config: |
   
   ST2_TOKEN_TTL = 24 * 3600
   
+  # LDAP
+  
+  DEFAULT_EMAIL_DOMAIN = 'example.com'
+  # base url will be used by notifications to show web links
+  DEFAULT_BASE_URL = 'https://example.com'
+  FORCE_HTTPS = False
+  ADMIN_EMAIL_ADDRS = 'admin@example.com,ops@example.com'
+  FROM_EMAIL_ADDR = 'helpdesk@example.com'
+  
+  NOTIFICATION_TITLE_PREFIX = '[helpdesk] '
+  
   NO_AUTH_TARGET_OBJECTS = ['ldap_pass_reset']
   
   URL_RESET_PASSWORD = ''
+  
+  AUTO_APPROVAL_TARGET_OBJECTS = []
+  
+  TICKETS_PER_PAGE = 50
   
   
   def avatar_url_func(ldap_id):
@@ -113,4 +143,74 @@ config: |
       ]]
   
   ACTION_TREE_CONFIG = ['功能导航', [ACCOUNT_SUBTREE, PACKAGE_SUBTREE]]
+
+global:
+  sql:
+    password: "he1pde2k"
+
+mysql:
+  install: true
+  imageTag: "5.7.14"
+  ## Specify password for root user
+  ##
+  ## Default: random 10 character string
+  mysqlRootPassword: "ro0t_he1pde2k"
+
+  ## Create a database user
+  ##
+  mysqlUser: "helpdesk"
+  ## Default: random 10 character string
+  mysqlPassword: "he1pde2k"
+
+  ## Allow unauthenticated access, uncomment to enable
+  ##
+  # mysqlAllowEmptyPassword: true
+
+  ## Create a database
+  ##
+  mysqlDatabase: "helpdesk"
+
+  ## Persist data to a persistent volume
+  persistence:
+    enabled: true
+    ## database data Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    # storageClass: "-"
+    accessMode: ReadWriteOnce
+    size: 8Gi
+    annotations: {}
+
+  ## Configure resource requests and limits
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  ##
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 100m
+
+  # Custom mysql configuration files used to override default mysql settings
+  configurationFiles:
+    mysql.cnf: |-
+      [mysqld]
+      character-set-server = utf8mb4
+      collation-server = utf8mb4_unicode_ci
+      
+      [mysql]
+      default-character-set = utf8mb4
+      
+      [client]
+      default-character-set = utf8mb4
+
+  # Custom mysql init SQL files used to initialize the database
+  initializationFiles: {}
+  #  first-db.sql: |-
+  #    CREATE DATABASE IF NOT EXISTS first DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+  #  second-db.sql: |-
+  #    CREATE DATABASE IF NOT EXISTS second DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
 
