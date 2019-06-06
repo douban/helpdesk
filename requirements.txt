@@ -23,6 +23,7 @@ jsonpath-rw==1.4.0
 jsonschema==2.6.0
 MarkupSafe==1.1.1
 mccabe==0.6.1
+mysqlclient==1.4.2.post1
 ply==3.11
 prettytable==0.7.2
 prompt-toolkit==1.0.15

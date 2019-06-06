@@ -20,6 +20,10 @@ PARAM_FILLUP = {
     'ldap_id': lambda provider: provider.user,
 }
 
+# DATABASE_URL = 'sqlite:///tmp/helpdesk.db'
+#   postgres://user:pass@localhost/dbname
+#   mysql://user:pass@localhost/dbname
+
 PROVIDER = 'st2'
 
 ST2_BASE_URL = 'https://st2.example.com'

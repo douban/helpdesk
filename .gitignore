@@ -10,3 +10,7 @@ local_config.py
 /helpdesk-*.tgz
 # helm chart override values
 /values.yaml
+# subchart pkgs
+contrib/charts/*/charts/*.tgz
+# chart requirements lock
+requirements.lock
