@@ -6,8 +6,9 @@ import logging
 import jinja2
 from starlette.templating import Jinja2Templates as _Jinja2Templates, _TemplateResponse
 from starlette.background import BackgroundTask
+from starlette.datastructures import URL
 
-from app.config import DEFAULT_BASE_URL
+from app.config import DEFAULT_BASE_URL, FORCE_HTTPS
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +28,13 @@ class Jinja2Templates(_Jinja2Templates):
             """
             if 'request' in context:
                 request = context["request"]
-                return request.url_for(name, **path_params)
+                url = request.url_for(name, **path_params)
             else:
                 url_path = _router.url_path_for(name, **path_params)
-                return '%s%s' % (DEFAULT_BASE_URL, url_path)
+                url = '%s%s' % (DEFAULT_BASE_URL, url_path)
+            if FORCE_HTTPS:
+                url = str(URL(url).replace(scheme='https'))
+            return url
 
         loader = jinja2.FileSystemLoader(directory)
         env = jinja2.Environment(loader=loader, autoescape=True)
