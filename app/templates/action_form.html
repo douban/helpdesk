@@ -34,6 +34,7 @@
     >
     <a-divider orientation="left"><h3>{{ action.name }}</h3></a-divider>
     {% if msg %}
+    {# FIXME: a-alert message allow html
     <a-alert
       message="{% autoescape false %}{{ msg }}{% endautoescape %}"
       type="{{ msg_level }}"
@@ -41,6 +42,10 @@
       closable
     >
     </a-alert>
+    #}
+    <div data-show="true" class="ant-alert ant-alert-{{ msg_level }} ant-alert-no-icon" style="margin: 16px;">
+        {% autoescape false %}{{ msg }}{% endautoescape %}
+    </div>
     {% endif %}
     <a-alert
       message="{{ action.desc }}"
@@ -96,9 +101,7 @@
         {% if property['type'] == 'boolean' %}
             <a-checkbox name="{{ name }}"></a-checkbox>
         {% elif property['enum'] %}
-            {# TODO: respect select input, fix submission #}
             <a-select
-            name="{{ name }}"
             mode="tags"
             style="width: 100%"
             :tokenSeparators="[',']"
@@ -108,11 +111,13 @@
               {rules: [{ required: true, message: 'This field is required!' }]}
             ]"
             {% endif %}
+            v-model="selectedValues['{{ name }}']"
             >
                 {% for choice in property['enum'] %}
                 <a-select-option key="{{ choice }}">{{ choice }}</a-select-option>
                 {% endfor %}
             </a-select>
+            <a-input type='hidden' name="{{ name }}" v-model="selectedValues['{{ name }}']"></a-input>
         {% else %}
             <a-textarea name="{{ name }}"
                 rows="1"
@@ -206,6 +211,7 @@ Vue.component('h-menu', {
 new Vue({
   el: '#app',
   data: {
+      selectedValues: {},
   },
   methods: {
     handleSubmit (e) {
