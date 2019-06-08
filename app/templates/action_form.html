@@ -1,16 +1,77 @@
-{% extends "base.html" %}
+{% extends "base_header.html" %}
 {% block title %}Helpdesk | {{ action.name }}{% endblock %}
-{% block subcontainer %}
-<h3>{{ action.name }}</h3>
-<hr />
-{% if msg %}
-<div class="alert alert-{{ msg_level }}">
-    <p>{% autoescape false %}{{ msg }}{% endautoescape %}</p>
+
+{#
+{% macro render_action_tree(tree) %}
+      <div class="list-group">
+        <label class="label label-default">{{ tree.name }}</label>
+    {% for sub in tree.nexts %}
+        {% if sub.action %}
+        <a class="list-group-item" href="{{ url_for('web:index', full_path=sub.action.target_object) }}" title="{{ sub.action.desc }}">{{ sub.action.name }}</a>
+        {% endif %}
+        {% if sub.nexts %}
+            {{ render_action_tree(sub) }}
+        {% endif %}
+    {% endfor %}
+      </div>
+{%- endmacro %}
+#}
+
+{% block container %}
+<div class="container">
+  <div class="row">
+
+    <div class="col-md-3">
+        <h3>{{ action_tree.name }}</h3>
+            <div id="app">
+                <h-menu data="{{ menu_data }}"></h-menu>
+            </div>
+            {#
+            {% for sub in action_tree.nexts %}
+              {{ render_action_tree(sub) }}
+            {% endfor %}
+            #}
+    </div>
+
+    <div class="col-md-9">
+        <h3>{{ action.name }}</h3>
+        <hr />
+        {% if msg %}
+        <div class="alert alert-{{ msg_level }}">
+            <p>{% autoescape false %}{{ msg }}{% endautoescape %}</p>
+        </div>
+        {% endif %}
+        <div class="alert alert-info">
+            <p>{{ action.desc }}</p>
+        </div>
+
+        <form action="" method="POST" class="form-horizontal">
+            {% for name, param_property in action.parameters(provider).items() %}
+                {{ render_param(name, param_property) }}
+            {% endfor %}
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-6">
+                    <button type="submit" class="btn btn-primary">提交</button>
+                </div>
+            </div>
+        </form>
+
+        {% if debug and request.user.is_admin %}
+        <div class="alert alert-info">
+            <p>action: {{ action.get_action(provider)|tojson }}</p>
+            {% if execution %}
+            <p>execution: {{ execution|tojson }}</p>
+            {% endif %}
+            {% if ticket %}
+            <p>ticket: {{ ticket|tojson }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+  </div>
 </div>
-{% endif %}
-<div class="alert alert-info">
-    <p>{{ action.desc }}</p>
-</div>
+{% endblock container %}
 
 {% macro render_param(name, property) %}
     {% if not property['immutable'] %}
@@ -46,39 +107,83 @@
     {% endif %}
 {% endmacro %}
 
-<form action="" method="POST" class="form-horizontal">
+{% block extra_js %}
+<script type="text/javascript" src="{{ url_for('static', path='/chosen/chosen.jquery.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', path='/js/bootstrap3-typeahead.min.js') }}"></script>
+<script type="text/javascript">
+$(function() {
+    $(".chosen-select").chosen();
+    $("[rel='tooltip']").tooltip();
+});
+</script>
 
-    {% for name, param_property in action.parameters(provider).items() %}
-        {{ render_param(name, param_property) }}
+{% macro render_action_tree2(tree, level=1) %}
+    <a-sub-menu key="{{ '%s-%s' % (level, tree.name) }}">
+      <span slot="title"><a-icon type="mail" /><span>{{ tree.name }}</span></span>
+    {% for sub in tree.nexts %}
+      {% if sub.action %}
+      <a-menu-item key="{{ sub.action.name }}">
+        <a href="{{ url_for('web:index', full_path=sub.action.target_object) }}" title="{{ sub.action.desc }}"></a>
+      {{ sub.action.name }}
+      </a-menu-item>
+      {% endif %}
+      {% if sub.nexts %}
+        {{ render_action_tree2(sub, level+1) }}
+      {% endif %}
     {% endfor %}
+    </a-sub-menu>
+{%- endmacro %}
 
-    <div class="form-group">
-        <div class="col-sm-offset-2 col-sm-6">
-            <button type="submit" class="btn btn-primary">提交</button>
-        </div>
-    </div>
+<script type="text/x-template" id="menu-template">
+  <a-menu
+    mode="inline"
+    :openKeys="openKeys"
+    :defaultSelectedKeys="selectedKeys"
+    @openChange="onOpenChange"
+    style="width: 256px"
+  >
+    {% for sub in action_tree.nexts %}
+      {{ render_action_tree2(sub) }}
+    {% endfor %}
+  </a-menu>
+</script>
 
-</form>
+<script type="text/javascript">
+Vue.component('h-menu', {
+  props: ['data'],
+  data: function () {
+    return JSON.parse(this.data)
+  },
+  methods: {
+    onOpenChange (openKeys) {
+      const latestOpenKey = openKeys.find(key => this.openKeys.indexOf(key) === -1)
+      if (!latestOpenKey || this.openKeys.length === 0) {
+          this.openKeys = openKeys
+          return
+      }
+      if (this.openKeys[this.openKeys.length-1].split('-')[0] == latestOpenKey.split('-')[0]) {
+        this.openKeys.pop()
+      }
+      this.openKeys.push(latestOpenKey)
+      console.log(openKeys + ', ' + this.openKeys + ', ' + latestOpenKey)
+    },
+  },  
+  template: '#menu-template'
+})
 
-{% if debug and request.user.is_admin %}
-<div class="alert alert-info">
-    <p>action: {{ action.get_action(provider)|tojson }}</p>
-    {% if execution %}
-    <p>execution: {{ execution|tojson }}</p>
-    {% endif %}
-    {% if ticket %}
-    <p>ticket: {{ ticket|tojson }}</p>
-    {% endif %}
-</div>
-{% endif %}
+new Vue({
+  el: '#app',
+  data: {
+    message: 'Hello Vue.js!',
+  },
+})
+</script>
 
-{% endblock subcontainer %}
-
-{% block sub_extra_js %}
 <script type="text/javascript" src="{{ url_for('static', path='/js/autosize.js') }}"></script>
 <script>
 $(function() {
   autosize($('textarea'));
 });
+
 </script>
-{% endblock %}
+{% endblock extra_js %}

@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import json
 import logging
 import urllib.parse
 
@@ -179,5 +180,7 @@ async def index(request):
                        action_tree=_action_tree,
                        action=action,
                        provider=provider,
+                       menu_data=json.dumps(dict(openKeys=_action_tree.path_to(action_tree_leaf)[1:-1],
+                                                 selectedKeys=[action.name])),
                        debug=DEBUG,
                        **extra_context))

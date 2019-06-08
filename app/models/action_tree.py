@@ -12,6 +12,7 @@ class ActionTree:
         self.parent = None
         self.action = None
         self.is_leaf = False
+        self.level = 0
 
         self.build_from_config(tree_config)
 
@@ -25,11 +26,16 @@ class ActionTree:
             for subconfig in config[1]:
                 subtree = ActionTree(subconfig)
                 subtree.parent = self
+                subtree.level = self.level + 1
                 self.nexts.append(subtree)
         else:
             # leaf
             self.action = Action(*config)
             self.is_leaf = True
+
+    @property
+    def key(self):
+        return '{level}-{name}'.format(level=self.level, name=self.name)
 
     def first(self):
         if self.action:
@@ -48,6 +54,11 @@ class ActionTree:
             ret = sub.find(obj)
             if ret is not None:
                 return ret
+
+    def path_to(self, tree_node, pattern='{level}-{name}'):
+        if not tree_node:
+            return []
+        return self.path_to(tree_node.parent, pattern) + [pattern.format(**tree_node.__dict__) if pattern else tree_node]
 
 
 action_tree = ActionTree(ACTION_TREE_CONFIG)
