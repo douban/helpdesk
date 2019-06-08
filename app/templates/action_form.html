@@ -18,22 +18,23 @@
 #}
 
 {% block container %}
-<div class="container">
-  <div class="row">
+<a-layout>
+  <a-row>
 
-    <div class="col-md-3">
-        <h3>{{ action_tree.name }}</h3>
-            <div id="app">
-                <h-menu data="{{ menu_data }}"></h-menu>
-            </div>
+    <a-col :md="6">
+		<a-layout-sider width="200" style="background: #fff">
+            <h-menu data="{{ menu_data }}"></h-menu>
             {#
             {% for sub in action_tree.nexts %}
               {{ render_action_tree(sub) }}
             {% endfor %}
             #}
-    </div>
+		</a-layout-sider>
+    </a-col>
 
-    <div class="col-md-9">
+    <a-col :md="18">
+		<a-layout>
+		<a-layout-content>
         <h3>{{ action.name }}</h3>
         <hr />
         {% if msg %}
@@ -57,7 +58,7 @@
         </form>
 
         {% if debug and request.user.is_admin %}
-        <div class="alert alert-info">
+        <div v-pre class="alert alert-info">
             <p>action: {{ action.get_action(provider)|tojson }}</p>
             {% if execution %}
             <p>execution: {{ execution|tojson }}</p>
@@ -67,10 +68,13 @@
             {% endif %}
         </div>
         {% endif %}
-    </div>
 
-  </div>
-</div>
+		</a-layout-content>
+		</a-layout>
+    </a-col>
+
+  </a-row>
+</a-layout>
 {% endblock container %}
 
 {% macro render_param(name, property) %}
@@ -119,7 +123,7 @@ $(function() {
 
 {% macro render_action_tree2(tree, level=1) %}
     <a-sub-menu key="{{ '%s-%s' % (level, tree.name) }}">
-      <span slot="title"><a-icon type="mail" /><span>{{ tree.name }}</span></span>
+      <span slot="title"><a-icon type="folder" /><span>{{ tree.name }}</span></span>
     {% for sub in tree.nexts %}
       {% if sub.action %}
       <a-menu-item key="{{ sub.action.name }}">
@@ -140,8 +144,11 @@ $(function() {
     :openKeys="openKeys"
     :defaultSelectedKeys="selectedKeys"
     @openChange="onOpenChange"
-    style="width: 256px"
+    :style="{ height: '100%', borderRight: 0 }"
   >
+    <a-menu-item key="{{ action_tree.name }}">
+	    {{ action_tree.name }}
+    </a-menu-item>
     {% for sub in action_tree.nexts %}
       {{ render_action_tree2(sub) }}
     {% endfor %}
@@ -174,7 +181,6 @@ Vue.component('h-menu', {
 new Vue({
   el: '#app',
   data: {
-    message: 'Hello Vue.js!',
   },
 })
 </script>

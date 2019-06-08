@@ -14,8 +14,10 @@
   {% block extra_css %}{% endblock %}
 </head>
 <body>
+  <a-layout id="app">
   {% block header %}{% endblock %}
   {% block container %}{% endblock %}
+  </a-layout>
   {% block js %}
   <script type="text/javascript" src="{{ url_for('static', path='/js/jquery-2.0.0.min.js') }}"></script>
   <script type="text/javascript" src="{{ url_for('static', path='/bootstrap3/js/bootstrap.min.js') }}"></script>
