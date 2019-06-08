@@ -8,22 +8,25 @@
   <link rel="shortcut icon" href="{{ url_for('static', path='/images/favicon.ico') }}">
   {% block css %}
   <link rel="stylesheet" href="{{ url_for('static', path='/bootstrap3/css/bootstrap.min.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', path='/antd/antd.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', path='/antd/antd.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', path='/css/main.css') }}">
   {% endblock css %}
   {% block extra_css %}{% endblock %}
 </head>
 <body>
-  <a-layout id="app">
-  {% block header %}{% endblock %}
-  {% block container %}{% endblock %}
+  <a-layout id="app" :style="{ minHeight: '100vh' }">
+    {% block header %}{% endblock %}
+    {% block container %}{% endblock %}
+    <a-layout-footer style="text-align: center">
+      ©2019 Created by Douban
+    </a-layout-footer>
   </a-layout>
   {% block js %}
   <script type="text/javascript" src="{{ url_for('static', path='/js/jquery-2.0.0.min.js') }}"></script>
   <script type="text/javascript" src="{{ url_for('static', path='/bootstrap3/js/bootstrap.min.js') }}"></script>
 
-  <script type="text/javascript" src="{{ url_for('static', path='/js/vue.js') }}"></script>
-  <script type="text/javascript" src="{{ url_for('static', path='/antd/antd.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', path='/js/vue.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', path='/antd/antd.min.js') }}"></script>
   {% endblock js %}
   {% block extra_js %}{% endblock %}
 </body>

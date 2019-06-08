@@ -18,96 +18,117 @@
 #}
 
 {% block container %}
-<a-layout>
-  <a-row>
+<a-layout style="padding: 0 24px 24px">
 
-    <a-col :md="6">
-		<a-layout-sider width="200" style="background: #fff">
-            <h-menu data="{{ menu_data }}"></h-menu>
-            {#
-            {% for sub in action_tree.nexts %}
-              {{ render_action_tree(sub) }}
-            {% endfor %}
-            #}
-		</a-layout-sider>
-    </a-col>
+    <a-layout-sider width="300" style="background: #fff">
+        <h-menu data="{{ menu_data }}"></h-menu>
+        {#
+        {% for sub in action_tree.nexts %}
+          {{ render_action_tree(sub) }}
+        {% endfor %}
+        #}
+    </a-layout-sider>
 
-    <a-col :md="18">
-		<a-layout>
-		<a-layout-content>
-        <h3>{{ action.name }}</h3>
-        <hr />
-        {% if msg %}
-        <div class="alert alert-{{ msg_level }}">
-            <p>{% autoescape false %}{{ msg }}{% endautoescape %}</p>
-        </div>
+    <a-layout-content
+        :style="{ background: '#fff', padding: '24px', margin: '0 24px', minHeight: '280px' }"
+    >
+    <a-divider orientation="left"><h3>{{ action.name }}</h3></a-divider>
+    {% if msg %}
+    <a-alert
+      message="{% autoescape false %}{{ msg }}{% endautoescape %}"
+      type="{{ msg_level }}"
+      :style="{ margin: '16px' }"
+      closable
+    >
+    </a-alert>
+    {% endif %}
+    <a-alert
+      message="{{ action.desc }}"
+      type="info"
+      :style="{ margin: '16px' }"
+    >
+    </a-alert>
+
+    <a-form action="" method="POST"
+    	@submit="handleSubmit"
+    >
+        {% for name, param_property in action.parameters(provider).items() %}
+            {{ render_param(name, param_property) }}
+        {% endfor %}
+        <a-form-item
+            :wrapper-col="{ span: 12, offset: 5 }"
+        >
+            <a-button
+              type="primary"
+              html-type="submit"
+            >
+              Submit
+            </a-button>
+        </a-form-item>
+    </form>
+
+    {% if debug and request.user.is_admin %}
+    <a-card title="Debug Info">
+        <div v-pre>
+        <p>action: {{ action.get_action(provider)|tojson }}</p>
+        {% if execution %}
+        <p>execution: {{ execution|tojson }}</p>
         {% endif %}
-        <div class="alert alert-info">
-            <p>{{ action.desc }}</p>
-        </div>
-
-        <form action="" method="POST" class="form-horizontal">
-            {% for name, param_property in action.parameters(provider).items() %}
-                {{ render_param(name, param_property) }}
-            {% endfor %}
-            <div class="form-group">
-                <div class="col-sm-offset-2 col-sm-6">
-                    <button type="submit" class="btn btn-primary">提交</button>
-                </div>
-            </div>
-        </form>
-
-        {% if debug and request.user.is_admin %}
-        <div v-pre class="alert alert-info">
-            <p>action: {{ action.get_action(provider)|tojson }}</p>
-            {% if execution %}
-            <p>execution: {{ execution|tojson }}</p>
-            {% endif %}
-            {% if ticket %}
-            <p>ticket: {{ ticket|tojson }}</p>
-            {% endif %}
-        </div>
+        {% if ticket %}
+        <p>ticket: {{ ticket|tojson }}</p>
         {% endif %}
+        </div>
+    </a-card>
+    {% endif %}
 
-		</a-layout-content>
-		</a-layout>
-    </a-col>
-
-  </a-row>
+    </a-layout-content>
 </a-layout>
 {% endblock container %}
 
 {% macro render_param(name, property) %}
     {% if not property['immutable'] %}
-    <div class="form-group">
-        <label class="col-sm-2 control-label">{{ name }}</label>
-        <div class="col-sm-6">
+    <a-form-item label="{{ name }}"
+      :label-col="{ span: 5 }"
+      :wrapper-col="{ span: 12 }"
+      extra="{{ property['description'] }}"
+    >
 
-            {% if property['type'] == 'boolean' %}
-            <div class="checkbox">
-                <label><input type="checkbox" name="{{ name }}"></label>
-            </div>
-            {% else %}
-
-            {% if not property['enum'] %}
-            <textarea class="form-control" name="{{ name }}"
+        {% if property['type'] == 'boolean' %}
+            <a-checkbox name="{{ name }}"></a-checkbox>
+        {% elif property['enum'] %}
+            {# TODO: respect select input, fix submission #}
+            <a-select
+            name="{{ name }}"
+            mode="tags"
+            style="width: 100%"
+            :tokenSeparators="[',']"
+            {% if property['required'] %}
+            v-decorator="[
+              '{{ name }}',
+              {rules: [{ required: true, message: 'This field is required!' }]}
+            ]"
+            {% endif %}
+            >
+                {% for choice in property['enum'] %}
+                <a-select-option key="{{ choice }}">{{ choice }}</a-select-option>
+                {% endfor %}
+            </a-select>
+        {% else %}
+            <a-textarea name="{{ name }}"
                 rows="1"
                 placeholder="{% if property['required'] %}required{% else %}optional{% endif %}"
-                required="{% if property['required'] %}required{% else %}{% endif %}"></textarea>
-            {% else %}
-            <select name="{{ name }}" class="form-control">
-                {% for choice in property['enum'] %}
-                <option value="{{ choice }}">{{ choice }}</option>
-                {% endfor %}
-            </select>
-            {% endif %}
+                autosize
+                required="{% if property['required'] %}required{% else %}{% endif %}"
+                {% if property['required'] %}
+                v-decorator="[
+                  '{{ name }}',
+                  {rules: [{ required: true, message: 'This field is required!' }]}
+                ]"
+                {% endif %}
+            ></a-textarea>
+        {% endif %}
 
-            {% endif %}
-
-            <span class="help-block">{{ property['description'] }}</span>
-
-        </div>
-    </div>
+    </a-form-item>
     {% endif %}
 {% endmacro %}
 
@@ -178,18 +199,19 @@ Vue.component('h-menu', {
   template: '#menu-template'
 })
 
+// we need ES6
+// import { Form } from 'ant-design-vue';
+// Vue.use(Form)
+
 new Vue({
   el: '#app',
   data: {
   },
+  methods: {
+    handleSubmit (e) {
+      // e.preventDefault();
+    },
+  }
 })
-</script>
-
-<script type="text/javascript" src="{{ url_for('static', path='/js/autosize.js') }}"></script>
-<script>
-$(function() {
-  autosize($('textarea'));
-});
-
 </script>
 {% endblock extra_js %}

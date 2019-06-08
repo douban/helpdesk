@@ -47,7 +47,7 @@ async def login(request):
             return RedirectResponse(url=return_url)
 
         extra_context = dict(msg=msg,
-                             msg_level='danger')
+                             msg_level='error')
 
     return render('login.html',
                   dict(request=request,
@@ -163,7 +163,7 @@ async def index(request):
         form = await request.form()
         execution_or_ticket, msg = await action.run(provider, form,
                                                     is_admin=has_required_scope(request, ['admin']))
-        msg_level = 'success' if bool(execution_or_ticket) else 'danger'
+        msg_level = 'success' if bool(execution_or_ticket) else 'error'
         execution = ticket = None
         if execution_or_ticket and execution_or_ticket.get('_class') == 'Ticket':
             ticket = execution_or_ticket
