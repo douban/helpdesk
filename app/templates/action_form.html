@@ -172,6 +172,9 @@ $(function() {
     @openChange="onOpenChange"
     :style="{ height: '100%', borderRight: 0 }"
   >
+    <a-menu-item>
+        <a-input-search placeholder="Search" @change="onSearchChange" />
+    </a-menu-item>
     <a-menu-item key="{{ action_tree.name }}">
 	    {{ action_tree.name }}
     </a-menu-item>
@@ -196,11 +199,16 @@ Vue.component('h-menu', {
       }
       if (this.openKeys[this.openKeys.length-1].split('-')[0] == latestOpenKey.split('-')[0]) {
         this.openKeys.pop()
+      } else if (latestOpenKey.split('-')[0] == '1') {
+          this.openKeys = []
       }
       this.openKeys.push(latestOpenKey)
-      console.log(openKeys + ', ' + this.openKeys + ', ' + latestOpenKey)
+      // console.log(openKeys + ', ' + this.openKeys + ', ' + latestOpenKey)
     },
-  },  
+    // TODO: search menu
+    onSearchChange (e) {
+    },
+  },
   template: '#menu-template'
 })
 
