@@ -20,25 +20,31 @@ def set_router(router):
     _router = router
 
 
+def url_for(name, request=None, **path_params):
+    if request is not None:
+        url = request.url_for(name, **path_params)
+    else:
+        url_path = _router.url_path_for(name, **path_params)
+        url = '%s%s' % (DEFAULT_BASE_URL, url_path)
+    if FORCE_HTTPS:
+        url = str(URL(url).replace(scheme='https'))
+    return url
+
+
 class Jinja2Templates(_Jinja2Templates):
     def get_env(self, directory: str) -> "jinja2.Environment":
         @jinja2.contextfunction
-        def url_for(context: dict, name: str, **path_params: typing.Any) -> str:
+        def _url_for(context: dict, name: str, **path_params: typing.Any) -> str:
             """use request to generate url if request is presented in context, otherwise use configured url bash.
             """
+            request = None
             if 'request' in context:
                 request = context["request"]
-                url = request.url_for(name, **path_params)
-            else:
-                url_path = _router.url_path_for(name, **path_params)
-                url = '%s%s' % (DEFAULT_BASE_URL, url_path)
-            if FORCE_HTTPS:
-                url = str(URL(url).replace(scheme='https'))
-            return url
+            return url_for(name, request=request, **path_params)
 
         loader = jinja2.FileSystemLoader(directory)
         env = jinja2.Environment(loader=loader, autoescape=True)
-        env.globals["url_for"] = url_for
+        env.globals["url_for"] = _url_for
         return env
 
     def get_template(self, name: str) -> "jinja2.Template":

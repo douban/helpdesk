@@ -9,11 +9,13 @@ from starlette.exceptions import HTTPException
 from starlette.authentication import requires, has_required_scope  # NOQA
 
 from app.libs.auth import authenticate, unauth
-from app.libs.template import render
+from app.libs.template import render, url_for
 from app.models.provider import get_provider
 from app.models.action_tree import action_tree
 from app.models.db.ticket import Ticket
-from app.config import (DEBUG, PROVIDER, NO_AUTH_TARGET_OBJECTS, URL_RESET_PASSWORD,
+import app.config as config
+from app.config import (DEBUG,
+                        PROVIDER, NO_AUTH_TARGET_OBJECTS, URL_RESET_PASSWORD,
                         TICKETS_PER_PAGE)
 
 from . import bp
@@ -53,6 +55,7 @@ async def login(request):
                   dict(request=request,
                        reset_pass_url=URL_RESET_PASSWORD,
                        debug=DEBUG,
+                       config=config,
                        **extra_context))
 
 
@@ -110,11 +113,17 @@ async def ticket(request):
         pass
 
     page = request.query_params.get('page')
+    page_size = request.query_params.get('pagesize')
     if page and page.isdigit():
         page = max(1, int(page))
     else:
         page = 1
-    kw = dict(desc=True, limit=TICKETS_PER_PAGE, offset=(page - 1) * TICKETS_PER_PAGE)
+    if page_size and page_size.isdigit():
+        page_size = max(1, int(page_size))
+        page_size = min(page_size, TICKETS_PER_PAGE)
+    else:
+        page_size = TICKETS_PER_PAGE
+    kw = dict(desc=True, limit=page_size, offset=(page - 1) * page_size)
 
     if ticket:
         if not ticket.can_view(request.user):
@@ -126,11 +135,26 @@ async def ticket(request):
         # only show self tickets if not admin
         tickets = await Ticket.get_all_by_submitter(submitter=request.user.name, **kw)
 
+    def extra_dict(d):
+        id_ = d['id']
+        return dict(url=url_for('web:ticket', request, ticket_id=id_),
+                    approve_url=url_for('web:ticket_op', request, ticket_id=id_, op='approve'),
+                    reject_url=url_for('web:ticket_op', request, ticket_id=id_, op='reject'),
+                    api_url=url_for('api:ticket', request, ticket_id=id_),
+                    **d)
+
+    tickets_data = [extra_dict(t.to_dict(show=True)) for t in tickets]
+    total = await Ticket.count()
+
     return render('ticket.html',
                   dict(request=request,
                        tickets=tickets,
+                       tickets_data=json.dumps(tickets_data),
                        page=page,
+                       page_size=page_size,
+                       total=total,
                        debug=DEBUG,
+                       config=config,
                        **extra_context))
 
 
@@ -183,4 +207,5 @@ async def index(request):
                        menu_data=json.dumps(dict(openKeys=_action_tree.path_to(action_tree_leaf)[1:-1],
                                                  selectedKeys=[action.name])),
                        debug=DEBUG,
+                       config=config,
                        **extra_context))

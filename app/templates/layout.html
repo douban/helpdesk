@@ -25,7 +25,11 @@
   <script type="text/javascript" src="{{ url_for('static', path='/js/jquery-2.0.0.min.js') }}"></script>
   <script type="text/javascript" src="{{ url_for('static', path='/bootstrap3/js/bootstrap.min.js') }}"></script>
 
+  {% if config.DEVELOP_MODE %}
+  <script type="text/javascript" src="{{ url_for('static', path='/js/vue.js') }}"></script>
+  {% else %}
   <script type="text/javascript" src="{{ url_for('static', path='/js/vue.min.js') }}"></script>
+  {% endif %}
   <script type="text/javascript" src="{{ url_for('static', path='/antd/antd.min.js') }}"></script>
   {% endblock js %}
   {% block extra_js %}{% endblock %}
