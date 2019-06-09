@@ -136,8 +136,13 @@
 
 <script type="text/javascript">
 function cmp(a, b, attr) {
-    x = a[attr]
-    y = b[attr]
+    if (attr != undefined) {
+        x = a[attr]
+        y = b[attr]
+    } else {
+        x = a
+        y = b
+    }
     if (!x && !y) {
         return 0
     } else if (!x) {
@@ -192,7 +197,7 @@ Vue.component('h-table', {
           title: 'Status',
           key: 'status',
           dataIndex: 'status',
-          sorter: (a, b) => cmp(a, b, 'status'),
+          sorter: (a, b) => cmp({'pending':0, 'approved':1, 'rejected':2}[a.status], {'pending':0, 'approved':1, 'rejected':2}[b.status]),
           scopedSlots: { customRender: 'status' },
           filters: [{
             text: 'approved',
