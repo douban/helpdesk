@@ -1,7 +1,14 @@
-{% extends "base.html" %}
+{% extends "base_header.html" %}
 {% block title %}Helpdesk | Tickets{% endblock %}
 {% block container %}
-<div class="container">
+<a-layout style="padding: 0 24px 24px">
+    <a-layout-content
+        :style="{ background: '#fff', padding: '24px', margin: '0 24px', minHeight: '280px' }"
+    >
+        <h-table data="{{ tickets_data }}"></h-table>
+    </a-layout-content>
+
+{#
   <div class="row">
     <div class="col-md-12">
 
@@ -41,7 +48,7 @@
                 </td>
                 <td>{{ ticket.submitter }}
                 </td>
-                <td>{{ ticket.is_approved }}
+                <td>{{ ticket.status }}
                 </td>
                 <td>{{ ticket.confirmed_by }}
                 </td>
@@ -83,8 +90,205 @@
           <li class="next"><a href="?page={{ page + 1 }}">Newer <span aria-hidden="true">&rarr;</span></a></li>
         </ul>
       </nav>
-
     </div>
   </div>
-</div>
+#}
+
+</a-layout>
 {% endblock container %}
+
+{% block extra_js %}
+<script type="text/x-template" id="table-template">
+    <a-table :columns="columns" :dataSource="dataSource"
+        rowKey="id"
+        :pagination="{ current: currentPage, pageSize: pageSize, showSizeChanger: true, total: {{ total }} }"
+        @change="onChange"
+    >
+        {% raw %}
+        <a slot="id" slot-scope="text, record" :href="record.url">{{record.id}}</a>
+        <a slot="result" slot-scope="text, record" :href="record.execution_result_url">link</a>
+        <span slot="status" slot-scope="status">
+            <a-tag :key="status" :color="approval_color[status]">{{status}}</a-tag>
+        </span>
+        <span slot="action" slot-scope="text, record">
+            <span v-if="record.is_approved === undefined">
+            <a-popconfirm
+                title="Sure to approve?"
+                @confirm="() => onConfirm(record, 'approved', record.approve_url)"
+            >
+                <a :href="record.approve_url">approve</a>
+            </a-popconfirm>
+            <a-divider type="vertical" />
+            <a-popconfirm
+                title="Sure to reject?"
+                @confirm="() => onConfirm(record, 'rejected', record.reject_url)"
+            >
+                <a :href="record.reject_url">reject</a>
+            </a-popconfirm>
+            <a-divider type="vertical" />
+            </span>
+
+            <a :href="record.api_url">detail</a>
+        </span>
+        {% endraw %}
+    </a-table>
+</script>
+
+<script type="text/javascript">
+function cmp(a, b, attr) {
+    if (attr != undefined) {
+        x = a[attr]
+        y = b[attr]
+    } else {
+        x = a
+        y = b
+    }
+    if (!x && !y) {
+        return 0
+    } else if (!x) {
+        return -1
+    } else if(!y) {
+        return 1
+    }
+    return (x > y) - (x < y)
+}
+
+Vue.component('h-table', {
+  props: ['data'],
+  data: function () {
+      return {
+        dataSource: JSON.parse(this.data),
+        approval_color: {'approved': 'green', 'rejected': 'red', 'pending': 'orange'},
+        currentPage: {{ page }},
+        pageSize: {{ page_size }},
+        filtered: {}
+      }
+  },
+
+  computed: {
+      columns() {
+        const columns = [{
+          title: 'ID',
+          key: 'id',
+          dataIndex: 'id',
+          sorter: (a, b) => cmp(a, b, 'id'),
+          scopedSlots: { customRender: 'id' },
+        }, {
+          title: 'Title',
+          key: 'title',
+          dataIndex: 'title',
+          sorter: (a, b) => cmp(a, b, 'title'),
+        }, {
+          title: 'Params',
+          key: 'params',
+          dataIndex: 'display_params',
+          sorter: (a, b) => cmp(a, b, 'display_params'),
+        }, {
+          title: 'Reason',
+          key: 'reason',
+          dataIndex: 'reason',
+          sorter: (a, b) => cmp(a, b, 'reason'),
+        }, {
+          title: 'Submitter',
+          key: 'submitter',
+          dataIndex: 'submitter',
+          sorter: (a, b) => cmp(a, b, 'submitter'),
+        }, {
+          title: 'Status',
+          key: 'status',
+          dataIndex: 'status',
+          sorter: (a, b) => cmp({'pending':0, 'approved':1, 'rejected':2}[a.status], {'pending':0, 'approved':1, 'rejected':2}[b.status]),
+          scopedSlots: { customRender: 'status' },
+          filters: [{
+            text: 'approved',
+            value: 'approved',
+          }, {
+            text: 'rejected',
+            value: 'rejected',
+          }, {
+            text: 'pending',
+            value: 'pending',
+          }],
+          onFilter: (value, record) => record.status == value,
+          filteredValue: this.filtered.status,
+        }, {
+          title: 'By',
+          key: 'confirmed_by',
+          dataIndex: 'confirmed_by',
+          sorter: (a, b) => cmp(a, b, 'confirmed_by'),
+        },
+        {
+          title: 'Create Time',
+          key: 'created_at',
+          dataIndex: 'created_at',
+          sorter: (a, b) => cmp(a, b, 'created_at'),
+        },
+        {
+          title: 'Result',
+          key: 'result',
+          dataIndex: 'execution_result_url',
+          sorter: (a, b) => cmp(a, b, 'execution_result_url'),
+          scopedSlots: { customRender: 'result' },
+        },
+        {
+          title: 'Execute Time',
+          key: 'executed_at',
+          dataIndex: 'executed_at',
+          sorter: (a, b) => cmp(a, b, 'executed_at'),
+        },
+        {
+          title: 'Action',
+          key: 'action',
+          width: 230,
+          scopedSlots: { customRender: 'action' },
+        },
+        ];
+        return columns;
+      }
+  },
+
+  methods: {
+      onChange (pagination, filters, sorter) {
+          // console.log(pagination, pagination.current, pagination.pageSize, this.currentPage, this.pageSize)
+          // console.log(filters.status, this.filtered.status)
+
+          // trigger if page change but isn't caused by filters
+          if ((filters.status == this.filtered.status) && (pagination.current != this.currentPage || pagination.pageSize != this.pageSize)) {
+              this.currentPage = pagination.current
+              this.pageSize = pagination.pageSize
+
+              window.location.href = '?page=' + pagination.current + '&pagesize=' + pagination.pageSize;
+          }
+          this.filtered = filters;
+      },
+      onConfirm (record, status, action_url) {
+          // console.log(action_url)
+          let message = this.$message
+
+          let xhr = new XMLHttpRequest();
+          xhr.onreadystatechange = function() {
+              if (this.readyState == 4 && this.status == 200) {
+                // FIXME: use api, and return json
+                if (xhr.responseText == 'Success') {
+                    record.status = status
+                    message.success(xhr.responseText);
+                } else {
+                    message.warning(xhr.responseText);
+                }
+              }
+          };
+          xhr.open('GET', action_url);
+          xhr.send();
+
+      }
+  },
+  template: '#table-template'
+})
+
+new Vue({
+  el: '#app',
+  data: {
+  },
+})
+</script>
+{% endblock %}

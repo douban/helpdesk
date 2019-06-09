@@ -5,7 +5,7 @@ from datetime import datetime
 
 from sqlalchemy import (Column, Integer, String, JSON,  # NOQA
                         Boolean, DateTime)  # NOQA
-from sqlalchemy.sql import select
+from sqlalchemy.sql import select, func
 from sqlalchemy.ext.declarative import declarative_base
 
 from app.libs.db import metadata, get_db
@@ -57,6 +57,14 @@ class Model(DictSerializableClassMixin, Base):
         rs = await cls._fetchall(query)
         return [cls(**r) for r in rs] if rs else []
 
+    @classmethod
+    async def count(cls, filter_=None):
+        query = select([func.count()]).select_from(cls.__table__)
+        if filter_ is not None:
+            query = query.where(filter_)
+        rs = await cls._fetchall(query)
+        return rs[0][0] if rs and rs[0] else None
+
     async def save(self):
         obj = await self.get(self.id)
         logger.debug('Saving %s, checking if obj exists: %s', self, obj)
@@ -91,9 +99,13 @@ class Model(DictSerializableClassMixin, Base):
         return {k: getattr(self, k) for k in self.__table__.columns.keys()}
 
     def to_dict(self, show=None, **kw):
-        d = self._fields()
+        if show:
+            d = self
+        else:
+            d = self._fields()
+        d = json_unpack(d)
         d['_class'] = self.__class__.__name__
-        return json_unpack(d)
+        return d
 
     def from_dict(self, **kw):
         pass

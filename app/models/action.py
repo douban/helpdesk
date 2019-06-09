@@ -60,7 +60,7 @@ class Action(DictSerializableClassMixin):
                 logger.error(msg)
                 return None, msg
             if live_value is not None:
-                if v.get('type') == 'boolean' and live_value == 'on':
+                if v.get('type') == 'boolean':
                     live_value = True
                 params[k] = live_value
 
@@ -93,6 +93,6 @@ class Action(DictSerializableClassMixin):
         execution, msg = ticket_added.execute(provider=provider, is_admin=is_admin)
         if execution:
             await ticket_added.save()
+            ticket_added.notify('request')
 
-        ticket_added.notify('request')
         return execution, msg

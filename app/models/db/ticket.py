@@ -43,6 +43,15 @@ class Ticket(db.Model):
         filter_ = cls.__table__.c.submitter == submitter
         return cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset)
 
+    @classmethod
+    def count_by_submitter(cls, submitter):
+        filter_ = cls.__table__.c.submitter == submitter
+        return cls.count(filter_=filter_)
+
+    @property
+    def status(self):
+        return 'pending' if self.is_approved is None else ['rejected', 'approved'][self.is_approved]
+
     @property
     def ccs(self):
         return self.cc.split(',') if self.cc else []

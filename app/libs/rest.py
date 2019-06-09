@@ -41,8 +41,24 @@ class DictSerializableClassMixin(object):
 def dictify(obj):
     """turn an object to a dict, return None if can't"""
     d = None
-    if d is None and hasattr(obj, '__dict__') and obj.__dict__:
+    if hasattr(obj, '__dict__') and obj.__dict__:
         d = obj.__dict__
+        if not isinstance(d, dict):
+            d = dict(d)
+
+        # deal with properties
+        if hasattr(obj, '__class__'):
+            properties = {}
+            for cls_attr in dir(obj.__class__):
+                if cls_attr.startswith('_'):
+                    continue
+                attr = getattr(obj.__class__, cls_attr)
+                if isinstance(attr, property):
+                    try:
+                        properties[cls_attr] = attr.__get__(obj, obj.__class__)
+                    except Exception:
+                        properties[cls_attr] = ''
+            d.update(properties)
     return d
 
 
@@ -54,7 +70,6 @@ def json_unpack(obj, visited=None):
     """unpack an object to a jsonable form, return None if can't"""
     if visited is None:
         visited = {}
-    visited[id(obj)] = True
     if isa_json_primitive_type(obj):
         return obj
     if isinstance(obj, datetime):
@@ -64,6 +79,7 @@ def json_unpack(obj, visited=None):
     elif isinstance(obj, Iterable):
         return [json_unpack(v, visited) for v in obj]
     d = dictify(obj)
+    visited[id(obj)] = True
     return ({k: json_unpack(v, visited)
              for k, v in d.items() if id(v) not in visited and not k.startswith('_')}
             if d is not None else None)
