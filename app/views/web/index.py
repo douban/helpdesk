@@ -129,11 +129,14 @@ async def ticket(request):
         if not ticket.can_view(request.user):
             raise HTTPException(status_code=403)
         tickets = [ticket]
+        total = 1
     elif request.user.is_admin:
         tickets = await Ticket.get_all(**kw)
+        total = await Ticket.count()
     else:
         # only show self tickets if not admin
         tickets = await Ticket.get_all_by_submitter(submitter=request.user.name, **kw)
+        total = await Ticket.count_by_submitter(submitter=request.user.name)
 
     def extra_dict(d):
         id_ = d['id']
@@ -144,7 +147,6 @@ async def ticket(request):
                     **d)
 
     tickets_data = [extra_dict(t.to_dict(show=True)) for t in tickets]
-    total = await Ticket.count()
 
     return render('ticket.html',
                   dict(request=request,

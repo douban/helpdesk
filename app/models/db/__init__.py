@@ -58,8 +58,10 @@ class Model(DictSerializableClassMixin, Base):
         return [cls(**r) for r in rs] if rs else []
 
     @classmethod
-    async def count(cls):
+    async def count(cls, filter_=None):
         query = select([func.count()]).select_from(cls.__table__)
+        if filter_ is not None:
+            query = query.where(filter_)
         rs = await cls._fetchall(query)
         return rs[0][0] if rs and rs[0] else None
 
