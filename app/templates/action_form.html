@@ -54,24 +54,9 @@
     >
     </a-alert>
 
-    <a-form action="" method="POST"
-    	@submit="handleSubmit"
-    >
-        {% for name, param_property in action.parameters(provider).items() %}
-            {{ render_param(name, param_property) }}
-        {% endfor %}
-        <a-form-item
-            :wrapper-col="{ span: 12, offset: 5 }"
-        >
-            <a-button
-              type="primary"
-              html-type="submit"
-            >
-              Submit
-            </a-button>
-        </a-form-item>
-    </form>
+    <h-form></h-form>
 
+    {# TODO: show in drawer, and only show when enable admin mode #}
     {% if debug and request.user.is_admin %}
     <a-card title="Debug Info">
         <div v-pre>
@@ -101,8 +86,22 @@
         {% if property['type'] == 'boolean' %}
             <a-checkbox name="{{ name }}"></a-checkbox>
         {% elif property['enum'] %}
+            <v-select
+                name="{{ name }}"
+                :options="{{ property['enum'] }}"
+                :multiple="true"
+                :clearable="true"
+                :searchable="true"
+                :filterable="true"
+                :taggable="true"
+                :select-on-tab="true"
+                v-model="selectedValues['{{ name }}']"
+            ></v-select>
+            <a-input type='hidden' name="{{ name }}" v-model="selectedValues['{{ name }}']"></a-input>
+
+            {#
             <a-select
-            mode="tags"
+            mode="multiple"
             style="width: 100%"
             :tokenSeparators="[',']"
             {% if property['required'] %}
@@ -118,6 +117,8 @@
                 {% endfor %}
             </a-select>
             <a-input type='hidden' name="{{ name }}" v-model="selectedValues['{{ name }}']"></a-input>
+            #}
+
         {% else %}
             <a-textarea name="{{ name }}"
                 rows="1"
@@ -184,6 +185,26 @@ $(function() {
   </a-menu>
 </script>
 
+<script type="text/x-template" id="form-template">
+  <a-form action="" method="POST"
+  	@submit="handleSubmit"
+  >
+      {% for name, param_property in action.parameters(provider).items() %}
+          {{ render_param(name, param_property) }}
+      {% endfor %}
+      <a-form-item
+          :wrapper-col="{ span: 12, offset: 5 }"
+      >
+          <a-button
+            type="primary"
+            html-type="submit"
+          >
+            Submit
+          </a-button>
+      </a-form-item>
+  </a-form>
+</script>
+
 <script type="text/javascript">
 Vue.component('h-menu', {
   props: ['data'],
@@ -212,6 +233,24 @@ Vue.component('h-menu', {
   template: '#menu-template'
 })
 
+Vue.component('h-form', {
+  props: [],
+  data: function () {
+      return {
+        selectedValues: {},
+      }
+  },
+  methods: {
+    handleSubmit (e) {
+      // e.preventDefault();
+    },
+  },
+  template: '#form-template'
+})
+
+// https://vue-select.org
+Vue.component('v-select', VueSelect.VueSelect);
+
 // we need ES6
 // import { Form } from 'ant-design-vue';
 // Vue.use(Form)
@@ -219,12 +258,8 @@ Vue.component('h-menu', {
 new Vue({
   el: '#app',
   data: {
-      selectedValues: {},
   },
   methods: {
-    handleSubmit (e) {
-      // e.preventDefault();
-    },
   }
 })
 </script>
