@@ -35,7 +35,7 @@ async def server_error(request, exc):
 
 @bp.route('/favicon.ico', methods=['GET'])
 async def favicon(request):
-    return RedirectResponse(url=request.url_for('static', path='/images/favicon.ico'))
+    return RedirectResponse(url=url_for('static', request, path='/images/favicon.ico'))
 
 
 @bp.route('/login', methods=['GET', 'POST'])
@@ -45,7 +45,7 @@ async def login(request):
         token, msg = await authenticate(request)
 
         if token:
-            return_url = request.query_params.get('r', request.url_for('web:index'))
+            return_url = request.query_params.get('r', url_for('web:index', request))
             return RedirectResponse(url=return_url)
 
         extra_context = dict(msg=msg,
@@ -62,7 +62,7 @@ async def login(request):
 @bp.route('/logout', methods=['GET', 'POST'])
 async def logout(request):
     unauth(request)
-    return RedirectResponse(url=request.url_for('web:index'))
+    return RedirectResponse(url=url_for('web:index', request))
 
 
 @bp.route('/ticket/{ticket_id:int}/{op}', methods=['GET'])
@@ -180,7 +180,7 @@ async def index(request):
             _action_tree = action_tree_leaf
             provider = system_provider
         else:
-            return RedirectResponse(url=request.url_for('web:login') + '?r=' + urllib.parse.quote(request.url.path))
+            return RedirectResponse(url=url_for('web:login', request) + '?r=' + urllib.parse.quote(request.url.path))
     else:
         provider = request.user.provider
 
