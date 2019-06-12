@@ -22,6 +22,9 @@ class Provider:
 
     __repr__ = __str__
 
+    def get_default_pack(self):
+        raise NotImplementedError()
+
     def get_actions(self, pack=None):
         '''
         return a list of action dict,

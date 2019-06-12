@@ -1,37 +1,73 @@
 # coding: utf-8
 
-from app.models.action import Action
+import logging
 
-from app.config import ACTION_TREE_CONFIG
+from app.models.action import Action
+from app.models.provider import get_provider
+from app.config import ACTION_TREE_CONFIG, PROVIDER
+
+logger = logging.getLogger(__name__)
+
+# objs = {}
 
 
 class ActionTree:
-    def __init__(self, tree_config):
+    def __init__(self, tree_config, level=0):
         self.name = None
         self.nexts = []
         self.parent = None
         self.action = None
         self.is_leaf = False
-        self.level = 0
+        self.level = level
 
         self.build_from_config(tree_config)
 
-    # TODO: resolve pack
     def build_from_config(self, config):
-        assert type(config) is list
+        assert type(config) is list, 'expect %s, got %s: %s' % ('list', type(config), config)
         if not config:
             return
         self.name = config[0]
         if any(not isinstance(c, str) for c in config):
             for subconfig in config[1]:
-                subtree = ActionTree(subconfig)
+                subtree = ActionTree(subconfig, level=self.level + 1)
                 subtree.parent = self
-                subtree.level = self.level + 1
                 self.nexts.append(subtree)
         else:
             # leaf
-            self.action = Action(*config)
-            self.is_leaf = True
+            provider_object = config[-1]
+
+            # # dedup
+            # system_provider = get_provider(PROVIDER)
+            # default_pack = system_provider.get_default_pack() + '.'
+            # if not provider_object.endswith('.'):
+            #     if provider_object.startswith(default_pack):
+            #         provider_object = provider_object[len(default_pack):]
+            # if provider_object in objs:
+            #     return
+            # objs[provider_object] = True
+
+            if provider_object.endswith('.'):
+                # pack
+                pack_sub_tree_config = self.resolve_pack(*config)
+                self.build_from_config(pack_sub_tree_config)
+            else:
+                # leaf action
+                self.action = Action(*config)
+                self.is_leaf = True
+
+    def resolve_pack(self, *config):
+        name = config[0]
+        provider_object = config[-1]
+        pack = provider_object[:-1]
+
+        sub_actions = []
+        system_provider = get_provider(PROVIDER)
+        actions = system_provider.get_actions(pack=pack)
+        for a in actions:
+            obj = '.'.join([a.get('pack'), a.get('name')])
+            desc = a.get('description')
+            sub_actions.append([obj, desc, obj])
+        return [name, sub_actions]
 
     @property
     def key(self):
@@ -44,7 +80,6 @@ class ActionTree:
             return self
         return self.nexts[0].first()
 
-    # TODO: resolve action
     def find(self, obj):
         if not obj:
             return None

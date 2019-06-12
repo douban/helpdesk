@@ -23,9 +23,8 @@ PARAM_FILLUP = {}
 
 PROVIDER = ''
 
-# TODO:
+# TODO: LDAP
 # for LdapProviderMixin, to provide the ability to access user metadata like email addrs.
-# LDAP
 
 DEFAULT_EMAIL_DOMAIN = ''
 # base url will be used by notifications to show web links
