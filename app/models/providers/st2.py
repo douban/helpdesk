@@ -25,6 +25,9 @@ class ST2Provider(LdapProviderMixin, Provider):
         super().__init__(token=token, user=user)
         self.st2 = get_client(token) if token else service_client
 
+    def get_default_pack(self):
+        return ST2_DEFAULT_PACK
+
     def _ref(self, ref):
         if '.' not in ref:
             ref = '.'.join([ST2_DEFAULT_PACK, ref])
