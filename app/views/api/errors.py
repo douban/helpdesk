@@ -8,6 +8,7 @@ from . import bp
 
 
 class ApiErrors(ApiErrorsBuiltin):
+    # error_code, message, status_code
     not_found = (20001, 'not_found', 404)
     forbidden = (20002, 'forbidden', 403)
     method_not_allowed = (20003, 'method_not_allowed', 405)

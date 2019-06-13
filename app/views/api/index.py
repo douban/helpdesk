@@ -8,6 +8,7 @@ from starlette.authentication import requires, has_required_scope  # NOQA
 
 from app.libs.rest import jsonize
 from app.models.db.ticket import Ticket
+from app.models.action_tree import action_tree
 from app.views.api.errors import ApiError, ApiErrors
 
 from . import bp
@@ -44,3 +45,18 @@ async def ticket(request):
 @jsonize
 async def user(request):
     return request.user
+
+
+@bp.route('/admin_panel/{target_object}', methods=['POST'])
+@requires(['authenticated', 'admin'])
+@jsonize
+async def admin_panel(request):
+    target_object = request.path_params.get('target_object', '')
+    target_object = target_object.strip('/')
+
+    action_tree_leaf = action_tree.find(target_object) if target_object != '' else action_tree.first()
+    if not action_tree_leaf:
+        raise HTTPException(status_code=404)
+    action = action_tree_leaf.action
+
+    return action
