@@ -56,19 +56,8 @@
 
     <h-form></h-form>
 
-    {# TODO: show in drawer, and only show when enable admin mode #}
-    {% if debug and request.user.is_admin %}
-    <a-card title="Debug Info">
-        <div v-pre>
-        <p>action: {{ action.get_action(provider)|tojson }}</p>
-        {% if execution %}
-        <p>execution: {{ execution|tojson }}</p>
-        {% endif %}
-        {% if ticket %}
-        <p>ticket: {{ ticket|tojson }}</p>
-        {% endif %}
-        </div>
-    </a-card>
+    {% if request.user.is_admin %}
+    <h-drawer></h-drawer>
     {% endif %}
 
     </a-layout-content>
@@ -205,6 +194,46 @@ $(function() {
   </a-form>
 </script>
 
+<script type="text/x-template" id="drawer-template">
+<div>
+  <a-drawer
+    key="h-drawer"
+    title="Admin Panel"
+    :width="720"
+    placement="right"
+    :closable="false"
+    @close="onClose"
+    :visible="visible"
+  >
+    <div slot="handle" class="ant-pro-setting-drawer-handle" @click="showDrawer">
+      <a-icon type="setting" :style="{color: '#fff', fontSize: '20px'}"/>
+    </div>
+    <p>Some contents...</p>
+    <p>Some contents...</p>
+    <p>Some contents...</p>
+
+    {% if debug and request.user.is_admin %}
+    <div>
+      <a-collapse accordion :bordered="false">
+        <a-collapse-panel header="Debug Info" key="1">
+          <div v-pre>
+            <p>action: {{ action.get_action(provider)|tojson }}</p>
+            {% if execution %}
+            <p>execution: {{ execution|tojson }}</p>
+            {% endif %}
+            {% if ticket %}
+            <p>ticket: {{ ticket|tojson }}</p>
+            {% endif %}
+          </div>
+        </a-collapse-panel>
+      </a-collapse>
+    </div>
+    {% endif %}
+
+  </a-drawer>
+</div>
+</script>
+
 <script type="text/javascript">
 Vue.component('h-menu', {
   props: ['data'],
@@ -246,6 +275,24 @@ Vue.component('h-form', {
     },
   },
   template: '#form-template'
+})
+
+Vue.component('h-drawer', {
+  data() {
+    return {
+      visible: false,
+      handle: "handle",
+    }
+  },
+  methods: {
+    showDrawer() {
+      this.visible = true
+    },
+    onClose() {
+      this.visible = false
+    },
+  },
+  template: '#drawer-template'
 })
 
 // https://vue-select.org

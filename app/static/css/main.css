@@ -1,1 +1,17 @@
-/* body { padding-top: 70px; } */
+.ant-pro-setting-drawer-handle {
+    position: absolute;
+    top: 240px;
+    right: 720px;
+    z-index: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
+    text-align: center;
+    background: #1890ff;
+    border-radius: 4px 0 0 4px;
+    cursor: pointer;
+    pointer-events: auto;
+}
