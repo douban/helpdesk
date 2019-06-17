@@ -71,11 +71,11 @@ class Model(DictSerializableClassMixin, Base):
         logger.debug('Saving %s, checking if obj exists: %s', self, obj)
         if obj:
             if 'updated_at' in kw:
-                kw['updated_at'] = kw.get('updated_at', datetime.now())
+                kw['updated_at'] = datetime.now()
             return await self.update(**kw)
 
-        if 'created_at' in kw:
-            kw['created_at'] = kw.get('created_at', datetime.now())
+        if 'created_at' in kw and kw['created_at'] is None:
+            kw['created_at'] = datetime.now()
         query = self.__table__.insert().values(**kw)
         id_ = await self._execute(query)
         self.id = id_
