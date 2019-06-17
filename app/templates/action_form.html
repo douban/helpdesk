@@ -396,8 +396,10 @@ Vue.component('h-drawer', {
             var param_rule_added = jsonResponse.data
             message.success(JSON.stringify(param_rule_added));
             this_.param_rules.splice(index, 1, param_rule_added)
-            // new empty obj
-            this_.param_rules.push({})
+            // new empty obj if last
+            if (this_.param_rules.length - 1 == index) {
+                this_.param_rules.push({})
+            }
           } else {
             message.warning(JSON.stringify(jsonResponse));
           }
