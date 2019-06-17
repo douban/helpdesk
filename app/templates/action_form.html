@@ -304,12 +304,16 @@ Vue.component('h-drawer', {
     return {
       visible: false,
       handle: "handle",
-      action_url: "{{ url_for('api:admin_panel', target_object=action.target_object) }}",
+      url_param_rule: "{{ url_for('api:admin_panel', target_object=action.target_object, config_type='param_rule') }}",
+      url_param_rule_add: "{{ url_for('api:admin_panel', target_object=action.target_object, config_type='param_rule', op='add') }}",
+      url_param_rule_del: "{{ url_for('api:admin_panel', target_object=action.target_object, config_type='param_rule', op='del') }}",
+      param_rule_data: {},
     }
   },
   methods: {
     showDrawer() {
       this.visible = true
+      // TODO:
     },
     onClose() {
       this.visible = false
@@ -319,8 +323,6 @@ Vue.component('h-drawer', {
       // TODO:
 
       let message = this.$message
-
-      let data = {}
 
       let xhr = new XMLHttpRequest();
       xhr.responseType = 'json';
@@ -335,7 +337,7 @@ Vue.component('h-drawer', {
         }
       };
       xhr.open('POST', this.action_url, true);
-      xhr.send(data);
+      xhr.send(this.param_rule_data);
 
     },
   },

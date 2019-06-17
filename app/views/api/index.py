@@ -1,13 +1,14 @@
 # coding: utf-8
 
 import logging
+from datetime import datetime
 
-from starlette.responses import PlainTextResponse, RedirectResponse  # NOQA
-from starlette.exceptions import HTTPException  # NOQA
+from starlette.responses import RedirectResponse  # NOQA
 from starlette.authentication import requires, has_required_scope  # NOQA
 
 from app.libs.rest import jsonize
 from app.models.db.ticket import Ticket
+from app.models.db.param_rule import ParamRule
 from app.models.action_tree import action_tree
 from app.views.api.errors import ApiError, ApiErrors
 
@@ -47,7 +48,8 @@ async def user(request):
     return request.user
 
 
-@bp.route('/admin_panel/{target_object}', methods=['POST'])
+@bp.route('/admin_panel/{target_object}/{config_type}', methods=['GET'])
+@bp.route('/admin_panel/{target_object}/{config_type}/{op}', methods=['POST'])
 @requires(['authenticated', 'admin'])
 @jsonize
 async def admin_panel(request):
@@ -56,7 +58,37 @@ async def admin_panel(request):
 
     action_tree_leaf = action_tree.find(target_object) if target_object != '' else action_tree.first()
     if not action_tree_leaf:
-        raise HTTPException(status_code=404)
+        raise ApiError(ApiErrors.not_found)
     action = action_tree_leaf.action
 
+    config_type = request.path_params.get('config_type')
+    if config_type not in ('param_rule',):
+        raise ApiError(ApiErrors.unknown_config_type)
+
+    if config_type == 'param_rule':
+        return await config_param_rule(request, action)
     return action
+
+
+async def config_param_rule(request, action):
+    if request.method == 'POST':
+        op = request.path_params['op']
+        if op not in ('add', 'del'):
+            raise ApiError(ApiErrors.unknown_operation)
+
+        if op == 'add':
+            form = await request.form()
+            param_rule = ParamRule(id=form.get('id'),
+                                   title=form.get('title', 'Untitled'),
+                                   provider_object=action.target_object,
+                                   rule=form['rule'],
+                                   is_auto_approval=form.get('is_auto_approval', False),
+                                   approver=form.get('approver'))
+            param_rule.save()
+            return param_rule
+        elif op == 'del':
+            ParamRule.delete(form['id'])
+            return True
+
+    param_rules = ParamRule.get_all_by_provider_object(action.provider_object)
+    return param_rules
