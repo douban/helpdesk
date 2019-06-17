@@ -1,7 +1,6 @@
 # coding: utf-8
 
 import logging
-from datetime import datetime
 
 from starlette.responses import RedirectResponse  # NOQA
 from starlette.authentication import requires, has_required_scope  # NOQA
@@ -76,19 +75,20 @@ async def config_param_rule(request, action):
         if op not in ('add', 'del'):
             raise ApiError(ApiErrors.unknown_operation)
 
+        payload = await request.json()
         if op == 'add':
-            form = await request.form()
-            param_rule = ParamRule(id=form.get('id'),
-                                   title=form.get('title', 'Untitled'),
+            param_rule = ParamRule(id=payload.get('id'),
+                                   title=payload.get('title', 'Untitled'),
                                    provider_object=action.target_object,
-                                   rule=form['rule'],
-                                   is_auto_approval=form.get('is_auto_approval', False),
-                                   approver=form.get('approver'))
-            param_rule.save()
-            return param_rule
+                                   rule=payload['rule'],
+                                   is_auto_approval=payload.get('is_auto_approval', False),
+                                   approver=payload.get('approver'))
+            id_ = await param_rule.save()
+            param_rule_added = await ParamRule.get(id_)
+            return param_rule_added
         elif op == 'del':
-            ParamRule.delete(form['id'])
+            ParamRule.delete(payload['id'])
             return True
 
-    param_rules = ParamRule.get_all_by_provider_object(action.provider_object)
+    param_rules = await ParamRule.get_all_by_provider_object(action.target_object)
     return param_rules

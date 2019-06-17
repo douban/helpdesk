@@ -19,7 +19,7 @@ def jsonize(func):
             ret = await func(*args, **kwargs)
             data = json_unpack(ret)
             # logger.debug('jsonize: args: %s, kwargs: %s, ret: %s, data: %s', args, kwargs, ret, data)
-            status_code = data.get('status_code') if data else None
+            status_code = data.get('status_code') if data and isinstance(data, dict) else None
             return JSONResponse(dict(data=data), status_code=status_code or 200)
         return _
     else:
@@ -28,7 +28,7 @@ def jsonize(func):
             ret = func(*args, **kwargs)
             data = json_unpack(ret)
             # logger.debug('jsonize: args: %s, kwargs: %s, ret: %s, data: %s', args, kwargs, ret, data)
-            status_code = data.get('status_code') if data else None
+            status_code = data.get('status_code') if data and isinstance(data, dict) else None
             return JSONResponse(dict(data=data), status_code=status_code or 200)
         return _
 

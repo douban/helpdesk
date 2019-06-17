@@ -27,6 +27,6 @@ class ParamRule(db.Model):
     updated_at = db.Column(db.DateTime)
 
     @classmethod
-    def get_all_by_provider_object(cls, provider_object, desc=False, limit=None, offset=None):
+    async def get_all_by_provider_object(cls, provider_object, desc=False, limit=None, offset=None):
         filter_ = cls.__table__.c.provider_object == provider_object
-        return cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset)
+        return await cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset)
