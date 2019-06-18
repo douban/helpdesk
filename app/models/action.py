@@ -41,8 +41,6 @@ class Action(DictSerializableClassMixin):
                 parameters[k].update(dict(default=fill, immutable=True))
         return parameters
 
-    # TODO: params rule
-    #   onlycontains op
     async def run(self, provider, form, is_admin=False):
         # too many st2 details, make this as the standard
         params = {}
