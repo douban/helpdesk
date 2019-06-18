@@ -5,7 +5,7 @@ import logging
 from starlette.responses import RedirectResponse  # NOQA
 from starlette.authentication import requires, has_required_scope  # NOQA
 
-from app.libs.rest import jsonize, check_parameter, yaml_validator
+from app.libs.rest import jsonize, check_parameter, json_validator
 from app.models.db.ticket import Ticket
 from app.models.db.param_rule import ParamRule
 from app.models.action_tree import action_tree
@@ -77,7 +77,7 @@ async def config_param_rule(request, action):
 
         payload = await request.json()
         if op == 'add':
-            rule = check_parameter(payload, 'rule', str, yaml_validator)
+            rule = check_parameter(payload, 'rule', str, json_validator)
 
             param_rule = ParamRule(id=payload.get('id'),
                                    title=payload.get('title', 'Untitled'),
@@ -90,8 +90,7 @@ async def config_param_rule(request, action):
             return param_rule_added
         elif op == 'del':
             id_ = check_parameter(payload, 'id', int)
-            ParamRule.delete(id_)
-            return True
+            return await ParamRule.delete(id_) == id_
 
     param_rules = await ParamRule.get_all_by_provider_object(action.target_object)
     return param_rules
