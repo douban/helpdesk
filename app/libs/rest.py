@@ -135,6 +135,15 @@ def yaml_validator(s):
         logger.info('failed validate yaml: %s: %s', s, str(e))
 
 
+def json_validator(s):
+    import json
+    try:
+        json.loads(s)
+        return True
+    except ValueError as e:
+        logger.info('failed validate yaml: %s: %s', s, str(e))
+
+
 def check_parameter(params, name, type_, validator=None, optional=False, default=None):
     """`type_` should be a class, such as int, str..."""
     value = params.get(name)
