@@ -210,7 +210,6 @@ $(function() {
     </div>
 
     {% raw %}
-    // TODO: new layout
     <a-form v-for="(param_rule, index) in param_rules"
         :key="index"
         method="POST"
@@ -218,52 +217,61 @@ $(function() {
         hideRequiredMark
         @submit="(e) => onSubmit(e, index)"
     >
-        <a-form-item label="Title">
-            <a-input name="title" placeholder="Untitled"
-                v-model="param_rule.title"
-            ></a-input>
-        </a-form-item>
+        <a-row :gutter="16">
+            <a-col>
+                <a-form-item label="Title">
+                    <a-input name="title" placeholder="Untitled"
+                        v-model="param_rule.title"
+                    ></a-input>
+                </a-form-item>
+            </a-col>
+        </a-row>
+        <a-row :gutter="16">
+            <a-col>
+                <a-form-item label="Rule">
+                    <a-textarea name="rule"
+                        rows="1"
+                        placeholder='e.g. ["onlycontains", ["split", "hosts", ","], "***REMOVED***", "***REMOVED***", "***REMOVED***"]'
+                        autosize
+                        required="true"
+                        v-model="param_rule.rule"
+                    ></a-textarea>
+                </a-form-item>
+            </a-col>
+        </a-row>
+        <a-row :gutter="16">
+            <a-col :span="6">
+                <a-form-item label="Is auto-approval?">
+                    <a-checkbox name="is_auto_approval"
+                        :checked="param_rule.is_auto_approval"
+                        @change="(e) => onCheckboxChange(e, index, 'is_auto_approval')"
+                    ></a-checkbox>
+                </a-form-item>
+            </a-col>
+            <a-col :span="18">
+                <a-form-item label="Approver">
+                    <a-input name="approver" placeholder="Approver names seperated by comma"
+                        v-model="param_rule.approver"
+                    ></a-input>
+                </a-form-item>
+            </a-col>
+        </a-row>
 
-        <a-form-item label="Rule">
-            <a-textarea name="rule"
-                rows="1"
-                placeholder='e.g. ["onlycontains", ["split", "hosts", ","], "***REMOVED***", "***REMOVED***", "***REMOVED***"]'
-                autosize
-                required="true"
-                v-model="param_rule.rule"
-            ></a-textarea>
-        </a-form-item>
-
-        <a-form-item label="Is auto-approval?">
-            <a-checkbox name="is_auto_approval"
-                :checked="param_rule.is_auto_approval"
-                @change="(e) => onCheckboxChange(e, index, 'is_auto_approval')"
-            ></a-checkbox>
-        </a-form-item>
-
-        <a-form-item label="Approver">
-            <a-input name="approver" placeholder="Approver names seperated by comma"
-                v-model="param_rule.approver"
-            ></a-input>
-        </a-form-item>
-
-        <a-form-item :style="{textAlign: 'right'}"
-        >
-            <a-button
-              type="primary"
-              html-type="submit"
+        <a-row :gutter="16">
+            <a-form-item :style="{textAlign: 'right'}"
             >
-              Submit
-            </a-button>
-        </a-form-item>
+                <a-button type="danger" shape="circle" icon="close"
+                    :style="{marginRight: '8px'}"
+                    :disabled="param_rules.length - 1 === index"
+                    @click="(e) => onDelete(e, index)"
+                />
+                <a-button html-type="submit" type="primary" shape="circle" icon="check" />
+            </a-form-item>
+        </a-row>
 
-        // TODO: remove
+        <a-divider />
     </a-form>
     {% endraw %}
-
-    <p>Some contents...</p>
-    <p>Some contents...</p>
-    <p>Some contents...</p>
 
     {% if debug and request.user.is_admin %}
     <div>
@@ -410,6 +418,29 @@ Vue.component('h-drawer', {
       xhr.send(JSON.stringify(this.param_rules[index]));
 
     },
+    onDelete(e, index) {
+      let this_ = this
+      let message = this.$message
+
+      let xhr = new XMLHttpRequest();
+      xhr.responseType = 'json';
+      xhr.onreadystatechange = function() {
+        if (this.readyState == 4) {
+          var jsonResponse = xhr.response;
+          if (this.status == 200) {
+            var param_rule_added = jsonResponse.data
+            message.success(JSON.stringify(param_rule_added));
+            this_.param_rules.splice(index, 1)
+          } else {
+            message.warning(JSON.stringify(jsonResponse));
+          }
+        }
+      };
+      xhr.open('POST', this.url_param_rule_del, true);
+      xhr.setRequestHeader('Content-type', 'application/json')
+      xhr.send(JSON.stringify(this.param_rules[index]));
+    },
+
   },
   template: '#drawer-template'
 })
