@@ -30,3 +30,7 @@ class ParamRule(db.Model):
     async def get_all_by_provider_object(cls, provider_object, desc=False, limit=None, offset=None):
         filter_ = cls.__table__.c.provider_object == provider_object
         return await cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset)
+
+    def match(self, context):
+        # TODO:
+        return True

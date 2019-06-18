@@ -76,7 +76,9 @@ class Action(DictSerializableClassMixin):
                         created_at=datetime.now())
 
         # if auto pass
-        if self.target_object in AUTO_APPROVAL_TARGET_OBJECTS or is_admin:
+        if (self.target_object in AUTO_APPROVAL_TARGET_OBJECTS
+                or is_admin
+                or await ticket.get_rule_actions('is_auto_approval')):
             ret, msg = ticket.approve(auto=True)
             if not ret:
                 return None, msg
@@ -88,13 +90,13 @@ class Action(DictSerializableClassMixin):
             return ticket_added, 'Failed to create ticket.'
 
         if not ticket_added.is_approved:
-            ticket_added.notify('request')
+            await ticket_added.notify('request')
             return ticket_added.to_dict(), 'Success. Your request has been submitted, please wait for approval.'
 
         # if this ticket is auto approved, execute it immediately
         execution, msg = ticket_added.execute(provider=provider, is_admin=is_admin)
         if execution:
             await ticket_added.save()
-            ticket_added.notify('request')
+            await ticket_added.notify('request')
 
         return execution, msg
