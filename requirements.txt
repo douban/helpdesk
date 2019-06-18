@@ -40,7 +40,8 @@ python-multipart==0.0.5
 pytz==2019.1
 PyYAML==5.1
 requests==2.14.2
--e git+git@github.***REMOVED***:sa/sa-tools-core.git@5563d9c6d83171974878f115ad82f0fe50c92661#egg=sa_tools_core
+rule==0.1.1
+-e git+git@github.***REMOVED***:sa/sa-tools-core.git@b6bc93cd65f4db66a30ea7d4e4db8a4103966df3#egg=sa_tools_core
 sentry-asgi==0.1.5
 sentry-sdk==0.7.14
 six==1.12.0

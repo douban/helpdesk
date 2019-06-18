@@ -2,6 +2,7 @@
 
 import logging
 
+from app.libs.rule import Rule
 from app.models import db
 
 logger = logging.getLogger(__name__)
@@ -17,7 +18,7 @@ class ParamRule(db.Model):
     provider_object = db.Column(db.String(length=64), index=True)
 
     # rule string
-    rule = db.Column(db.JSON)
+    rule = db.Column(db.String(length=1024))
 
     # action
     is_auto_approval = db.Column(db.Boolean)
@@ -32,5 +33,8 @@ class ParamRule(db.Model):
         return await cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset)
 
     def match(self, context):
-        # TODO:
-        return True
+        try:
+            return Rule(self.rule).match(context)
+        except Exception:
+            logger.exception('Failed to match ParamRule: %s, context: %s', self.rule, context)
+            return False

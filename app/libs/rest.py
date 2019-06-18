@@ -126,6 +126,15 @@ def ip_address_validator(ip):
     return bool(RE_PATTERN_IPADDRESS.match(ip))
 
 
+def yaml_validator(s):
+    import yaml
+    try:
+        yaml.safe_load(s)
+        return True
+    except yaml.YAMLError as e:
+        logger.info('failed validate yaml: %s: %s', s, str(e))
+
+
 def check_parameter(params, name, type_, validator=None, optional=False, default=None):
     """`type_` should be a class, such as int, str..."""
     value = params.get(name)
