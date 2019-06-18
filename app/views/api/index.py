@@ -90,8 +90,7 @@ async def config_param_rule(request, action):
             return param_rule_added
         elif op == 'del':
             id_ = check_parameter(payload, 'id', int)
-            ParamRule.delete(id_)
-            return True
+            return await ParamRule.delete(id_) == id_
 
     param_rules = await ParamRule.get_all_by_provider_object(action.target_object)
     return param_rules
