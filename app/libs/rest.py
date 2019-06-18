@@ -19,7 +19,7 @@ def jsonize(func):
             ret = await func(*args, **kwargs)
             data = json_unpack(ret)
             # logger.debug('jsonize: args: %s, kwargs: %s, ret: %s, data: %s', args, kwargs, ret, data)
-            status_code = data.get('status_code') if data else None
+            status_code = data.get('status_code') if data and isinstance(data, dict) else None
             return JSONResponse(dict(data=data), status_code=status_code or 200)
         return _
     else:
@@ -28,7 +28,7 @@ def jsonize(func):
             ret = func(*args, **kwargs)
             data = json_unpack(ret)
             # logger.debug('jsonize: args: %s, kwargs: %s, ret: %s, data: %s', args, kwargs, ret, data)
-            status_code = data.get('status_code') if data else None
+            status_code = data.get('status_code') if data and isinstance(data, dict) else None
             return JSONResponse(dict(data=data), status_code=status_code or 200)
         return _
 
@@ -124,6 +124,15 @@ def ip_address_or_section_validator(ip):
 
 def ip_address_validator(ip):
     return bool(RE_PATTERN_IPADDRESS.match(ip))
+
+
+def yaml_validator(s):
+    import yaml
+    try:
+        yaml.safe_load(s)
+        return True
+    except yaml.YAMLError as e:
+        logger.info('failed validate yaml: %s: %s', s, str(e))
 
 
 def check_parameter(params, name, type_, validator=None, optional=False, default=None):

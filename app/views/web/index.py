@@ -66,7 +66,7 @@ async def logout(request):
 
 
 @bp.route('/ticket/{ticket_id:int}/{op}', methods=['GET'])
-@requires(['authenticated', 'admin'])
+@requires(['authenticated'])
 async def ticket_op(request):
     ticket_id = request.path_params['ticket_id']
     op = request.path_params['op']
@@ -76,6 +76,9 @@ async def ticket_op(request):
     ticket = await Ticket.get(ticket_id)
     if not ticket:
         return PlainTextResponse('not found', status_code=404)
+
+    if not await ticket.can_admin(request.user):
+        return PlainTextResponse('Permission Denied', status_code=403)
 
     if op == 'approve':
         ret, msg = ticket.approve(by_user=request.user.name)
@@ -93,7 +96,7 @@ async def ticket_op(request):
     if not id_:
         msg = 'ticket executed but failed to save state' if op == 'approve' else 'Failed to save ticket state'
         return PlainTextResponse(msg, status_code=500)
-    ticket.notify('approval')
+    await ticket.notify('approval')
     return PlainTextResponse('Success')
 
 
@@ -126,7 +129,7 @@ async def ticket(request):
     kw = dict(desc=True, limit=page_size, offset=(page - 1) * page_size)
 
     if ticket:
-        if not ticket.can_view(request.user):
+        if not await ticket.can_view(request.user):
             raise HTTPException(status_code=403)
         tickets = [ticket]
         total = 1

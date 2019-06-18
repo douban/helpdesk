@@ -30,7 +30,7 @@
     </a-layout-sider>
 
     <a-layout-content
-        :style="{ background: '#fff', padding: '24px', margin: '0 24px', minHeight: '280px' }"
+        :style="{ background: '#fff', padding: '24px', margin: '0 0 0 24px', minHeight: '280px' }"
     >
     <a-divider orientation="left"><h3>{{ action.name }}</h3></a-divider>
     {% if msg %}
@@ -56,19 +56,8 @@
 
     <h-form></h-form>
 
-    {# TODO: show in drawer, and only show when enable admin mode #}
-    {% if debug and request.user.is_admin %}
-    <a-card title="Debug Info">
-        <div v-pre>
-        <p>action: {{ action.get_action(provider)|tojson }}</p>
-        {% if execution %}
-        <p>execution: {{ execution|tojson }}</p>
-        {% endif %}
-        {% if ticket %}
-        <p>ticket: {{ ticket|tojson }}</p>
-        {% endif %}
-        </div>
-    </a-card>
+    {% if request.user.is_admin %}
+    <h-drawer></h-drawer>
     {% endif %}
 
     </a-layout-content>
@@ -177,7 +166,7 @@ $(function() {
         <a-input-search placeholder="Search" @change="onSearchChange" />
     </a-menu-item>
     <a-menu-item key="{{ action_tree.name }}">
-	    {{ action_tree.name }}
+        <a href="/">{{ action_tree.name }}</a>
     </a-menu-item>
     {% for sub in action_tree.nexts %}
       {{ render_action_tree2(sub) }}
@@ -186,7 +175,7 @@ $(function() {
 </script>
 
 <script type="text/x-template" id="form-template">
-  <a-form action="" method="POST"
+  <a-form key="h-form" action="" method="POST"
   	@submit="handleSubmit"
   >
       {% for name, param_property in action.parameters(provider).items() %}
@@ -203,6 +192,105 @@ $(function() {
           </a-button>
       </a-form-item>
   </a-form>
+</script>
+
+<script type="text/x-template" id="drawer-template">
+<div>
+  <a-drawer
+    key="h-drawer"
+    title="Admin Panel"
+    :width="720"
+    placement="right"
+    :closable="false"
+    @close="onClose"
+    :visible="visible"
+  >
+    <div slot="handle" class="ant-pro-setting-drawer-handle" @click="showDrawer">
+      <a-icon type="setting" :style="{color: '#fff', fontSize: '20px'}"/>
+    </div>
+
+    {% raw %}
+    <a-form v-for="(param_rule, index) in param_rules"
+        :key="index"
+        method="POST"
+        layout="vertical"
+        hideRequiredMark
+        @submit="(e) => onSubmit(e, index)"
+    >
+        <a-row :gutter="16">
+            <a-col>
+                <a-form-item label="Title">
+                    <a-input name="title" placeholder="Untitled"
+                        v-model="param_rule.title"
+                    ></a-input>
+                </a-form-item>
+            </a-col>
+        </a-row>
+        <a-row :gutter="16">
+            <a-col>
+                <a-form-item label="Rule">
+                    <a-textarea name="rule"
+                        rows="1"
+                        placeholder='e.g. ["onlycontains", ["split", "hosts", ","], "***REMOVED***", "***REMOVED***", "***REMOVED***"]'
+                        autosize
+                        required="true"
+                        v-model="param_rule.rule"
+                    ></a-textarea>
+                </a-form-item>
+            </a-col>
+        </a-row>
+        <a-row :gutter="16">
+            <a-col :span="6">
+                <a-form-item label="Is auto-approval?">
+                    <a-checkbox name="is_auto_approval"
+                        :checked="param_rule.is_auto_approval"
+                        @change="(e) => onCheckboxChange(e, index, 'is_auto_approval')"
+                    ></a-checkbox>
+                </a-form-item>
+            </a-col>
+            <a-col :span="18">
+                <a-form-item label="Approver">
+                    <a-input name="approver" placeholder="Approver names seperated by comma"
+                        v-model="param_rule.approver"
+                    ></a-input>
+                </a-form-item>
+            </a-col>
+        </a-row>
+
+            <a-form-item :style="{textAlign: 'right'}"
+            >
+                <a-button type="danger" shape="circle" icon="close"
+                    :style="{marginRight: '8px'}"
+                    :disabled="param_rules.length - 1 === index"
+                    @click="(e) => onDelete(e, index)"
+                />
+                <a-button html-type="submit" type="primary" shape="circle" icon="check" />
+            </a-form-item>
+
+        <a-divider />
+    </a-form>
+    {% endraw %}
+
+    {% if debug and request.user.is_admin %}
+    <div>
+      <a-collapse accordion :bordered="false">
+        <a-collapse-panel header="Debug Info" key="1">
+          <div v-pre>
+            <p>action: {{ action.get_action(provider)|tojson }}</p>
+            {% if execution %}
+            <p>execution: {{ execution|tojson }}</p>
+            {% endif %}
+            {% if ticket %}
+            <p>ticket: {{ ticket|tojson }}</p>
+            {% endif %}
+          </div>
+        </a-collapse-panel>
+      </a-collapse>
+    </div>
+    {% endif %}
+
+  </a-drawer>
+</div>
 </script>
 
 <script type="text/javascript">
@@ -246,6 +334,113 @@ Vue.component('h-form', {
     },
   },
   template: '#form-template'
+})
+
+Vue.component('h-drawer', {
+  data() {
+    return {
+      visible: false,
+      handle: "handle",
+      url_param_rule: "{{ url_for('api:admin_panel', target_object=action.target_object, config_type='param_rule') }}",
+      url_param_rule_add: "{{ url_for('api:admin_panel', target_object=action.target_object, config_type='param_rule', op='add') }}",
+      url_param_rule_del: "{{ url_for('api:admin_panel', target_object=action.target_object, config_type='param_rule', op='del') }}",
+      param_rules: null,
+    }
+  },
+  methods: {
+    showDrawer() {
+      let this_ = this
+      let message = this.$message
+
+      if (!this.param_rules) {
+        let xhr = new XMLHttpRequest();
+        xhr.responseType = 'json';
+        xhr.onreadystatechange = function() {
+          if (this.readyState == 4) {
+            var jsonResponse = xhr.response;
+            if (this.status == 200) {
+              this_.param_rules = jsonResponse.data;
+
+              if (!this_.param_rules) {
+                  this_.param_rules = []
+              }
+              // new empty obj
+              this_.param_rules.push({})
+
+              // console.log(this_.param_rules)
+            } else {
+              message.warning(JSON.stringify(jsonResponse));
+            }
+          }
+        };
+        xhr.open('GET', this.url_param_rule, true);
+        xhr.send();
+      }
+
+      this.visible = true
+    },
+    onClose() {
+      this.visible = false
+    },
+    onCheckboxChange(e, index, attr) {
+      var param_rule = this.param_rules[index]
+      param_rule[attr] = e.target.checked
+      this.param_rules.splice(index, 1, param_rule)
+    },
+    onSubmit(e, index) {
+      e.preventDefault();
+
+      let this_ = this
+      let message = this.$message
+
+      let xhr = new XMLHttpRequest();
+      xhr.responseType = 'json';
+      xhr.onreadystatechange = function() {
+        if (this.readyState == 4) {
+          var jsonResponse = xhr.response;
+          if (this.status == 200) {
+            var param_rule_added = jsonResponse.data
+            message.success(JSON.stringify(param_rule_added));
+            this_.param_rules.splice(index, 1, param_rule_added)
+            // new empty obj if last
+            if (this_.param_rules.length - 1 == index) {
+                this_.param_rules.push({})
+            }
+          } else {
+            message.warning(JSON.stringify(jsonResponse));
+          }
+        }
+      };
+      xhr.open('POST', this.url_param_rule_add, true);
+      xhr.setRequestHeader('Content-type', 'application/json')
+      xhr.send(JSON.stringify(this.param_rules[index]));
+
+    },
+    onDelete(e, index) {
+      let this_ = this
+      let message = this.$message
+
+      let xhr = new XMLHttpRequest();
+      xhr.responseType = 'json';
+      xhr.onreadystatechange = function() {
+        if (this.readyState == 4) {
+          var jsonResponse = xhr.response;
+          if (this.status == 200) {
+            var param_rule_added = jsonResponse.data
+            message.success(JSON.stringify(param_rule_added));
+            this_.param_rules.splice(index, 1)
+          } else {
+            message.warning(JSON.stringify(jsonResponse));
+          }
+        }
+      };
+      xhr.open('POST', this.url_param_rule_del, true);
+      xhr.setRequestHeader('Content-type', 'application/json')
+      xhr.send(JSON.stringify(this.param_rules[index]));
+    },
+
+  },
+  template: '#drawer-template'
 })
 
 // https://vue-select.org

@@ -66,12 +66,17 @@ class Model(DictSerializableClassMixin, Base):
         return rs[0][0] if rs and rs[0] else None
 
     async def save(self):
+        kw = self._fields()
         obj = await self.get(self.id)
         logger.debug('Saving %s, checking if obj exists: %s', self, obj)
         if obj:
-            return await self.update(**self._fields())
+            if 'updated_at' in kw:
+                kw['updated_at'] = datetime.now()
+            return await self.update(**kw)
 
-        query = self.__table__.insert().values(**self._fields())
+        if 'created_at' in kw and kw['created_at'] is None:
+            kw['created_at'] = datetime.now()
+        query = self.__table__.insert().values(**kw)
         id_ = await self._execute(query)
         self.id = id_
         return id_
@@ -84,6 +89,25 @@ class Model(DictSerializableClassMixin, Base):
         kw.pop('id', None)
         query = t.update().where(t.c.id == self.id).values(**kw)
         return await self._execute(query) or self.id
+
+    @classmethod
+    async def delete(cls, id_):
+        if id_ is None:
+            return None
+        t = cls.__table__
+        query = t.delete().where(t.c.id == id_)
+        return await cls._execute(query) or id_
+
+    @classmethod
+    async def delete_all(cls, ids=None, filter_=None):
+        t = cls.__table__
+        query = t.delete()
+        if ids:
+            # see https://docs.sqlalchemy.org/en/13/core/sqlelement.html?highlight=in_#sqlalchemy.sql.expression.ColumnElement.in_
+            query = query.where(t.c.id.in_(ids))
+        elif filter_ is not None:
+            query = query.where(filter_)
+        return await cls._execute(query)
 
     @classmethod
     async def _execute(cls, query):

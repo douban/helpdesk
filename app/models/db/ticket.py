@@ -3,7 +3,9 @@
 import logging
 from datetime import datetime
 
+from app.libs.decorators import cached_property
 from app.models import db
+from app.models.db.param_rule import ParamRule
 from app.models.provider import get_provider
 from app.config import (SYSTEM_USER, ST2_EXECUTION_RESULT_URL_PATTERN,
                         ADMIN_EMAIL_ADDRS,
@@ -39,14 +41,14 @@ class Ticket(db.Model):
     executed_at = db.Column(db.DateTime)
 
     @classmethod
-    def get_all_by_submitter(cls, submitter, desc=False, limit=None, offset=None):
+    async def get_all_by_submitter(cls, submitter, desc=False, limit=None, offset=None):
         filter_ = cls.__table__.c.submitter == submitter
-        return cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset)
+        return await cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset)
 
     @classmethod
-    def count_by_submitter(cls, submitter):
+    async def count_by_submitter(cls, submitter):
         filter_ = cls.__table__.c.submitter == submitter
-        return cls.count(filter_=filter_)
+        return await cls.count(filter_=filter_)
 
     @property
     def status(self):
@@ -62,8 +64,28 @@ class Ticket(db.Model):
             return None
         return '; '.join(['%s: %s' % (k, v) for k, v in self.params.items() if k not in ('reason',)])
 
-    def can_view(self, user):
-        return user.is_admin or user.name == self.submitter or user.name in self.ccs
+    async def can_view(self, user):
+        return user.is_admin or user.name == self.submitter or user.name in self.ccs or user.name in await self.get_rule_actions('approver')
+
+    async def can_admin(self, user):
+        return user.is_admin or user.name in await self.get_rule_actions('approver')
+
+    @cached_property
+    async def rules(self):
+        # param rules
+        rules = await ParamRule.get_all_by_provider_object(self.provider_object)
+        return [rule for rule in rules if rule.match(self.params)]
+
+    async def get_rule_actions(self, rule_action):
+        assert rule_action in ('is_auto_approval', 'approver')
+        ret = filter(None, [getattr(r, rule_action) for r in await self.rules])
+        if rule_action == 'is_auto_approval':
+            ret = any(ret)
+        elif rule_action == 'approver':
+            ret = [a for r in ret for a in r.split(',')]
+
+        logger.debug('Ticket.get_rule_actions(%s): %s', rule_action, ret)
+        return ret
 
     def annotate(self, dict_=None, **kw):
         d = dict_ or {}
@@ -142,7 +164,7 @@ class Ticket(db.Model):
         # we don't save the ticket here, we leave it outside
         return execution, 'Success. <a href="%s" target="_blank">result</a>' % (execution['web_url'],)
 
-    def notify(self, phase):
+    async def notify(self, phase):
         # TODO: support custom template bind to action tree
         from app import config
         from app.libs.template import render_notification
@@ -157,6 +179,7 @@ class Ticket(db.Model):
         #   support slack etc.
         system_provider = get_provider(self.provider_type)
         email_addrs = [ADMIN_EMAIL_ADDRS] + [system_provider.get_user_email(cc) for cc in self.ccs]
+        email_addrs += [system_provider.get_user_email(approver) for approver in await self.get_rule_actions('approver')]
         if phase == 'approval':
             email_addrs += [system_provider.get_user_email(self.submitter)]
         email_addrs = ','.join(addr for addr in email_addrs if addr)

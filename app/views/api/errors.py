@@ -8,9 +8,12 @@ from . import bp
 
 
 class ApiErrors(ApiErrorsBuiltin):
+    # error_code, message, status_code
     not_found = (20001, 'not_found', 404)
     forbidden = (20002, 'forbidden', 403)
     method_not_allowed = (20003, 'method_not_allowed', 405)
+    unknown_config_type = (20004, 'unknown_config_type', 400)
+    unknown_operation = (20005, 'unknown_operation', 400)
 
     unknown_exception = (22001, 'unknown_exception', 400)
 
