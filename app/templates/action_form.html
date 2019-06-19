@@ -84,6 +84,7 @@
                 :filterable="true"
                 :taggable="true"
                 :select-on-tab="true"
+                @keypress.enter.native.prevent=""
                 v-model="selectedValues['{{ name }}']"
             ></v-select>
             <input type='hidden' name="{{ name }}" :value="selectedValues['{{ name }}']" />
