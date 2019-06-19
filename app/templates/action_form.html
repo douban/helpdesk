@@ -86,7 +86,7 @@
                 :select-on-tab="true"
                 v-model="selectedValues['{{ name }}']"
             ></v-select>
-            <a-input type='hidden' name="{{ name }}" v-model="selectedValues['{{ name }}']"></a-input>
+            <input type='hidden' name="{{ name }}" :value="selectedValues['{{ name }}']" />
 
             {#
             <a-select
@@ -105,7 +105,6 @@
                 <a-select-option key="{{ choice }}">{{ choice }}</a-select-option>
                 {% endfor %}
             </a-select>
-            <a-input type='hidden' name="{{ name }}" v-model="selectedValues['{{ name }}']"></a-input>
             #}
 
         {% else %}
