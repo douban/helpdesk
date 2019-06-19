@@ -2,6 +2,7 @@
 
 import logging
 
+from app.libs.decorators import cached_property_with_ttl
 from app.models.action import Action
 from app.models.provider import get_provider
 from app.config import ACTION_TREE_CONFIG, PROVIDER
@@ -14,13 +15,19 @@ logger = logging.getLogger(__name__)
 class ActionTree:
     def __init__(self, tree_config, level=0):
         self.name = None
-        self.nexts = []
+        self._nexts = []
         self.parent = None
         self.action = None
         self.is_leaf = False
         self.level = level
+        self.config = tree_config
 
         self.build_from_config(tree_config)
+
+    def __str__(self):
+        return 'ActionTree(%s, level=%s)' % (self.config, self.level)
+
+    __repr__ = __str__
 
     def build_from_config(self, config):
         assert type(config) is list, 'expect %s, got %s: %s' % ('list', type(config), config)
@@ -31,7 +38,7 @@ class ActionTree:
             for subconfig in config[1]:
                 subtree = ActionTree(subconfig, level=self.level + 1)
                 subtree.parent = self
-                self.nexts.append(subtree)
+                self._nexts.append(subtree)
         else:
             # leaf
             provider_object = config[-1]
@@ -69,6 +76,18 @@ class ActionTree:
             sub_actions.append([obj, desc, obj])
         return [name, sub_actions]
 
+    @cached_property_with_ttl(300)
+    def nexts(self):
+        # if is pack, re-calc it
+        if all(isinstance(c, str) for c in self.config):
+            if self.config[-1].endswith('.'):
+                logger.warn('recalc %s', self)
+                self._nexts = []
+                pack_sub_tree_config = self.resolve_pack(*self.config)
+                self.build_from_config(pack_sub_tree_config)
+
+        return self._nexts
+
     @property
     def key(self):
         return '{level}-{name}'.format(level=self.level, name=self.name)
@@ -76,16 +95,16 @@ class ActionTree:
     def first(self):
         if self.action:
             return self
-        if not self.nexts:
+        if not self._nexts:
             return self
-        return self.nexts[0].first()
+        return self._nexts[0].first()
 
     def find(self, obj):
         if not obj:
             return None
         if self.action:
             return self if self.action.target_object == obj else None
-        for sub in self.nexts:
+        for sub in self._nexts:
             ret = sub.find(obj)
             if ret is not None:
                 return ret

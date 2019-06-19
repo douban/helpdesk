@@ -162,7 +162,7 @@ $(function() {
     @openChange="onOpenChange"
     :style="{ height: '100%', borderRight: 0 }"
   >
-    <a-menu-item>
+    <a-menu-item v-if="false">
         <a-input-search placeholder="Search" @change="onSearchChange" />
     </a-menu-item>
     <a-menu-item key="{{ action_tree.name }}">
