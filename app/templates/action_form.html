@@ -138,20 +138,20 @@ $(function() {
 </script>
 
 {% macro render_action_tree2(tree, level=1) %}
+    {% if tree.action %}
+    <a-menu-item key="{{ tree.action.name }}">
+      <a href="{{ url_for('web:index', full_path=tree.action.target_object) }}" title="{{ tree.action.desc }}"></a>
+    {{ tree.action.name }}
+    </a-menu-item>
+    {% endif %}
+    {% if tree.nexts %}
     <a-sub-menu key="{{ '%s-%s' % (level, tree.name) }}">
       <span slot="title"><a-icon type="folder" /><span>{{ tree.name }}</span></span>
     {% for sub in tree.nexts %}
-      {% if sub.action %}
-      <a-menu-item key="{{ sub.action.name }}">
-        <a href="{{ url_for('web:index', full_path=sub.action.target_object) }}" title="{{ sub.action.desc }}"></a>
-      {{ sub.action.name }}
-      </a-menu-item>
-      {% endif %}
-      {% if sub.nexts %}
         {{ render_action_tree2(sub, level+1) }}
-      {% endif %}
     {% endfor %}
     </a-sub-menu>
+    {% endif %}
 {%- endmacro %}
 
 <script type="text/x-template" id="menu-template">
