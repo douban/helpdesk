@@ -1,0 +1,52 @@
+<template>
+  <a-layout-header>
+
+    <a-menu
+      theme="dark"
+      mode="horizontal"
+      :style="{ lineHeight: '64px' }"
+    >
+      <a-menu-item key="1"><a href="/#/">Helpdesk</a></a-menu-item>
+      <a-menu-item key="2">
+        <a class="nav-item" href="/#/ticket">Tickets</a>
+      </a-menu-item>
+      <!-- TODO add user authorize here
+      {% if request.user.is_authenticated %}
+
+      <a-sub-menu :style="{ float: 'right' }">
+      <span slot="title">
+          <span>{{ request.user.display_name }}</span>
+          <a-avatar shape="square" icon="user"
+                    src="{{ request.user.avatar_url }}"
+          />
+      </span>
+        <a-menu-item key="3">
+          <a href="{{ url_for('api:user') }}">
+            <i class="glyphicon glyphicon-user"></i>
+            whoami
+          </a>
+        </a-menu-item>
+        <a-menu-item key="4">
+          <a href="{{ url_for('web:logout') }}">
+            <i class="glyphicon glyphicon-off"></i>
+            Logout
+          </a>
+        </a-menu-item>
+      </a-sub-menu>
+
+      {% endif %}
+      -->
+    </a-menu>
+
+  </a-layout-header>
+</template>
+
+<script>
+export default {
+  name: 'HHeader'
+}
+</script>
+
+<style scoped>
+
+</style>
