@@ -11,6 +11,7 @@ from app.models.db.param_rule import ParamRule
 from app.models.action_tree import action_tree
 from app.views.api.errors import ApiError, ApiErrors
 
+from .api_utils import action_tree_dict_to_list
 from . import bp
 
 logger = logging.getLogger(__name__)
@@ -159,9 +160,11 @@ async def action_list(request):
             r[node.name] = {
                 'title': node.action.name,
                 'desc': node.action.desc,
-                'url': node.action.target_object
+                'url': node.action.target_object,
+                'name': node.action.target_object
             }
             
         for subnode in node._nexts:
             stack.append(subnode)
+    result['action_tree'] = action_tree_dict_to_list(result['action_tree'])
     return result
