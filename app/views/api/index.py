@@ -94,3 +94,74 @@ async def config_param_rule(request, action):
 
     param_rules = await ParamRule.get_all_by_provider_object(action.target_object)
     return param_rules
+
+
+@bp.route('/action_tree')
+@jsonize
+@requires(['authenticated'])
+async def action_list(request):
+    """
+    trans ActionTree object to action_tree api for frontend sidebar render
+    data structure: dict with attrs
+
+    {
+    "data": {
+        "collapsed": false,
+        "action_tree": {
+          "功能导航": {
+            "账号相关": {
+              "申请服务器账号/重置密码": {
+                "title": "申请服务器账号/重置密码",
+                "desc": "申请 ssh 登录服务器的账号，或者重置密码",
+                "url": "douban_helpdesk.apply_server"
+              },
+              ...
+            },
+            "包管理相关": {
+              "查询服务器上包版本": {
+                "title": "查询服务器上包版本",
+                "desc": "可查询的信息有 ebuild 版本号、编译/部署时间，VCS 版本",
+                "url": ""
+              },
+              ...
+            }
+          }
+        }
+      }
+    }
+    """
+    
+    result = {
+        "collapsed": False,
+        "action_tree": {}
+    }
+
+    # DFS然后针对叶子节点重建路径构成数据结构
+    stack = [action_tree]
+
+    while stack:
+        node = stack.pop(0)
+        if node.is_leaf:
+            # 找到到主节点的路径
+            path = []
+            tmp_node = node
+            while tmp_node.parent is not None:
+                path.append(tmp_node.parent.name)
+                tmp_node = tmp_node.parent
+
+            # 保存节点结构到字典
+            path.reverse()
+            r = result['action_tree']
+            for p in path:
+                if p not in r:
+                    r[p] = {}
+                r = r[p]
+            r[node.name] = {
+                'title': node.action.name,
+                'desc': node.action.desc,
+                'url': node.action.target_object
+            }
+            
+        for subnode in node._nexts:
+            stack.append(subnode)
+    return result
