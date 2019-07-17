@@ -103,31 +103,28 @@ async def config_param_rule(request, action):
 async def action_list(request):
     """
     trans ActionTree object to action_tree api for frontend sidebar render
-    data structure: dict with attrs
+    data structure: action tree nested list, ex:
 
-    {
-    "data": {
-        "collapsed": false,
-        "action_tree": {
-          "功能导航": {
-            "账号相关": {
-              "申请服务器账号/重置密码": {
+    "action_tree": [
+      {
+        "key": 1,
+        "title": "功能导航",
+        "children": [
+          {
+            "key": 11,
+            "title": "账号相关",
+            "children": [
+              {
                 "title": "申请服务器账号/重置密码",
                 "desc": "申请 ssh 登录服务器的账号，或者重置密码",
-                "url": "douban_helpdesk.apply_server"
+                "url": "douban_helpdesk.apply_server",
+                "name": "douban_helpdesk.apply_server",
+                "key": 111
               },
               ...
-            },
-            "包管理相关": {
-              "查询服务器上包版本": {
-                "title": "查询服务器上包版本",
-                "desc": "可查询的信息有 ebuild 版本号、编译/部署时间，VCS 版本",
-                "url": ""
-              },
-              ...
-            }
+            ]
           }
-        }
+        ],
       }
     }
     """
