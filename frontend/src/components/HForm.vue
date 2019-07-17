@@ -13,9 +13,12 @@
 <script>
 import NumberInput from './FormWidgets/NumberInput'
 import TextInput from './FormWidgets/TextInput'
+import ChoiceInput from './FormWidgets/ChoiceInput'
+import CheckBoxInput from './FormWidgets/CheckBoxInput'
+
 export default {
   name: 'HForm',
-  components: { NumberInput, TextInput },
+  components: {NumberInput, TextInput, ChoiceInput, CheckBoxInput},
   props: ['schema', 'value'],
   data () {
     return {

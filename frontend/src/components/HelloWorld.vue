@@ -68,6 +68,23 @@ export default {
           name: 'age',
           label: 'Age',
           minValue: 0
+        },
+        {
+          fieldType: 'ChoiceInput',
+          placeholder: 'some choice has to be made',
+          name: 'c_test',
+          label: '选择',
+          choices: [
+            {id: 1, value: 1},
+            {id: 2, value: 'Jack'},
+            {id: 3, value: 'Mary'}
+          ]
+
+        },
+        {
+          fieldType: 'CheckBoxInput',
+          label: '同意?',
+          name: 'approved'
         }
       ],
       formData: {
