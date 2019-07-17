@@ -1,14 +1,15 @@
 <template>
   <div>
     <a-menu
-      :defaultSelectedKeys="['1']"
-      :defaultOpenKeys="['2']"
+      :defaultSelectedKeys="[111]"
+      :defaultOpenKeys="[1, 11, 111]"
       mode="inline"
       :inlineCollapsed="collapsed"
     >
       <template v-for="item in list">
+        <!-- 如果要更改此处的自定义渲染, 请同时修改下方 import 的 SubMenu 内的渲染, 以保证一致 -->
         <a-menu-item v-if="!item.children" :key="item.key">
-          <a v-if="item.url" v-bind:href="item.url" >{{item.title}}</a>
+          <a v-if="item.name" :href="'/#/forms/' + item.name" >{{item.title}}</a>
           <span v-else>{{item.title}}</span>
         </a-menu-item>
         <sub-menu v-else :menu-info="item" :key="item.key"/>
@@ -19,6 +20,7 @@
 
 <script>
 import SubMenu from './SubMenu'
+import {HRequest} from '../utils/HRequests'
 export default {
   components: {
     'sub-menu': SubMenu
@@ -29,31 +31,22 @@ export default {
       list: [
         {
           key: '1',
-          title: '功能导航',
+          title: '功能导航加载中',
           url: '/#/'
-        }, {
-          key: '2',
-          title: '账号相关',
-          children: [
-            {
-              key: '2.1',
-              title: '申请服务器账号/重置密码',
-              url: '/#/apply_server_group'
-            },
-            {
-              key: '2.2',
-              title: '申请创建分布式文件系统用户目录',
-              url: '/#/create_mfs_userhome'
-            },
-            {
-              key: '2.3',
-              title: '申请加入用户组'
-            }
-          ]
         }]
     }
   },
   methods: {
+    loadActionTree () {
+      HRequest.get('/api/action_tree').then(
+        (response) => {
+          this.list = response.data.data.action_tree
+        }
+      )
+    }
+  },
+  mounted () {
+    this.loadActionTree()
   }
 }
 </script>

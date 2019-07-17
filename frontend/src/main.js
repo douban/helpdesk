@@ -11,10 +11,11 @@ Vue.config.productionTip = false
 Vue.use(Antd)
 
 /* eslint-disable no-new */
-new Vue({
+let vm = new Vue({
   el: '#app',
   router,
   store,
   components: { App },
   template: '<App/>'
 })
+export {vm}

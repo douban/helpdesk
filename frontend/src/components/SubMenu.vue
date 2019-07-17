@@ -10,7 +10,7 @@
         v-if="!item.children"
         :key="item.key"
       >
-        <a v-if="item.url" v-bind:href="item.url" >{{item.title}}</a>
+        <a v-if="item.url" :href="'/#/forms/' + item.name" >{{item.title}}</a>
         <span v-else>{{item.title}}</span>
       </a-menu-item>
       <sub-menu

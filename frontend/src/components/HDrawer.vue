@@ -114,7 +114,7 @@ export default {
   },
   watch: {
     '$route' (to, from) {
-      // 路由变化时, 清除旧路由数据, 重新加载定义
+      // reload ActionDefinition when url changes
       this.clearStage()
       this.loadActionDefinition()
     }

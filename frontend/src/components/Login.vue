@@ -59,16 +59,16 @@
 
 <script>
 import HFooter from './HFooter'
+import {HRequest} from '../utils/HRequests'
+const axios = require('axios')
 export default {
   name: 'Login',
   components: {HFooter},
   beforeCreate () {
     this.form = this.$form.createForm(this)
   },
-  data () {
-    return {
-
-    }
+  mounted () {
+    this.checkUserLoginStatus()
   },
   methods: {
     handleSubmit (e) {
@@ -76,7 +76,6 @@ export default {
       this.form.validateFields((err, values) => {
         // values 是表单对象
         if (!err) {
-          const axios = require('axios')
           const qs = require('qs')
           let message = this.$message
           console.log('Received values of form: ', values)
@@ -88,7 +87,7 @@ export default {
               password: values.password
             }),
             url: '/api/auth/challenge'}
-          axios(options).then(
+          HRequest(options).then(
             (response) => {
               // 第一个data 是response 里的data , 第二个data 是消息体内的data
               if (response.data.data.success) {
@@ -118,17 +117,12 @@ export default {
       // TODO 在localstorage 删除
     },
     checkUserLoginStatus () {
-      const axios = require('axios')
       axios.get('/api/auth/heartbeat').then(
         (response) => {
           if (response.data.data.status_code === 200) {
             this.onSuccess()
-          } else {
-            // 认证失败, 把本地的缓存消除
-            this.purgeUserProfile()
           }
-        }
-      )
+        })
     }
   }
 }

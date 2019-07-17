@@ -9,10 +9,10 @@
         </a-col>
         <a-col :span="18" >
           <a-layout :style="{ background: '#fff', padding: '24px', margin: '0 0 0 24px', minHeight: '280px' }">
-            <a-divider orientation="left"><h3>申请服务器账号/重置密码</h3></a-divider>
+            <a-divider orientation="left"><h3>{{title}}</h3></a-divider>
 
             <a-alert
-              message="申请 ssh 登录服务器的账号，或者重置密码"
+              :message="description"
               type="info"
               :style="{ margin: '16px' }"
             >
@@ -26,7 +26,7 @@
           </a-layout>
         </a-col>
       </a-row>
-      <h-drawer v-if="this.$store.isAdmin"></h-drawer>
+      <h-drawer v-if="this.$store.getters.isAdmin"></h-drawer>
     </a-layout>
   </h-base>
 </template>
@@ -47,6 +47,8 @@ export default {
   data () {
     return {
       msg: 'Welcome to Your Vue.js App',
+      title: '申请服务器账号/重置密码',
+      description: '申请 ssh 登录服务器的账号，或者重置密码',
       schema: [
         {
           fieldType: 'TextInput',

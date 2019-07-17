@@ -10,40 +10,62 @@
       <a-menu-item key="2">
         <a class="nav-item" href="/#/ticket">Tickets</a>
       </a-menu-item>
-      <!-- TODO add user authorize here
-      {% if request.user.is_authenticated %}
-
       <a-sub-menu :style="{ float: 'right' }">
-      <span slot="title">
-          <span>{{ request.user.display_name }}</span>
-          <a-avatar shape="square" icon="user"
-                    src="{{ request.user.avatar_url }}"
-          />
-      </span>
+        <span slot="title">
+            <span>{{ user.display_name }}</span>
+            <a-avatar shape="square" icon="user"
+                      :src="user.avatar_url"
+            />
+        </span>
         <a-menu-item key="3">
-          <a href="{{ url_for('api:user') }}">
+          <a href="#/user/profile">
             <i class="glyphicon glyphicon-user"></i>
             whoami
           </a>
         </a-menu-item>
-        <a-menu-item key="4">
-          <a href="{{ url_for('web:logout') }}">
-            <i class="glyphicon glyphicon-off"></i>
-            Logout
-          </a>
+        <a-menu-item key="4" v-on:click="logout">
+          logout
         </a-menu-item>
       </a-sub-menu>
-
-      {% endif %}
-      -->
     </a-menu>
 
   </a-layout-header>
 </template>
 
 <script>
+import {HRequest} from '../utils/HRequests'
 export default {
-  name: 'HHeader'
+  name: 'HHeader',
+  computed: {
+    user () {
+      return this.$store.state.userProfile
+    }
+  },
+  mounted () {
+    this.updateUserProfile()
+  },
+  methods: {
+    updateUserProfile () {
+      if (!this.$store.getters.isAuthenticated) {
+        HRequest.get('/api/user/me').then(
+          (response) => {
+            if (response.data.data.is_authenticated === true) {
+              this.$store.dispatch('updateUserProfile', response.data.data)
+            } else {
+              // 理论上来说不可能到这一步, 但我还是加上else 判断吧
+              this.$router.push('/login')
+            }
+          }
+        ).catch()
+      }
+    },
+    logout () {
+      HRequest.post('/api/auth/logout').then(() => {
+        document.cookie = 'session' + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;'
+        this.$router.push('/login')
+      })
+    }
+  }
 }
 </script>
 
