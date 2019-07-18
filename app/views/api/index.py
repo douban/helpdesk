@@ -13,7 +13,6 @@ from app.models.db.param_rule import ParamRule
 from app.models.action_tree import action_tree
 from app.views.api.errors import ApiError, ApiErrors
 
-from .api_utils import action_tree_dict_to_list, dump_action_tree_to_dict
 from . import bp
 
 logger = logging.getLogger(__name__)
@@ -103,21 +102,7 @@ async def config_param_rule(request, action):
 @jsonize
 @requires(['authenticated'])
 async def action_tree_list(request):
-    """
-    trans ActionTree object to action_tree api for frontend sidebar render
-    data structure: action tree nested list
-    """
-    result = {
-        "collapsed": False,
-        "action_tree": {}
-    }
-
-    action_tree_dict = dump_action_tree_to_dict(action_tree)
-    action_tree_list = action_tree_dict_to_list(action_tree_dict)
-    for node in action_tree_list:
-        node['children'].reverse()
-    result['action_tree'] = action_tree_list
-    return result
+    return action_tree.get_tree_list()
 
 
 @bp.route('/action_definition/{target_type}')
@@ -136,11 +121,5 @@ async def action_definition(request):
     if not provider:
         return HTTPException(status_code=401)
 
-    # trans st2 parameters to api data
-    result = {
-        "title": action.name,
-        "desc": action.desc,
-        "params": action.parameters(provider)
-    }
-
-    return result
+    action.params = action.parameters(provider)
+    return action

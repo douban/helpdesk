@@ -114,5 +114,25 @@ class ActionTree:
             return []
         return self.path_to(tree_node.parent, pattern) + [pattern.format(**tree_node.__dict__) if pattern else tree_node]
 
+    def get_tree_list(self):
+        local_list = []
+
+        for node in self.nexts:
+            if node.is_leaf:
+                local_list.append(node.action)
+                continue
+
+            local_list.append({
+                'name': node.name,
+                'children': node.get_tree_list()
+            })
+
+        if self.parent is None:
+            local_list = [{
+                'name': self.name,
+                'children': local_list
+            }]
+        return local_list
+
 
 action_tree = ActionTree(ACTION_TREE_CONFIG)
