@@ -98,3 +98,15 @@ class Action(DictSerializableClassMixin):
             await ticket_added.notify('request')
 
         return execution, msg
+
+
+def get_action_by_target_obj(action_tree_instance, target_object):
+    """
+    :param action_tree_instance: app.models.action_tree.action_tree
+    :param target_object: str | st2 pack.action
+    :return: app.models.action.Action obj
+    """
+    action_tree_leaf = action_tree_instance.find(target_object) if target_object != '' else action_tree_instance.first()
+    if not action_tree_leaf:
+        return
+    return action_tree_leaf.action

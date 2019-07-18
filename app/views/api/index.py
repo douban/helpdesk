@@ -7,7 +7,8 @@ from starlette.authentication import requires  # NOQA
 from starlette.exceptions import HTTPException
 
 from app.libs.rest import jsonize, check_parameter, json_validator
-from app.libs.action import get_action_by_target_obj, get_provider_by_action
+from app.models.action import get_action_by_target_obj
+from app.models.provider import get_provider_by_action_auth
 from app.models.db.ticket import Ticket
 from app.models.db.param_rule import ParamRule
 from app.models.action_tree import action_tree
@@ -117,7 +118,7 @@ async def action_definition(request):
         return HTTPException(status_code=404)
 
     # check provider permission
-    provider = get_provider_by_action(request, action)
+    provider = get_provider_by_action_auth(request, action)
     if not provider:
         return HTTPException(status_code=401)
 
