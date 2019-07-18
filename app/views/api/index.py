@@ -102,7 +102,7 @@ async def config_param_rule(request, action):
 @bp.route('/action_tree')
 @jsonize
 @requires(['authenticated'])
-async def action_list(request):
+async def action_tree_list(request):
     """
     trans ActionTree object to action_tree api for frontend sidebar render
     data structure: action tree nested list
@@ -121,7 +121,7 @@ async def action_list(request):
 @bp.route('/action_definition/{target_type}')
 @jsonize
 @requires(['authenticated'])
-async def action_from_fields(request):
+async def action_definition(request):
     target_object = request.path_params.get('target_type', '').strip('/')
 
     # check target_type availability
