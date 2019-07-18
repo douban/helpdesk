@@ -31,9 +31,10 @@ def action_tree_dict_to_list(action_tree_d, index=0):
     }
     """
     local_list = []
+    is_leaf_value_func = lambda v: isinstance(v, dict) and 'url' in v
     for key, value in action_tree_d.items():
         index += 1
-        if isinstance(value, dict) and 'url' in value:
+        if is_leaf_value_func(value):
             value['key'] = index
             local_list.append(value)
             continue
@@ -43,6 +44,8 @@ def action_tree_dict_to_list(action_tree_d, index=0):
             'title': key,
             'children': action_tree_dict_to_list(value, index*10)
         })
+    if is_leaf_value_func(value):
+        local_list.reverse()
     return local_list
 
 
