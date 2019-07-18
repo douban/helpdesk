@@ -3,15 +3,17 @@
 import logging
 
 from starlette.responses import RedirectResponse  # NOQA
-from starlette.authentication import requires, has_required_scope  # NOQA
+from starlette.authentication import requires  # NOQA
+from starlette.exceptions import HTTPException
 
 from app.libs.rest import jsonize, check_parameter, json_validator
+from app.libs.action import get_action_by_target_obj, get_provider_by_action
 from app.models.db.ticket import Ticket
 from app.models.db.param_rule import ParamRule
 from app.models.action_tree import action_tree
 from app.views.api.errors import ApiError, ApiErrors
 
-from .api_utils import action_tree_dict_to_list
+from .api_utils import action_tree_dict_to_list, dump_action_tree_to_dict
 from . import bp
 
 logger = logging.getLogger(__name__)
@@ -103,30 +105,7 @@ async def config_param_rule(request, action):
 async def action_list(request):
     """
     trans ActionTree object to action_tree api for frontend sidebar render
-    data structure: action tree nested list, ex:
-
-    "action_tree": [
-      {
-        "key": 1,
-        "title": "功能导航",
-        "children": [
-          {
-            "key": 11,
-            "title": "账号相关",
-            "children": [
-              {
-                "title": "申请服务器账号/重置密码",
-                "desc": "申请 ssh 登录服务器的账号，或者重置密码",
-                "url": "douban_helpdesk.apply_server",
-                "name": "douban_helpdesk.apply_server",
-                "key": 111
-              },
-              ...
-            ]
-          }
-        ],
-      }
-    }
+    data structure: action tree nested list
     """
     
     result = {
@@ -134,34 +113,32 @@ async def action_list(request):
         "action_tree": {}
     }
 
-    # DFS然后针对叶子节点重建路径构成数据结构
-    stack = [action_tree]
+    action_tree_dict = dump_action_tree_to_dict(action_tree)
+    result['action_tree'] = action_tree_dict_to_list(action_tree_dict)
+    return result
 
-    while stack:
-        node = stack.pop(0)
-        if node.is_leaf:
-            # 找到到主节点的路径
-            path = []
-            tmp_node = node
-            while tmp_node.parent is not None:
-                path.append(tmp_node.parent.name)
-                tmp_node = tmp_node.parent
 
-            # 保存节点结构到字典
-            path.reverse()
-            r = result['action_tree']
-            for p in path:
-                if p not in r:
-                    r[p] = {}
-                r = r[p]
-            r[node.name] = {
-                'title': node.action.name,
-                'desc': node.action.desc,
-                'url': node.action.target_object,
-                'name': node.action.target_object
-            }
-            
-        for subnode in node._nexts:
-            stack.append(subnode)
-    result['action_tree'] = action_tree_dict_to_list(result['action_tree'])
+@bp.route('/action_definition/{target_type}')
+@jsonize
+@requires(['authenticated'])
+async def action_from_fields(request):
+    target_object = request.path_params.get('target_type', '').strip('/')
+
+    # check target_type availability
+    action = get_action_by_target_obj(action_tree, target_object)
+    if not action:
+        return HTTPException(status_code=404)
+
+    # check provider permission
+    provider = get_provider_by_action(request, action)
+    if not provider:
+        return HTTPException(status_code=401)
+
+    # trans st2 parameters to api data
+    result = {
+        "title": action.name,
+        "desc": action.desc,
+        "params": action.parameters(provider)
+    }
+
     return result
