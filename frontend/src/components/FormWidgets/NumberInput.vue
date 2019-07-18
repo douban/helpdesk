@@ -1,10 +1,10 @@
 <template>
   <a-form-item
-    v-bind:label="label"
+    :label="label"
   >
     <a-input
-      v-bind:placeholder="placeholder"
-      v-model="value"
+      :placeholder="placeholder"
+      :value="value"
       @input="$emit('input',$event.target.value)"
     />
   </a-form-item>
@@ -12,6 +12,14 @@
 <script>
 export default {
   name: 'NumberInput',
-  props: ['placeholder', 'label', 'name', 'value']
+  props: ['placeholder', 'label', 'name', 'value', 'required'],
+  computed: {
+    decorator () {
+      return [
+        this.name, {
+          rules: [{required: this.required, message: 'This field is required'}]
+        }] || []
+    }
+  }
 }
 </script>

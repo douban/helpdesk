@@ -114,7 +114,6 @@ export default {
     },
     purgeUserProfile () {
       this.$store.dispatch('deleteUserProfile')
-      // TODO 在localstorage 删除
     },
     checkUserLoginStatus () {
       axios.get('/api/auth/heartbeat').then(

@@ -6,13 +6,13 @@
       mode="inline"
       :inlineCollapsed="collapsed"
     >
-      <template v-for="item in list">
+      <template v-for="(item, index) in list">
         <!-- 如果要更改此处的自定义渲染, 请同时修改下方 import 的 SubMenu 内的渲染, 以保证一致 -->
-        <a-menu-item v-if="!item.children" :key="item.key">
-          <a v-if="item.name" :href="'/#/forms/' + item.name" >{{item.title}}</a>
-          <span v-else>{{item.title}}</span>
+        <a-menu-item v-if="!item.children" :key="index">
+          <a v-if="item.target_object" :href="'/#/forms/' + item.target_object" >{{item.name}}</a>
+          <span v-else>{{item.name}}</span>
         </a-menu-item>
-        <sub-menu v-else :menu-info="item" :key="item.key"/>
+        <sub-menu v-else :menu-info="item" :key="index"/>
       </template>
     </a-menu>
   </div>
@@ -21,6 +21,8 @@
 <script>
 import SubMenu from './SubMenu'
 import {HRequest} from '../utils/HRequests'
+import {getElementFromArray} from '../utils/HFinder'
+
 export default {
   components: {
     'sub-menu': SubMenu
@@ -40,7 +42,11 @@ export default {
     loadActionTree () {
       HRequest.get('/api/action_tree').then(
         (response) => {
-          this.list = response.data.data.action_tree
+          this.list = response.data.data
+          // 在其中查找到选中的 action
+          let actionName = this.$route.params.name
+          let e = getElementFromArray(response.data.data.action_tree, 'name', actionName)
+          console.log(e)
         }
       )
     }

@@ -3,15 +3,15 @@
     :key="props.menuInfo.key"
   >
     <span slot="title">
-      <span>{{ props.menuInfo.title }}</span>
+      <span>{{ props.menuInfo.name }}</span>
     </span>
-    <template v-for="item in props.menuInfo.children">
+    <template v-for="(item, index) in props.menuInfo.children">
       <a-menu-item
         v-if="!item.children"
-        :key="item.key"
+        :key="index"
       >
-        <a v-if="item.url" :href="'/#/forms/' + item.name" >{{item.title}}</a>
-        <span v-else>{{item.title}}</span>
+        <a v-if="item.target_object" :href="'/#/forms/' + item.target_object" >{{item.name}}</a>
+        <span v-else>{{item.name}}</span>
       </a-menu-item>
       <sub-menu
         v-else

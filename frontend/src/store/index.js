@@ -25,6 +25,9 @@ export default new Vuex.Store({
     },
     deleteUserProfile ({ commit }) {
       commit('setUserProfile', '')
+    },
+    updateActionDefinition ({ commit }, definition) {
+      commit('setActionDefinition', definition)
     }
   },
   getters: {
