@@ -71,7 +71,7 @@ def dump_action_tree_to_dict(action_tree):
     def node_handler(node):
         if not node.is_leaf:
             return
-
+        
         # 找到到主节点的路径
         path = []
         tmp_node = node
@@ -100,7 +100,7 @@ def dfs_action_tree(action_tree, node_handler):
     """深度优先遍历action tree节点"""
     stack = [action_tree]
     while stack:
-        node = stack.pop(0)
+        node = stack.pop()
         node_handler(node)
         for sub_node in node.nexts:
             stack.append(sub_node)

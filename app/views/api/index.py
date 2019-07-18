@@ -107,14 +107,16 @@ async def action_tree_list(request):
     trans ActionTree object to action_tree api for frontend sidebar render
     data structure: action tree nested list
     """
-    
     result = {
         "collapsed": False,
         "action_tree": {}
     }
 
     action_tree_dict = dump_action_tree_to_dict(action_tree)
-    result['action_tree'] = action_tree_dict_to_list(action_tree_dict)
+    action_tree_list = action_tree_dict_to_list(action_tree_dict)
+    for node in action_tree_list:
+        node['children'].reverse()
+    result['action_tree'] = action_tree_list
     return result
 
 
