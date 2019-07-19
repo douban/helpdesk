@@ -3,9 +3,10 @@
 import logging
 
 from starlette.responses import RedirectResponse  # NOQA
-from starlette.authentication import requires  # NOQA
+from starlette.authentication import requires, has_required_scope  # NOQA
 from starlette.exceptions import HTTPException
 
+from app import config
 from app.libs.rest import jsonize, check_parameter, json_validator, json_unpack
 from app.models.action import get_action_by_target_obj
 from app.models.provider import get_provider_by_action_auth
@@ -116,7 +117,7 @@ async def action_tree_list(request):
     return action_tree.get_tree_list(node_formatter)
 
 
-@bp.route('/action_definition/{target_type}')
+@bp.route('/action/{target_type}', methods=['GET', 'POST'])
 @jsonize
 @requires(['authenticated'])
 async def action_definition(request):
@@ -132,6 +133,26 @@ async def action_definition(request):
     if not provider:
         return HTTPException(status_code=401)
 
-    action_dict = json_unpack(action)
-    action_dict['params'] = action.parameters(provider)
-    return action_dict
+    if request.method == 'GET':
+        action_dict = json_unpack(action)
+        action_dict['params'] = action.parameters(provider)
+        return action_dict
+
+    if request.method == 'POST':
+        form = await request.form()
+        execution_or_ticket, msg = await action.run(provider, form,
+                                                    is_admin=has_required_scope(request, ['admin']))
+        msg_level = 'success' if bool(execution_or_ticket) else 'error'
+        execution = ticket = None
+        if execution_or_ticket and execution_or_ticket.get('_class') == 'Ticket':
+            ticket = execution_or_ticket
+        else:
+            execution = execution_or_ticket
+
+        return dict(execution=execution,
+                    ticket=ticket,
+                    msg=msg,
+                    msg_level=msg_level,
+                    debug=config.DEBUG,
+                    provider=provider,
+                    )

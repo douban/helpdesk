@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class Ticket(db.Model):
     __tablename__ = 'ticket'
+    __table_args__ = {'mysql_charset': 'utf8mb4'}
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(length=64))
