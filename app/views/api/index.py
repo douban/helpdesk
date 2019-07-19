@@ -94,3 +94,28 @@ async def config_param_rule(request, action):
 
     param_rules = await ParamRule.get_all_by_provider_object(action.target_object)
     return param_rules
+
+
+@bp.route('/auth/challenge', methods=['POST'])
+@jsonize
+async def challenge(request):
+    token, msg = await authenticate(request)
+
+    if token:
+        return {'success': True, 'msg' :msg, 'token': token}
+    return {'success': False, 'msg': msg, 'token': ''}
+
+
+@bp.route('/auth/logout', methods=['POST'])
+@requires(['authenticated'])
+@jsonize
+async def revoke(request):
+    unauth(request)
+    return {'success': True, 'msg': ''}
+
+
+@bp.route('/auth/heartbeat', methods=['GET'])
+@requires(['authenticated'])
+@jsonize
+async def heartbeat(request):
+    return {'status_code': 200, 'message':'OK'}
