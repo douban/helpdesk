@@ -6,7 +6,7 @@ from starlette.responses import RedirectResponse  # NOQA
 from starlette.authentication import requires  # NOQA
 from starlette.exceptions import HTTPException
 
-from app.libs.rest import jsonize, check_parameter, json_validator
+from app.libs.rest import jsonize, check_parameter, json_validator, json_unpack
 from app.models.action import get_action_by_target_obj
 from app.models.provider import get_provider_by_action_auth
 from app.models.db.ticket import Ticket
@@ -103,7 +103,17 @@ async def config_param_rule(request, action):
 @jsonize
 @requires(['authenticated'])
 async def action_tree_list(request):
-    return action_tree.get_tree_list()
+    def node_formatter(node, children):
+        if node.is_leaf:
+            return node.action
+
+        sub_node_info = {
+            'name': node.name,
+            'children': children,
+        }
+        return [sub_node_info] if node.parent is None else sub_node_info
+
+    return action_tree.get_tree_list(node_formatter)
 
 
 @bp.route('/action_definition/{target_type}')
@@ -122,5 +132,6 @@ async def action_definition(request):
     if not provider:
         return HTTPException(status_code=401)
 
-    action.params = action.parameters(provider)
-    return action
+    action_dict = json_unpack(action)
+    action_dict['params'] = action.parameters(provider)
+    return action_dict

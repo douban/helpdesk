@@ -114,24 +114,23 @@ class ActionTree:
             return []
         return self.path_to(tree_node.parent, pattern) + [pattern.format(**tree_node.__dict__) if pattern else tree_node]
 
-    def get_tree_list(self):
+    def get_tree_list(self, node_formatter):
+        """
+        以嵌套列表的方式返回action_tree
+        :param: node_formatter: 节点处理函数
+        :return: 嵌套的列表
+        """
         local_list = []
 
         for node in self.nexts:
             if node.is_leaf:
-                local_list.append(node.action)
+                local_list.append(node_formatter(node, local_list))
                 continue
-
-            local_list.append({
-                'name': node.name,
-                'children': node.get_tree_list()
-            })
+            children_list = node.get_tree_list(node_formatter)
+            local_list.append(node_formatter(node, children_list))
 
         if self.parent is None:
-            local_list = [{
-                'name': self.name,
-                'children': local_list
-            }]
+            local_list = node_formatter(self, local_list)
         return local_list
 
 
