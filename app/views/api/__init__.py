@@ -7,4 +7,4 @@ bp = Starlette()
 bp.debug = True
 
 
-from . import (index,) # NOQA
+from . import (index, auth) # NOQA
