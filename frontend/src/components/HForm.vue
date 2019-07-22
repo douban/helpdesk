@@ -54,7 +54,7 @@ export default {
   methods: {
     loadFormDefinition () {
       this.formData = {}
-      HRequest.get('/api/action_definition/' + this.actionName).then(
+      HRequest.get('/api/action/' + this.actionName).then(
         (response) => this.formDefinitionHandler(response)
       )
     },

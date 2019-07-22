@@ -94,8 +94,7 @@ export default {
     return {
       visible: false,
       handle: 'handle',
-      paramRules: null,
-      actionDefinition: ''
+      paramRules: null
     }
   },
   computed: {
@@ -103,13 +102,16 @@ export default {
       return this.$route.params.name
     },
     url_param_rule: function () {
-      return 'https://helpdesk.***REMOVED***/api/admin_panel/' + this.currentForm + '/param_rule'
+      return '/api/admin_panel/' + this.currentForm + '/param_rule'
     },
     url_param_rule_add: function () {
-      return 'https://helpdesk.***REMOVED***/api/admin_panel/' + this.currentForm + '/param_rule/add'
+      return '/api/admin_panel/' + this.currentForm + '/param_rule/add'
     },
     url_param_rule_del: function () {
-      return 'https://helpdesk.***REMOVED***/api/admin_panel/' + this.currentForm + '/param_rule/del'
+      return '/api/admin_panel/' + this.currentForm + '/param_rule/del'
+    },
+    actionDefinition () {
+      return this.$store.state.actionDefinition
     }
   },
   watch: {
@@ -130,9 +132,6 @@ export default {
       this.loadParamRules()
       this.loadActionDefinition()
       this.visible = !this.visible
-    },
-    loadActionDefinition () {
-      this.actionDefinition = 'some_definition' + this.currentForm
     },
     loadParamRules () {
       let this_ = this
