@@ -4,10 +4,9 @@ import logging
 
 from starlette.responses import RedirectResponse  # NOQA
 from starlette.authentication import requires, has_required_scope  # NOQA
-from starlette.exceptions import HTTPException
 
 from app import config
-from app.libs.rest import jsonize, check_parameter, json_validator, json_unpack
+from app.libs.rest import jsonize, check_parameter, json_validator
 from app.models.provider import get_provider_by_action_auth
 from app.models.db.ticket import Ticket
 from app.models.db.param_rule import ParamRule
