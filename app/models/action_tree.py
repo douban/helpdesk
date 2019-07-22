@@ -116,9 +116,9 @@ class ActionTree:
 
     def get_tree_list(self, node_formatter):
         """
-        以嵌套列表的方式返回action_tree
-        :param: node_formatter: 节点处理函数
-        :return: 嵌套的列表
+        return nested list with tree structure
+        :param node_formatter: func to handle node info, node and local list will be passed as params
+        :return: nested list
         """
         local_list = []
 
@@ -132,6 +132,13 @@ class ActionTree:
         if self.parent is None:
             local_list = node_formatter(self, local_list)
         return local_list
+
+    def get_action_by_target_obj(self, target_object):
+        action_tree_leaf = self.find(
+            target_object) if target_object != '' else self.first()
+        if not action_tree_leaf:
+            return
+        return action_tree_leaf.action
 
 
 action_tree = ActionTree(ACTION_TREE_CONFIG)

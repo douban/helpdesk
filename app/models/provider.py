@@ -3,6 +3,7 @@
 from datetime import datetime
 
 from starlette.authentication import has_required_scope
+
 from app.config import NO_AUTH_TARGET_OBJECTS, PROVIDER
 
 

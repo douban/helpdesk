@@ -8,7 +8,6 @@ from starlette.exceptions import HTTPException
 
 from app import config
 from app.libs.rest import jsonize, check_parameter, json_validator, json_unpack
-from app.models.action import get_action_by_target_obj
 from app.models.provider import get_provider_by_action_auth
 from app.models.db.ticket import Ticket
 from app.models.db.param_rule import ParamRule
@@ -117,26 +116,24 @@ async def action_tree_list(request):
     return action_tree.get_tree_list(node_formatter)
 
 
-@bp.route('/action/{target_type}', methods=['GET', 'POST'])
+@bp.route('/action/{target_object}', methods=['GET', 'POST'])
 @jsonize
 @requires(['authenticated'])
 async def action_definition(request):
-    target_object = request.path_params.get('target_type', '').strip('/')
+    target_object = request.path_params.get('target_object', '').strip('/')
 
     # check target_type availability
-    action = get_action_by_target_obj(action_tree, target_object)
+    action = action_tree.get_action_by_target_obj(target_object)
     if not action:
-        return HTTPException(status_code=404)
+        raise ApiError(ApiErrors.not_found)
 
     # check provider permission
     provider = get_provider_by_action_auth(request, action)
     if not provider:
-        return HTTPException(status_code=401)
+        raise ApiError(ApiErrors.forbidden)
 
     if request.method == 'GET':
-        action_dict = json_unpack(action)
-        action_dict['params'] = action.parameters(provider)
-        return action_dict
+        return action.to_dict(params=action.parameters(provider))
 
     if request.method == 'POST':
         form = await request.form()
