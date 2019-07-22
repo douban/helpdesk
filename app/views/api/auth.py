@@ -25,10 +25,3 @@ async def challenge(request):
 async def revoke(request):
     unauth(request)
     return {'success': True, 'msg': ''}
-
-
-@bp.route('/auth/heartbeat', methods=['GET'])
-@requires(['authenticated'])
-@jsonize
-async def heartbeat(request):
-    return {'status_code': 200, 'msg':'OK'}
