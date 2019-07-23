@@ -117,11 +117,10 @@ async def action_tree_list(request):
 
 @bp.route('/action/{target_object}', methods=['GET', 'POST'])
 @jsonize
-@requires(['authenticated'])
-async def action_definition(request):
+async def action(request):
     target_object = request.path_params.get('target_object', '').strip('/')
 
-    # check target_type availability
+    # check if action exists
     action = action_tree.get_action_by_target_obj(target_object)
     if not action:
         raise ApiError(ApiErrors.not_found)
@@ -132,7 +131,7 @@ async def action_definition(request):
         raise ApiError(ApiErrors.forbidden)
 
     if request.method == 'GET':
-        return action.to_dict(params=action.parameters(provider))
+        return action.to_dict(provider)
 
     if request.method == 'POST':
         form = await request.form()

@@ -41,9 +41,10 @@ class Action(DictSerializableClassMixin):
                 parameters[k].update(dict(default=fill, immutable=True))
         return parameters
 
-    def to_dict(self, show=None, **kw):
-        action_d = super(Action, self).to_dict(show, **kw)
-        action_d.update(kw)
+    def to_dict(self, provider=None, **kw):
+        action_d = super(Action, self).to_dict(**kw)
+        if provider:
+            action_d['params'] = self.parameters(provider)
         return action_d
 
     async def run(self, provider, form, is_admin=False):

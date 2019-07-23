@@ -6,7 +6,6 @@
 # edit local_config.py
 cp local_config.py.example local_config.py
 
-# ref: puppet helm helpdesk.values.yaml
 vi local_config.py
 
 # init database
