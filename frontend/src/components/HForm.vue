@@ -1,14 +1,19 @@
 <template>
   <a-layout :style="{ background: '#fff', padding: '24px', margin: '0 0 0 24px', minHeight: '280px' }">
     <a-divider orientation="left"><h3>{{name}}</h3></a-divider>
-
+    <div
+      v-show="resultVisible"
+      :class="['ant-alert', 'ant-alert-' + resultType, 'ant-alert-no-icon']"
+      style="margin: 16px;"
+      v-html="submitResult"
+    >
+    </div>
     <a-alert
       :message="description"
       type="info"
       :style="{ margin: '16px' }"
-    >
-    </a-alert>
-    <a-col :span="12" :offset="3">
+    />
+    <a-col>
       <a-form
       :form="form"
       @submit="handleSubmit">
@@ -16,7 +21,11 @@
           :schema="schema"
           v-model="formData">
         </dynamic-form>
-        <a-button @click="handleSubmit">Submit</a-button>
+        <a-form-item
+          :wrapper-col="{ span: 12, offset: 5 }"
+        >
+          <a-button type="primary" @click="handleSubmit">Submit</a-button>
+        </a-form-item>
       </a-form>
     </a-col>
   </a-layout>
@@ -26,18 +35,21 @@
 <script>
 import DynamicForm from './DynamicForm'
 import {HRequest} from '../utils/HRequests'
+import AFormItem from 'ant-design-vue/es/form/FormItem'
 export default {
   name: 'HForm',
   components: {
+    AFormItem,
     DynamicForm
   },
   data () {
     return {
-      formData: {
-        firstName: 'Evan'
-      },
+      formData: {},
       form: this.$form.createForm(this),
-      schema: []
+      schema: [],
+      resultVisible: false,
+      submitResult: '',
+      resultType: 'success'
     }
   },
   computed: {
@@ -69,8 +81,25 @@ export default {
       this.form.validateFields((err, values) => {
         if (!err) {
           console.log('Received values of form: ', values)
+          // validate success, let us proceed.
+          let submitURL = '/api/action/' + this.actionName
+          const qs = require('qs')
+          const options = {
+            method: 'POST',
+            headers: { 'content-type': 'application/x-www-form-urlencoded' },
+            data: qs.stringify(this.formData),
+            url: submitURL}
+          HRequest(options).then((response) => {
+            this.handleSubmitResult(response)
+          })
         }
       })
+    },
+    handleSubmitResult (response) {
+      console.log(response)
+      this.resultVisible = true
+      this.submitResult = response.data.data.msg
+      this.resultType = response.data.data.msg_level
     },
     reloadSchema () {
       let formSchema = []
@@ -80,7 +109,7 @@ export default {
           continue
         }
         let fieldDefinition = {}
-
+        // shared property of all types
         fieldDefinition.name = name
         fieldDefinition.required = value.required || false
         fieldDefinition.extra = value.description
@@ -88,6 +117,7 @@ export default {
         // 判断类型
         if (value.type === 'boolean') {
           console.log('something')
+          fieldDefinition.fieldType = 'CheckBoxInput'
         } else {
           if (value.enum) {
             // 下拉选择框
@@ -101,8 +131,14 @@ export default {
         formSchema.push(fieldDefinition)
       }
       this.schema = formSchema
+    },
+    clearSubmitResult () {
+      this.resultVisible = false
+      this.submitResult = ''
+      this.resultType = 'success'
     }
   },
+
   mounted () {
     this.loadFormDefinition()
   },
@@ -110,6 +146,7 @@ export default {
     '$route' (to, from) {
       // 对路由变化作出响应...
       this.loadFormDefinition()
+      this.clearSubmitResult()
     }
   }
 

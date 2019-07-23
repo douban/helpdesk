@@ -60,15 +60,11 @@
 <script>
 import HFooter from './HFooter'
 import {HRequest} from '../utils/HRequests'
-const axios = require('axios')
 export default {
   name: 'Login',
   components: {HFooter},
   beforeCreate () {
     this.form = this.$form.createForm(this)
-  },
-  mounted () {
-    this.checkUserLoginStatus()
   },
   methods: {
     handleSubmit (e) {
@@ -86,7 +82,7 @@ export default {
               user: values.username,
               password: values.password
             }),
-            url: '/api/auth/challenge'}
+            url: '/api/auth/login'}
           HRequest(options).then(
             (response) => {
               // 第一个data 是response 里的data , 第二个data 是消息体内的data
@@ -114,14 +110,6 @@ export default {
     },
     purgeUserProfile () {
       this.$store.dispatch('deleteUserProfile')
-    },
-    checkUserLoginStatus () {
-      axios.get('/api/auth/heartbeat').then(
-        (response) => {
-          if (response.data.data.status_code === 200) {
-            this.onSuccess()
-          }
-        })
     }
   }
 }

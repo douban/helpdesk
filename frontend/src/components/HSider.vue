@@ -31,7 +31,7 @@ export default {
     return {
       collapsed: false,
       list: [],
-      OpenKeys: [],
+      OpenKeys: ['功能导航'],
       SelectedKeys: []
     }
   },
@@ -43,6 +43,7 @@ export default {
           let actionName = this.$route.params.name
           let e = getElementFromArray(response.data.data, 'target_object', actionName, 'name')
           let path = e[1].split('-')
+          // currently not working , see also https://github.***REMOVED***/sa/helpdesk/pull/43#discussion_r77114
           this.OpenKeys = path.slice(0, [path.length - 1])
           this.SelectedKeys = path.slice([path.length - 1])
           this.list = response.data.data

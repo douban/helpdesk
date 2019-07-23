@@ -10,8 +10,7 @@ let router = new Router({
   routes: [
     {
       path: '/',
-      name: 'Home',
-      component: HelloWorld
+      redirect: '/forms/apply_server'
     },
     {
       path: '/ticket',

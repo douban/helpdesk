@@ -88,6 +88,7 @@
 </template>
 
 <script>
+import {HRequest} from '../utils/HRequests'
 export default {
   name: 'HDrawer',
   data () {
@@ -98,16 +99,16 @@ export default {
     }
   },
   computed: {
-    currentForm: function () {
+    currentForm () {
       return this.$route.params.name
     },
-    url_param_rule: function () {
+    url_param_rule () {
       return '/api/admin_panel/' + this.currentForm + '/param_rule'
     },
-    url_param_rule_add: function () {
+    url_param_rule_add () {
       return '/api/admin_panel/' + this.currentForm + '/param_rule/add'
     },
-    url_param_rule_del: function () {
+    url_param_rule_del () {
       return '/api/admin_panel/' + this.currentForm + '/param_rule/del'
     },
     actionDefinition () {
@@ -118,49 +119,33 @@ export default {
     '$route' (to, from) {
       // reload ActionDefinition when url changes
       this.clearStage()
-      this.loadActionDefinition()
     }
   },
   methods: {
     clearStage () {
       // 清除已有的状态, 将抽屉关上
-      this.actionDefinition = null
       this.paramRules = null
       this.onClose()
     },
     showDrawer () {
       this.loadParamRules()
-      this.loadActionDefinition()
       this.visible = !this.visible
     },
     loadParamRules () {
-      let this_ = this
-      let message = this.$message
-
-      if (!this.paramRules) {
-        let xhr = new XMLHttpRequest()
-        xhr.responseType = 'json'
-        xhr.onreadystatechange = function () {
-          if (this.readyState === 4) {
-            var jsonResponse = xhr.response
-            if (this.status === 200) {
-              this_.paramRules = jsonResponse.data
-
-              if (!this_.paramRules) {
-                this_.paramRules = []
-              }
-              // new empty obj
-              this_.paramRules.push({})
-
-              // console.log(this_.paramRules)
-            } else {
-              message.warning(JSON.stringify(jsonResponse))
+      if (this.paramRules) {
+        return
+      }
+      this.paramRules = [{}]
+      HRequest.get(this.url_param_rule).then(
+        (response) => {
+          if (response.status === 200 && response.data.data) {
+            if (response.data.data !== []) {
+              this.paramRules = response.data.data
             }
           }
+          this.paramRules.push({})
         }
-        xhr.open('GET', this.url_param_rule, true)
-        xhr.send()
-      }
+      )
     },
     onClose () {
       this.visible = false

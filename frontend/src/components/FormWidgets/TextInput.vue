@@ -1,6 +1,9 @@
 <template>
   <a-form-item
     :label="label || name"
+    :extra="extra"
+    :label-col="{ span: 5 }"
+    :wrapper-col="{ span: 12 }"
   >
     <a-input
       :name="name"
@@ -14,7 +17,7 @@
 <script>
 export default {
   name: 'TextInput',
-  props: ['placeholder', 'label', 'name', 'value', 'required'],
+  props: ['placeholder', 'label', 'name', 'value', 'required', 'extra'],
   computed: {
     decorator () {
       return [
