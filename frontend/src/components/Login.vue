@@ -1,7 +1,7 @@
 <template>
   <a-layout :style="{ minHeight: '100vh' }">
     <a-layout-content>
-      <a-row type="flex" justify="center" align="middle">
+      <a-row type="flex" justify="center" align="middle" :style="{ minHeight: '80vh' }">
         <a-col :span="6">
           <p> Login </p>
           <a-form
