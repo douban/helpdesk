@@ -5,7 +5,12 @@
     >
       <a slot="id" slot-scope="text, record" :href="record.url">{{record.id}}</a>
       <span slot="params" slot-scope="text, record">
-        {{text}}<a href="javascript:;" v-on:click="loadParams(record.params)">加载更多</a>
+        <template v-if="text.length > 50">
+          {{text.substring(0,50) + '...'}}<a href="javascript:;" v-on:click="loadParams(record.params)">加载更多</a>
+        </template>
+        <template v-else>
+          {{text}}
+        </template>
       </span>
       <a slot="result" slot-scope="text, record" :href="record.execution_result_url">link</a>
       <span slot="status" slot-scope="status">
@@ -46,9 +51,9 @@
 <script>
 import HBase from '@/components/HBase'
 import {cmp} from '../utils/HComparer'
+import {HRequest} from '../utils/HRequests'
 
 export default {
-// TODO 需要改为 ajax 异步加载
 // TODO 需要有详情的链接
   name: 'TicketList',
   components: {
@@ -56,22 +61,7 @@ export default {
   },
   data () {
     return {
-      table_data: [{
-        key: 1,
-        id: '1',
-        title: 'John Brown',
-        display_params: 'pubkey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDS6PMayCes8wgZh1c0V3PkO2X67kh19JtVHOMrcy8tWqoiYvP/bfhq2uuN/LQaymjpqzCqoZDTSizOyXCnDh58ZqxQnC0XJWHOLDaJzPgXRr5w5cozP5zjCZXJV6huQpypeSbaRkLuPUPlu6DYc45UHWsqaRe0fkT0KkMzDy/Ylp4I8bGa7av1jo4+Wx9yVJyJmWvtXKFhZad6hHVtphBxbow3xFF8TAKyc0YdY7t2cbGSQ4cwqlJUy15futFZlybmf840Yd6hzFTSWpJQ2ecd2baTkA+8DTyRCKV/0A7mqWRXR3rQ+iz3urjfqhqYrKJVXHmubDtl+sUcAM8Rb+vb yaoqian@douban.com; ldap_id: yaoqian'.substring(0, 30),
-        params: {
-          pubkey: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDS6PMayCes8wgZh1c0V3PkO2X67kh19JtVHOMrcy8tWqoiYvP/bfhq2uuN/LQaymjpqzCqoZDTSizOyXCnDh58ZqxQnC0XJWHOLDaJzPgXRr5w5cozP5zjCZXJV6huQpypeSbaRkLuPUPlu6DYc45UHWsqaRe0fkT0KkMzDy/Ylp4I8bGa7av1jo4+Wx9yVJyJmWvtXKFhZad6hHVtphBxbow3xFF8TAKyc0YdY7t2cbGSQ4cwqlJUy15futFZlybmf840Yd6hzFTSWpJQ2ecd2baTkA+8DTyRCKV/0A7mqWRXR3rQ+iz3urjfqhqYrKJVXHmubDtl+sUcAM8Rb+vb yaoqian@douban.com',
-          ldap_id: 'some_one'
-        },
-        reason: 'some_reason',
-        submitter: 'someone',
-        status: 'pending',
-        confirmed_by: 'someone2',
-        executed_at: 'some_date'
-      }],
-      some_data: 'asdasdas',
+      table_data: [],
       filtered: {},
       approval_color: {'approved': 'green', 'rejected': 'red', 'pending': 'orange'},
       param_detail_visible: false,
@@ -176,7 +166,31 @@ export default {
         }
       )
       this.showDrawer()
+    },
+    loadTickets () {
+      HRequest.get('/api/ticket').then(
+        (response) => {
+          this.handleTicketList(response)
+        }
+      )
+    },
+    handleTicketList (response) {
+      console.log(response)
+      this.table_data = response.data.data.tickets
+    },
+    onConfirm (record, status, actionUrl) {
+      // console.log(action_url)
+      HRequest.get(actionUrl).then(
+        (response) => {
+          if (response.status === 200) {
+            this.$message.success(response.data)
+          } else this.$message.warning(response.data)
+        }
+      )
     }
+  },
+  mounted () {
+    this.loadTickets()
   }
 }
 </script>
