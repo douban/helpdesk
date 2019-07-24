@@ -29,19 +29,6 @@ async def index(request):
     return dict(msg='Hello API')
 
 
-@bp.route('/ticket/{ticket_id:int}', methods=['GET'])
-@requires(['authenticated'])
-@jsonize
-async def ticket(request):
-    ticket_id = request.path_params['ticket_id']
-    ticket = await Ticket.get(ticket_id)
-    if not ticket:
-        raise ApiError(ApiErrors.not_found)
-    if not await ticket.can_view(request.user):
-        raise ApiError(ApiErrors.forbidden)
-    return ticket
-
-
 @bp.route('/user/me', methods=['GET'])
 @requires(['authenticated'])
 @jsonize
@@ -151,3 +138,55 @@ async def action(request):
                     debug=config.DEBUG,
                     provider=provider,
                     )
+
+
+@bp.route('/ticket', methods=['GET'])
+@bp.route('/ticket/{ticket_id:int}', methods=['GET', 'POST'])
+@jsonize
+@requires(['authenticated'])
+async def ticket(request):
+    ticket_id = request.path_params.get('ticket_id')
+    ticket = None
+    if ticket_id:
+        ticket = await Ticket.get(ticket_id)
+        if not ticket:
+            raise ApiError(ApiErrors.not_found)
+
+    extra_context = {}
+    if request.method == 'POST':
+        pass
+
+    page = request.query_params.get('page')
+    page_size = request.query_params.get('pagesize')
+    if page and page.isdigit():
+        page = max(1, int(page))
+    else:
+        page = 1
+    if page_size and page_size.isdigit():
+        page_size = max(1, int(page_size))
+        page_size = min(page_size, config.TICKETS_PER_PAGE)
+    else:
+        page_size = config.TICKETS_PER_PAGE
+    kw = dict(desc=True, limit=page_size, offset=(page - 1) * page_size)
+
+    if ticket:
+        if not await ticket.can_view(request.user):
+            raise ApiError(ApiErrors.forbidden)
+        tickets = [ticket]
+        total = 1
+    elif request.user.is_admin:
+        tickets = await Ticket.get_all(**kw)
+        total = await Ticket.count()
+    else:
+        # only show self tickets if not admin
+        tickets = await Ticket.get_all_by_submitter(submitter=request.user.name, **kw)
+        total = await Ticket.count_by_submitter(submitter=request.user.name)
+
+    return dict(
+        request=request,
+        tickets=tickets,
+        page=page,
+        page_size=page_size,
+        total=total,
+        **extra_context
+    )
