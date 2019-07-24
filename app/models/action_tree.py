@@ -114,5 +114,31 @@ class ActionTree:
             return []
         return self.path_to(tree_node.parent, pattern) + [pattern.format(**tree_node.__dict__) if pattern else tree_node]
 
+    def get_tree_list(self, node_formatter):
+        """
+        return nested list with tree structure
+        :param node_formatter: func to handle node info, node and local list will be passed as params
+        :return: nested list
+        """
+        local_list = []
+
+        for node in self.nexts:
+            if node.is_leaf:
+                local_list.append(node_formatter(node, local_list))
+                continue
+            children_list = node.get_tree_list(node_formatter)
+            local_list.append(node_formatter(node, children_list))
+
+        if self.parent is None:
+            local_list = node_formatter(self, local_list)
+        return local_list
+
+    def get_action_by_target_obj(self, target_object):
+        action_tree_leaf = self.find(
+            target_object) if target_object != '' else self.first()
+        if not action_tree_leaf:
+            return
+        return action_tree_leaf.action
+
 
 action_tree = ActionTree(ACTION_TREE_CONFIG)

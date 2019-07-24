@@ -2,6 +2,10 @@
 
 from datetime import datetime
 
+from starlette.authentication import has_required_scope
+
+from app.config import NO_AUTH_TARGET_OBJECTS, PROVIDER
+
 
 class Provider:
     provider_type = ''
@@ -57,3 +61,9 @@ def get_provider(provider, **kw):
     from app.models.providers.st2 import ST2Provider
 
     return {'st2': ST2Provider}[provider](**kw)
+
+
+def get_provider_by_action_auth(request, action):
+    if not has_required_scope(request, ['authenticated']):
+        return get_provider(PROVIDER) if action.target_object in NO_AUTH_TARGET_OBJECTS else None
+    return request.user.provider

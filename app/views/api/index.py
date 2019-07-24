@@ -5,7 +5,9 @@ import logging
 from starlette.responses import RedirectResponse  # NOQA
 from starlette.authentication import requires, has_required_scope  # NOQA
 
+from app import config
 from app.libs.rest import jsonize, check_parameter, json_validator
+from app.models.provider import get_provider_by_action_auth
 from app.models.db.ticket import Ticket
 from app.models.db.param_rule import ParamRule
 from app.models.action_tree import action_tree
@@ -94,3 +96,58 @@ async def config_param_rule(request, action):
 
     param_rules = await ParamRule.get_all_by_provider_object(action.target_object)
     return param_rules
+
+
+@bp.route('/action_tree')
+@jsonize
+@requires(['authenticated'])
+async def action_tree_list(request):
+    def node_formatter(node, children):
+        if node.is_leaf:
+            return node.action
+
+        sub_node_info = {
+            'name': node.name,
+            'children': children,
+        }
+        return [sub_node_info] if node.parent is None else sub_node_info
+
+    return action_tree.get_tree_list(node_formatter)
+
+
+@bp.route('/action/{target_object}', methods=['GET', 'POST'])
+@jsonize
+async def action(request):
+    target_object = request.path_params.get('target_object', '').strip('/')
+
+    # check if action exists
+    action = action_tree.get_action_by_target_obj(target_object)
+    if not action:
+        raise ApiError(ApiErrors.not_found)
+
+    # check provider permission
+    provider = get_provider_by_action_auth(request, action)
+    if not provider:
+        raise ApiError(ApiErrors.forbidden)
+
+    if request.method == 'GET':
+        return action.to_dict(provider)
+
+    if request.method == 'POST':
+        form = await request.form()
+        execution_or_ticket, msg = await action.run(provider, form,
+                                                    is_admin=has_required_scope(request, ['admin']))
+        msg_level = 'success' if bool(execution_or_ticket) else 'error'
+        execution = ticket = None
+        if execution_or_ticket and execution_or_ticket.get('_class') == 'Ticket':
+            ticket = execution_or_ticket
+        else:
+            execution = execution_or_ticket
+
+        return dict(execution=execution,
+                    ticket=ticket,
+                    msg=msg,
+                    msg_level=msg_level,
+                    debug=config.DEBUG,
+                    provider=provider,
+                    )
