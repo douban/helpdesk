@@ -8,6 +8,7 @@
       :placeholder="placeholder"
       :value="value"
       @input="$emit('input',$event.target.value)"
+      v-decorator="decorator"
     />
   </a-form-item>
 </template>

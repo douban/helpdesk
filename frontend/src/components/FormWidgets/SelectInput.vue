@@ -17,6 +17,7 @@
       @input="handleInput"
       @keypress.enter.native.prevent=""
       :value="selectedValues"
+      v-decorator="decorator"
     ></v-select>
     <input type='hidden' :value="value" />
   </a-form-item>
