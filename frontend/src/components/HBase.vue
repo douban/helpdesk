@@ -1,7 +1,9 @@
 <template>
   <a-layout :style="{ minHeight: '100vh' }">
     <h-header></h-header>
-    <slot>Loading...</slot>
+    <a-layout class="padding24px">
+      <slot>Loading...</slot>
+    </a-layout>
     <h-footer></h-footer>
   </a-layout>
 </template>
@@ -18,5 +20,7 @@ export default {
 </script>
 
 <style scoped>
-
+.padding24px {
+  padding: 0px 24px 24px;
+}
 </style>

@@ -6,9 +6,11 @@
       mode="horizontal"
       :style="{ lineHeight: '64px' }"
     >
-      <a-menu-item key="1"><a href="/#/">Helpdesk</a></a-menu-item>
+      <a-menu-item key="1">
+        <router-link :to="{name: 'Home'}">Helpdesk</router-link>
+      </a-menu-item>
       <a-menu-item key="2">
-        <a class="nav-item" href="/#/ticket">Tickets</a>
+        <router-link :to="{name: 'HTicketList'}">Tickets</router-link>
       </a-menu-item>
       <a-sub-menu :style="{ float: 'right' }">
         <span slot="title">

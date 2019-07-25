@@ -65,8 +65,8 @@ export default {
           // looking for selected item with actionName
           let e = getElementFromArray(definition, 'target_object', actionName, 'key')
           if (e !== undefined) {
-            let path = e[0].key.split('-')
-            this.SelectedKeys = [e[0].key]
+            let path = e.key.split('-')
+            this.SelectedKeys = [e.key]
             this.openKeys = []
             for (let i = 1; i < path.length; i++) {
               this.openKeys.push(path.slice(0, i).join('-'))

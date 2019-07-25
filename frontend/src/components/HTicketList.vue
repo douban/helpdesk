@@ -1,9 +1,16 @@
 <template>
   <h-base>
-    <a-table :columns="columns"
-             :dataSource="table_data"
+    <a-table
+      :columns="columns"
+      :dataSource="displayData"
+      class="whiteBackground"
     >
-      <a slot="id" slot-scope="text, record" :href="record.url">{{record.id}}</a>
+      <router-link
+        slot="id"
+        slot-scope="text, record"
+        :to="{name: 'HTicketDetail', params: {id: record.id}}">
+        {{record.id}}
+      </router-link>
       <span slot="params" slot-scope="text, record">
         <template v-if="text.length > 50">
           {{text.substring(0,50) + '...'}}<a href="javascript:;" v-on:click="loadParams(record.params)">加载更多</a>
@@ -52,6 +59,7 @@
 import HBase from '@/components/HBase'
 import {cmp} from '../utils/HComparer'
 import {HRequest} from '../utils/HRequests'
+import {getElementFromArray} from '../utils/HFinder'
 
 export default {
 // TODO 需要有详情的链接
@@ -148,6 +156,13 @@ export default {
         scopedSlots: { customRender: 'action' }
       }
       ]
+    },
+    displayData () {
+      if (this.$route.params.id === undefined) {
+        return this.table_data
+      }
+      let selectedData = getElementFromArray(this.table_data, 'id', this.$route.params.id)
+      return [selectedData]
     }
   },
   methods: {
@@ -175,7 +190,6 @@ export default {
       )
     },
     handleTicketList (response) {
-      console.log(response)
       this.table_data = response.data.data.tickets
     },
     onConfirm (record, status, actionUrl) {
@@ -196,5 +210,7 @@ export default {
 </script>
 
 <style scoped>
-
+.whiteBackground {
+  background: #fff
+}
 </style>

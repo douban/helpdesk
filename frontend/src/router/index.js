@@ -20,6 +20,12 @@ let router = new Router({
       component: HTicketList
     },
     {
+      path: '/ticket/:id',
+      name: 'HTicketDetail',
+      // TODO create another component for ticket detail
+      component: HTicketList
+    },
+    {
       path: '/forms/:name',
       name: 'FormView',
       component: HActionView

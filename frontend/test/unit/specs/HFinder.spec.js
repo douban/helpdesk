@@ -10,8 +10,7 @@ describe('FinderTest', function () {
         url: '/#/'
       }]
     let findResult = getElementFromArray(exampleArray, 'name', 'test', 'name')
-    expect(findResult[0].title).toEqual('功能导航加载中')
-    expect(findResult[1]).toEqual('test')
+    expect(findResult.title).toEqual('功能导航加载中')
     findResult = getElementFromArray(exampleArray, 'name', 'test_does_not_exist')
     expect(findResult).toEqual(undefined)
   })
@@ -38,8 +37,7 @@ describe('FinderTest', function () {
         children: a1
       }
     ]
-    let findResult = getElementFromArray(a2, 'name', 'test1', 'name')
-    expect(findResult[0].title).toBe('testtitle2')
-    expect(findResult[1]).toEqual('test2-test1')
+    let findResult = getElementFromArray(a2, 'name', 'test1')
+    expect(findResult.title).toBe('testtitle2')
   })
 })

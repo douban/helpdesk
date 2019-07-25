@@ -86,10 +86,8 @@ export default {
             (response) => {
               // 第一个data 是response 里的data , 第二个data 是消息体内的data
               if (response.data.data.success) {
-                console.log('验证成功')
                 this.onSuccess()
               } else {
-                console.log('验证失败')
                 message.warning(response.data.data.msg)
               }
             }

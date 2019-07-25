@@ -1,15 +1,13 @@
 <template>
   <h-base>
-    <a-layout class="padding24px">
-      <a-layout-sider  width="300" class="whiteBackground">
-          <a-layout class="whiteBackground">
-            <h-sider></h-sider>
-          </a-layout>
-      </a-layout-sider>
-      <a-layout-content>
-        <h-form></h-form>
-      </a-layout-content>
-    </a-layout>
+    <a-layout-sider  width="300" class="whiteBackground">
+        <a-layout class="whiteBackground">
+          <h-sider></h-sider>
+        </a-layout>
+    </a-layout-sider>
+    <a-layout-content>
+      <h-form></h-form>
+    </a-layout-content>
   </h-base>
 </template>
 
@@ -36,10 +34,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  .padding24px {
-    padding: 0px 24px 24px;
-  }
-  .whiteBackground {
-    background: #fff
-  }
+.whiteBackground {
+  background: #fff
+}
 </style>

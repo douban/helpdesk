@@ -11,16 +11,21 @@ HRequest.interceptors.response.use((response) => {
   return response
 }, function (error) {
   // Do something with response error
+  let currentPath = vm.$route.fullPath
   if (error.response.status === 401) {
     // 401, 未认证, 重定向至登录
     vm.$message.warning('用户未登录, 即将重定向至登录页...')
-    vm.$router.push('/login')
+    if (vm.$route.name !== 'Login') {
+      vm.$router.push({name: 'Login', query: {next: currentPath}})
+    }
   } else if (error.response.status === 403) {
     // 403, 权限不足, 提示联系管理员 TODO 后端未改造
     vm.$message.warning('账户权限不足, 请切换账号或联系管理员' + error.response.status + ':' + error.response.data)
-    vm.$router.push('/login')
+    if (vm.$route.name !== 'Login') {
+      vm.$router.push({name: 'Login', query: {next: currentPath}})
+    }
   } else if (error.response.status >= 500) {
-    console.log(error.response.data)
+    console.debug(error.response.data)
     vm.$message.error('服务器内部错误, 请联系管理员' + error.response.status + ':' + error.response.data)
   } else {
     vm.$message.warning('请求失败: ' + error.response.status + ':' + error.response.data)
