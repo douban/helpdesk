@@ -46,8 +46,9 @@
     </a-table>
     <a-modal
       title="任务参数详情"
-      :closable="false"
+      :closable="true"
       @ok="onClose"
+      @cancel="onClose"
       :visible="param_detail_visible"
     >
       <p v-for="p in params_in_modal" v-bind:key="p.id">{{p.name}}: {{p.value}}</p>
