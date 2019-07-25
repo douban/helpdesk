@@ -91,6 +91,7 @@
 import {HRequest} from '../utils/HRequests'
 export default {
   name: 'HDrawer',
+  props: ['actionDefinition'],
   data () {
     return {
       visible: false,
@@ -110,9 +111,6 @@ export default {
     },
     url_param_rule_del () {
       return '/api/admin_panel/' + this.currentForm + '/param_rule/del'
-    },
-    actionDefinition () {
-      return this.$store.state.actionDefinition
     }
   },
   watch: {

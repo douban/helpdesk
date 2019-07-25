@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import {getFirstActionFromTree} from '../utils/HFinder'
 
 Vue.use(Vuex)
 
@@ -9,7 +10,8 @@ export default new Vuex.Store({
   strict: debug,
   state: {
     userProfile: '',
-    actionDefinition: ''
+    actionDefinition: '',
+    actionTree: ''
   },
   mutations: {
     setUserProfile (state, profile) {
@@ -17,6 +19,9 @@ export default new Vuex.Store({
     },
     setActionDefinition (state, definition) {
       state.actionDefinition = definition
+    },
+    setActionTree (state, tree) {
+      state.actionTree = tree
     }
   },
   actions: {
@@ -28,6 +33,9 @@ export default new Vuex.Store({
     },
     updateActionDefinition ({ commit }, definition) {
       commit('setActionDefinition', definition)
+    },
+    updateActionTree ({ commit }, tree) {
+      commit('setActionTree', tree)
     }
   },
   getters: {
@@ -41,6 +49,9 @@ export default new Vuex.Store({
         }
       }
       return false
+    },
+    firstAction: (state) => {
+      return getFirstActionFromTree(state.actionTree)
     }
   }
 })

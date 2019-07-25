@@ -8,7 +8,6 @@ const HRequest = axios.create({
 
 HRequest.interceptors.response.use((response) => {
   // Do something with response data
-  console.log('global!!!')
   return response
 }, function (error) {
   // Do something with response error

@@ -74,7 +74,6 @@ export default {
         if (!err) {
           const qs = require('qs')
           let message = this.$message
-          console.log('Received values of form: ', values)
           const options = {
             method: 'POST',
             headers: { 'content-type': 'application/x-www-form-urlencoded' },
@@ -88,11 +87,9 @@ export default {
               // 第一个data 是response 里的data , 第二个data 是消息体内的data
               if (response.data.data.success) {
                 console.log('验证成功')
-                console.log(response.data)
                 this.onSuccess()
               } else {
                 console.log('验证失败')
-                console.log(response)
                 message.warning(response.data.data.msg)
               }
             }
@@ -105,7 +102,7 @@ export default {
       if (next) {
         this.$router.push(next)
       } else {
-        this.$router.push('/')
+        this.$router.push({name: 'Home'})
       }
     },
     purgeUserProfile () {

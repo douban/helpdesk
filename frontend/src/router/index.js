@@ -1,8 +1,9 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import HelloWorld from '@/components/HelloWorld'
-import TicketList from '@/components/TicketList'
+import HActionView from '@/components/HActionView'
+import HTicketList from '@/components/HTicketList'
 import Login from '@/components/Login'
+import HHome from '../components/HHome'
 
 Vue.use(Router)
 
@@ -10,17 +11,18 @@ let router = new Router({
   routes: [
     {
       path: '/',
-      redirect: '/forms/apply_server'
+      name: 'Home',
+      component: HHome
     },
     {
       path: '/ticket',
-      name: 'TicketList',
-      component: TicketList
+      name: 'HTicketList',
+      component: HTicketList
     },
     {
       path: '/forms/:name',
       name: 'FormView',
-      component: HelloWorld
+      component: HActionView
     },
     {
       path: '/login',

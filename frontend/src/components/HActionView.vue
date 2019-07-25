@@ -1,17 +1,14 @@
 <template>
   <h-base>
     <a-layout class="padding24px">
-      <a-row>
-        <a-col :span="6">
-          <a-layout class="whiteBackground" width="300">
+      <a-layout-sider  width="300" class="whiteBackground">
+          <a-layout class="whiteBackground">
             <h-sider></h-sider>
           </a-layout>
-        </a-col>
-        <a-col :span="18" >
-          <h-form></h-form>
-        </a-col>
-      </a-row>
-      <h-drawer v-if="this.$store.getters.isAdmin"></h-drawer>
+      </a-layout-sider>
+      <a-layout-content>
+        <h-form></h-form>
+      </a-layout-content>
     </a-layout>
   </h-base>
 </template>
@@ -19,12 +16,12 @@
 <script>
 import HSider from './HSider'
 import HForm from './HForm'
-import HDrawer from './HDrawer'
 import HBase from './HBase'
+import ALayoutSider from 'ant-design-vue/es/layout/Sider'
 export default {
-  name: 'HelloWorld',
+  name: 'HActionView',
   components: {
-    HDrawer,
+    ALayoutSider,
     'h-sider': HSider,
     HForm,
     'h-base': HBase

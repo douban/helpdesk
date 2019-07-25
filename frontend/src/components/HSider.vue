@@ -2,14 +2,20 @@
   <div>
     <a-menu
       v-model="SelectedKeys"
-      :defaultOpenKeys="OpenKeys"
+      :openKeys="openKeys"
       mode="inline"
-      :inlineCollapsed="collapsed"
+      :style="{ height: '100%', borderRight: 0 }"
+      @openChange="onOpenChange"
     >
       <template v-for="item in list">
         <!-- 如果要更改此处的自定义渲染, 请同时修改下方 import 的 SubMenu 内的渲染, 以保证一致 -->
         <a-menu-item v-if="!item.children" :key="item.name">
-          <a v-if="item.target_object" :href="'/#/forms/' + item.target_object" >{{item.name}}</a>
+          <router-link v-if="item.target_object"
+            :to="{ name: 'FormView', params: { name: item.target_object }}"
+            :title="item.desc"
+          >
+            {{item.name}}
+          </router-link>
           <span v-else>{{item.name}}</span>
         </a-menu-item>
         <sub-menu v-else :menu-info="item" :key="item.name"/>
@@ -21,7 +27,7 @@
 <script>
 import SubMenu from './SubMenu'
 import {HRequest} from '../utils/HRequests'
-import {getElementFromArray} from '../utils/HFinder'
+import {addKeyForEachElement, getElementFromArray} from '../utils/HFinder'
 
 export default {
   components: {
@@ -30,29 +36,61 @@ export default {
   data () {
     return {
       collapsed: false,
-      list: [],
-      OpenKeys: ['功能导航'],
-      SelectedKeys: []
+      openKeys: [],
+      SelectedKeys: [],
+      rootSubmenuKeys: []
+    }
+  },
+  computed: {
+    list () {
+      return this.$store.state.actionTree
+    },
+    firstAction () {
+      return this.$store.getters.firstAction
     }
   },
   methods: {
     loadActionTree () {
       HRequest.get('/api/action_tree').then(
         (response) => {
-          // 在其中查找到选中的 action
+          let definition = [{name: '功能导航'}]
+          definition.push.apply(definition, response.data.data[0].children)
+          // add key for each element in tree
+          definition = addKeyForEachElement(definition)
+          for (let i = 0; i < definition.length; i++) {
+            this.rootSubmenuKeys.push(definition[i].key)
+          }
+          this.$store.dispatch('updateActionTree', definition)
           let actionName = this.$route.params.name
-          let e = getElementFromArray(response.data.data, 'target_object', actionName, 'name')
-          let path = e[1].split('-')
-          // currently not working , see also https://github.***REMOVED***/sa/helpdesk/pull/43#discussion_r77114
-          this.OpenKeys = path.slice(0, [path.length - 1])
-          this.SelectedKeys = path.slice([path.length - 1])
-          this.list = response.data.data
+          // looking for selected item with actionName
+          let e = getElementFromArray(definition, 'target_object', actionName, 'key')
+          if (e !== undefined) {
+            let path = e[0].key.split('-')
+            this.SelectedKeys = [e[0].key]
+            this.openKeys = []
+            for (let i = 1; i < path.length; i++) {
+              this.openKeys.push(path.slice(0, i).join('-'))
+            }
+          }
         }
       )
+    },
+    onOpenChange (openKeys) {
+      console.debug(openKeys)
+      const latestOpenKey = openKeys.find(key => this.openKeys.indexOf(key) === -1)
+      if (this.rootSubmenuKeys.indexOf(latestOpenKey) === -1) {
+        this.openKeys = openKeys
+      } else {
+        this.openKeys = latestOpenKey ? [latestOpenKey] : []
+      }
+    },
+    // TODO: search menu
+    onSearchChange (e) {
     }
   },
-  mounted () {
+  beforeMount () {
     this.loadActionTree()
   }
 }
+
 </script>

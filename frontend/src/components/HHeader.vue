@@ -53,7 +53,7 @@ export default {
               this.$store.dispatch('updateUserProfile', response.data.data)
             } else {
               // 理论上来说不可能到这一步, 但我还是加上else 判断吧
-              this.$router.push('/login')
+              this.$router.push({name: 'Login'})
             }
           }
         ).catch()
@@ -62,7 +62,7 @@ export default {
     logout () {
       HRequest.post('/api/auth/logout').then(() => {
         document.cookie = 'session' + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;'
-        this.$router.push('/login')
+        this.$router.push({name: 'Login'})
       })
     }
   }

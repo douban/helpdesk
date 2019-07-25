@@ -28,6 +28,7 @@
         </a-form-item>
       </a-form>
     </a-col>
+    <h-drawer v-if="this.$store.getters.isAdmin" :actionDefinition="this.actionDefinition"></h-drawer>
   </a-layout>
 
 </template>
@@ -36,20 +37,22 @@
 import DynamicForm from './DynamicForm'
 import {HRequest} from '../utils/HRequests'
 import AFormItem from 'ant-design-vue/es/form/FormItem'
+import HDrawer from '@/components/HDrawer'
 export default {
   name: 'HForm',
   components: {
     AFormItem,
-    DynamicForm
+    DynamicForm,
+    HDrawer
   },
   data () {
     return {
       formData: {},
       form: this.$form.createForm(this),
-      schema: [],
       resultVisible: false,
       submitResult: '',
-      resultType: 'success'
+      resultType: 'success',
+      actionDefinition: ''
     }
   },
   computed: {
@@ -57,10 +60,44 @@ export default {
       return this.$route.params.name
     },
     name () {
-      return this.$store.state.actionDefinition.name || '加载中...'
+      return this.actionDefinition.name || 'Loading...'
     },
     description () {
-      return this.$store.state.actionDefinition.desc || '加载中...'
+      return this.actionDefinition.desc || 'Loading...'
+    },
+    schema () {
+      let formSchema = []
+      let aParams = this.actionDefinition.params
+      if (aParams === undefined) {
+        // in case actionDefinition is not loaded yet
+        return formSchema
+      }
+      for (let [name, param] of Object.entries(aParams)) {
+        if (param.immutable) {
+          continue
+        }
+        let fieldDefinition = {}
+        // shared property of all types
+        fieldDefinition.name = name
+        fieldDefinition.required = param.required || false
+        fieldDefinition.extra = param.description
+        fieldDefinition.default = param.default
+        // param.type indicate which widget to use
+        if (param.type === 'boolean') {
+          fieldDefinition.fieldType = 'CheckBoxInput'
+        } else {
+          if (param.enum) {
+            // SelectInput
+            fieldDefinition.fieldType = 'SelectInput'
+            fieldDefinition.options = param.enum
+          } else {
+            // Normal TextInput
+            fieldDefinition.fieldType = 'TextInput'
+          }
+        }
+        formSchema.push(fieldDefinition)
+      }
+      return formSchema
     }
   },
   methods: {
@@ -71,16 +108,13 @@ export default {
       )
     },
     formDefinitionHandler (response) {
-      console.log(response)
       this.formData = {}
-      let actionDefinition = response.data.data
-      this.$store.dispatch('updateActionDefinition', actionDefinition).then(this.reloadSchema())
+      this.actionDefinition = response.data.data
     },
     handleSubmit (e) {
       e.preventDefault()
       this.form.validateFields((err, values) => {
         if (!err) {
-          console.log('Received values of form: ', values)
           // validate success, let us proceed.
           let submitURL = '/api/action/' + this.actionName
           const qs = require('qs')
@@ -96,41 +130,9 @@ export default {
       })
     },
     handleSubmitResult (response) {
-      console.log(response)
       this.resultVisible = true
       this.submitResult = response.data.data.msg
       this.resultType = response.data.data.msg_level
-    },
-    reloadSchema () {
-      let formSchema = []
-      let aParams = this.$store.state.actionDefinition.params
-      for (let [name, value] of Object.entries(aParams)) {
-        if (value.immutable) {
-          continue
-        }
-        let fieldDefinition = {}
-        // shared property of all types
-        fieldDefinition.name = name
-        fieldDefinition.required = value.required || false
-        fieldDefinition.extra = value.description
-        fieldDefinition.default = value.default
-        // 判断类型
-        if (value.type === 'boolean') {
-          console.log('something')
-          fieldDefinition.fieldType = 'CheckBoxInput'
-        } else {
-          if (value.enum) {
-            // 下拉选择框
-            fieldDefinition.fieldType = 'SelectInput'
-            fieldDefinition.options = value.enum
-          } else {
-            // 普通输入框
-            fieldDefinition.fieldType = 'TextInput'
-          }
-        }
-        formSchema.push(fieldDefinition)
-      }
-      this.schema = formSchema
     },
     clearSubmitResult () {
       this.resultVisible = false
@@ -144,7 +146,7 @@ export default {
   },
   watch: {
     '$route' (to, from) {
-      // 对路由变化作出响应...
+      // reload form when route changes
       this.loadFormDefinition()
       this.clearSubmitResult()
     }

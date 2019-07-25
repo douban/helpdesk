@@ -20,7 +20,7 @@ export default {
       return [
         this.name, {
           rules: [{required: this.required, message: 'This field is required'}]
-        }] || []
+        }]
     }
   }
 }

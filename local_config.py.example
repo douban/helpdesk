@@ -1,0 +1,98 @@
+# coding: utf-8
+# vi: ft=python
+
+
+DEBUG = DEVELOP_MODE = True
+
+SENTRY_DSN = ''
+
+SESSION_SECRET_KEY = 'NVzLYJSMyw'
+
+SESSION_TTL = 24 * 3600
+
+SYSTEM_USER = 'admin'
+SYSTEM_USER_PASSWORD = 'admin'
+
+ADMIN_ROLES = ['admin', 'system_admin']
+
+PARAM_FILLUP = {
+    # 'reason': 'hehe',
+    'ldap_id': lambda provider: provider.user,
+}
+
+# DATABASE_URL = 'sqlite:///tmp/helpdesk.db'
+#   postgres://user:pass@localhost/dbname
+#   mysql://user:pass@localhost/dbname
+
+PROVIDER = 'st2'
+
+ST2_BASE_URL = 'https://st2.example.com'
+ST2_API_URL = 'https://st2.example.com/api'
+ST2_AUTH_URL = 'https://st2.example.com/auth'
+ST2_STREAM_URL = 'https://st2.example.com/stream'
+
+ST2_EXECUTION_RESULT_URL_PATTERN = ST2_BASE_URL + '/#/code/result/{execution_id}'
+
+ST2_API_KEY = None
+
+ST2_CACERT = None
+
+ST2_DEFAULT_PACK = ''
+
+ST2_WORKFLOW_RUNNER_TYPES = [
+    'action-chain',
+    'mistral-v2',
+    'orquesta'
+]
+
+ST2_TOKEN_TTL = 24 * 3600
+
+# LDAP
+
+DEFAULT_EMAIL_DOMAIN = 'example.com'
+# base url will be used by notifications to show web links
+DEFAULT_BASE_URL = 'https://example.com'
+FORCE_HTTPS = False
+ADMIN_EMAIL_ADDRS = 'admin@example.com,ops@example.com'
+FROM_EMAIL_ADDR = 'helpdesk@example.com'
+
+NOTIFICATION_TITLE_PREFIX = '[helpdesk] '
+
+NO_AUTH_TARGET_OBJECTS = ['ldap_pass_reset']
+
+URL_RESET_PASSWORD = ''
+
+AUTO_APPROVAL_TARGET_OBJECTS = []
+
+TICKETS_PER_PAGE = 50
+
+
+def avatar_url_func(ldap_id):
+    import hashlib
+    GRAVATAR_URL = '//www.gravatar.com/avatar/%s'
+    email = '%s@example.com' % ldap_id
+    return GRAVATAR_URL % hashlib.md5(email.encode('utf-8').lower()).hexdigest()
+
+
+# Action Tree Config
+# action name, description/tips, st2 pack/action
+
+ACCOUNT_SUBTREE = ['账号相关', [
+    # ['', '', ''],
+    ['申请服务器账号/重置密码', '申请 ssh 登录服务器的账号，或者重置密码', ''],
+    ['申请创建分布式文件系统用户目录', '跑分布式计算脚本常用的前置条件', ''],
+    ['申请加入用户组', '', ''],
+    ]]
+
+PACKAGE_SUBTREE = ['包管理相关', [
+    # ['', '', ''],
+    ['查询服务器上包版本', '可查询的信息有 ebuild 版本号、编译/部署时间，VCS 版本', ''],
+    ['在部分机器上用 nobinpkg 测试包', '常用于在部分服务器上测试新版本，观察可用性与稳定性时', ''],
+    ['build binpkg 并全量更新', '常用于使用 nobinpkg 测试完毕，可以上线到生产环境时', ''],
+    ['将已有的 binpkg 装到指定机器', '常用于将当前稳定版本安装到之前并未部署此包的机器上时', ''],
+    ['仅 build binpkg 而不安装', '此功能并不常用，请慎用，仅用于为即将被部署的包打 binpkg 时', ''],
+    ['使用现有的 binpkg 全量更新', '常用于已在 binhost 上生成 binpkg 的大型软件包', ''],
+    ['回滚包到指定 VCS 版本', '常用于将 9999 包回滚到某个 VCS 版本', ''],
+    ]]
+
+ACTION_TREE_CONFIG = ['功能导航', [ACCOUNT_SUBTREE, PACKAGE_SUBTREE]]

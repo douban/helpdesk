@@ -55,7 +55,7 @@ import {HRequest} from '../utils/HRequests'
 
 export default {
 // TODO 需要有详情的链接
-  name: 'TicketList',
+  name: 'HTicketList',
   components: {
     HBase
   },

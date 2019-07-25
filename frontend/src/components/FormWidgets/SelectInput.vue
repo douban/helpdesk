@@ -37,7 +37,6 @@ export default {
   },
   methods: {
     handleInput (event) {
-      console.log(event)
       let realValue = event.join()
       this.selectedValues = event
       this.$emit('input', realValue)
@@ -48,7 +47,7 @@ export default {
       return [
         this.name, {
           rules: [{required: this.required, message: 'This field is required'}]
-        }] || []
+        }]
     }
   }
 }
