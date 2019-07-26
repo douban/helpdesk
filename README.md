@@ -2,6 +2,7 @@
 
 ## Development
 
+### backend
 ```
 # edit local_config.py
 cp local_config.py.example local_config.py
@@ -14,8 +15,19 @@ make database
 make web
 make tail
 ```
+The default listening port of backend is 8123 , you can modify it in ``gunicorn_conf.py``
 
-Visit <http://localhost:8123> on your browser.
+### frontend
+First make sure you have installed latest [nodejs](https://nodejs.org/en/download/)
+
+```
+cd frontend
+npm install
+npm start
+```
+Follow the link in the console.
+
+PS: If your backend is not hosted in localhost or listening to port other than 8123, please modify the proxyTable config in ``frontend/config/index.js`` , see [Vue Templates Doc](https://vuejs-templates.github.io/webpack/proxy.html) for details
 
 ### Add new python dependency
 
