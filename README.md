@@ -18,6 +18,8 @@ make tail
 Visit <http://localhost:8123> on your browser. 
 The default listening port of backend is 8123 , you can modify it in ``MakeFile``
 
+PS: The user interface in backend web pages will be replaced by new standalone frontend in next major release, please see ``Standalone frontend`` if you want to modify the ui.
+
 ### Standalone frontend
 First make sure you have installed latest [nodejs](https://nodejs.org/en/download/)
 
