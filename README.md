@@ -15,9 +15,10 @@ make database
 make web
 make tail
 ```
-The default listening port of backend is 8123 , you can modify it in ``gunicorn_conf.py``
+Visit <http://localhost:8123> on your browser. 
+The default listening port of backend is 8123 , you can modify it in ``MakeFile``
 
-### frontend
+### Standalone frontend
 First make sure you have installed latest [nodejs](https://nodejs.org/en/download/)
 
 ```

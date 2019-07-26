@@ -13,7 +13,7 @@
       </router-link>
       <span slot="params" slot-scope="text, record">
         <template v-if="text.length > 50">
-          {{text.substring(0,50) + '...'}}<a href="javascript:;" v-on:click="loadParams(record.params)">加载更多</a>
+          {{text.substring(0,50) + '...'}}<a href="javascript:;" v-on:click="loadParams(record.params)">more</a>
         </template>
         <template v-else>
           {{text}}
@@ -45,7 +45,7 @@
         </span>
     </a-table>
     <a-modal
-      title="任务参数详情"
+      title="Params"
       :closable="true"
       @ok="onClose"
       @cancel="onClose"

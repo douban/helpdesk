@@ -53,7 +53,7 @@ export default {
     loadActionTree () {
       HRequest.get('/api/action_tree').then(
         (response) => {
-          let definition = [{name: '功能导航'}]
+          let definition = [{name: response.data.data[0].name}]
           definition.push.apply(definition, response.data.data[0].children)
           // add key for each element in tree
           definition = addKeyForEachElement(definition)

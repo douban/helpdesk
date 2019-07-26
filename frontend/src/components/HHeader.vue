@@ -20,7 +20,8 @@
             />
         </span>
         <a-menu-item key="3">
-          <a href="#/user/profile">
+          <a href="/api/user/me">
+          <!-- TODO a user profile page is needed -->
             <i class="glyphicon glyphicon-user"></i>
             whoami
           </a>
