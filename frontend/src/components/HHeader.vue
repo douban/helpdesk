@@ -54,7 +54,6 @@ export default {
             if (response.data.data.is_authenticated === true) {
               this.$store.dispatch('updateUserProfile', response.data.data)
             } else {
-              // 理论上来说不可能到这一步, 但我还是加上else 判断吧
               this.$router.push({name: 'Login'})
             }
           }

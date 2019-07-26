@@ -13,26 +13,24 @@ HRequest.interceptors.response.use((response) => {
   // Do something with response error
   let currentPath = vm.$route.fullPath
   if (error.response.status === 401) {
-    // 401, 未认证, 重定向至登录
-    vm.$message.warning('用户未登录, 即将重定向至登录页...')
+    // 401, unauthorized , redirect to login page
+    vm.$message.warning('Login required, redirecting to login page...')
     if (vm.$route.name !== 'Login') {
       vm.$router.push({name: 'Login', query: {next: currentPath}})
     }
   } else if (error.response.status === 403) {
-    // 403, 权限不足, 提示联系管理员 TODO 后端未改造
-    vm.$message.warning('账户权限不足, 请切换账号或联系管理员' + error.response.status + ':' + error.response.data)
+    // 403, insufficient privillege, Redirect to login page
+    vm.$message.warning('Insufficient privilege!' + error.response.status + ':' + error.response.data)
     if (vm.$route.name !== 'Login') {
       vm.$router.push({name: 'Login', query: {next: currentPath}})
     }
   } else if (error.response.status >= 500) {
-    console.debug(error.response.data)
-    vm.$message.error('服务器内部错误, 请联系管理员' + error.response.status + ':' + error.response.data)
+    vm.$message.error('Internal error, please contact webadmin' + error.response.status + ':' + error.response.data)
   } else {
-    vm.$message.warning('请求失败: ' + error.response.status + ':' + error.response.data)
+    // > 500 internal error, notify only
+    // > 404 notify only
+    vm.$message.warning('Request failed: ' + error.response.status + ':' + error.response.data)
   }
-  // > 500 内部错误, 提示联系管理员
-  // > 404 只提示
-  // 超时在这里吗?
   return Promise.reject(error)
 })
 

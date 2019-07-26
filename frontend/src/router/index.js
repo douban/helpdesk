@@ -27,7 +27,7 @@ let router = new Router({
       component: HTicketList
     },
     {
-      path: '/forms/:name',
+      path: '/:name',
       name: 'FormView',
       component: HActionView
     },

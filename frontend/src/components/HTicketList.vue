@@ -63,7 +63,7 @@ import {HRequest} from '../utils/HRequests'
 import {getElementFromArray} from '../utils/HFinder'
 
 export default {
-// TODO 需要有详情的链接
+// TODO a new TicketDetail component for ticket detail view
   name: 'HTicketList',
   components: {
     HBase
@@ -194,7 +194,6 @@ export default {
       this.table_data = response.data.data.tickets
     },
     onConfirm (record, status, actionUrl) {
-      // console.log(action_url)
       HRequest.get(actionUrl).then(
         (response) => {
           if (response.status === 200) {

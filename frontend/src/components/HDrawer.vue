@@ -121,7 +121,7 @@ export default {
   },
   methods: {
     clearStage () {
-      // 清除已有的状态, 将抽屉关上
+      // clear stage , close the drawer
       this.paramRules = null
       this.onClose()
     },

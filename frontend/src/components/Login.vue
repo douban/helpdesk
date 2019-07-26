@@ -70,7 +70,7 @@ export default {
     handleSubmit (e) {
       e.preventDefault()
       this.form.validateFields((err, values) => {
-        // values 是表单对象
+        // ``values`` stands for the form data
         if (!err) {
           const qs = require('qs')
           let message = this.$message
@@ -84,7 +84,8 @@ export default {
             url: '/api/auth/login'}
           HRequest(options).then(
             (response) => {
-              // 第一个data 是response 里的data , 第二个data 是消息体内的data
+              // the initial ``data`` is data in response object
+              // second ``data`` is the data in message object
               if (response.data.data.success) {
                 this.onSuccess()
               } else {

@@ -5,12 +5,12 @@ describe('FinderTest', function () {
     let exampleArray = [
       {
         key: '1',
-        title: '功能导航加载中',
+        title: 'loading',
         name: 'test',
         url: '/#/'
       }]
     let findResult = getElementFromArray(exampleArray, 'name', 'test', 'name')
-    expect(findResult.title).toEqual('功能导航加载中')
+    expect(findResult.title).toEqual('loading')
     findResult = getElementFromArray(exampleArray, 'name', 'test_does_not_exist')
     expect(findResult).toEqual(undefined)
   })
@@ -31,7 +31,7 @@ describe('FinderTest', function () {
       },
       {
         key: '1',
-        title: '功能导航加载中',
+        title: 'loading',
         name: 'test2',
         url: '/#/',
         children: a1
