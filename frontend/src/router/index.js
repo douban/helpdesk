@@ -8,6 +8,7 @@ import HHome from '../components/HHome'
 Vue.use(Router)
 
 let router = new Router({
+  mode: 'history',
   routes: [
     {
       path: '/',
