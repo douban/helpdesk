@@ -7,6 +7,7 @@ from starlette.authentication import requires, has_required_scope  # NOQA
 
 from app import config
 from app.libs.rest import jsonize, check_parameter, json_validator
+from app.libs.template import url_for
 from app.models.provider import get_provider_by_action_auth
 from app.models.db.ticket import Ticket
 from app.models.db.param_rule import ParamRule
@@ -140,6 +141,42 @@ async def action(request):
                     )
 
 
+@bp.route('/ticket/{ticket_id:int}/{op}', methods=['GET'])
+@jsonize
+@requires(['authenticated'])
+async def ticket_op(request):
+    ticket_id = request.path_params['ticket_id']
+    op = request.path_params['op']
+    if op not in ('approve', 'reject'):
+        raise ApiError(ApiErrors.unknown_operation)
+
+    ticket = await Ticket.get(ticket_id)
+    if not ticket:
+        raise ApiError(ApiErrors.not_found)
+
+    if not await ticket.can_admin(request.user):
+        raise ApiError(ApiErrors.forbidden)
+
+    if op == 'approve':
+        ret, msg = ticket.approve(by_user=request.user.name)
+        if not ret:
+            return msg
+        execution, msg = ticket.execute()
+        if not execution:
+            raise ApiError(ApiErrors.unknown_exception, description=msg)
+    elif op == 'reject':
+        ret, msg = ticket.reject(by_user=request.user.name)
+        if not ret:
+            return msg
+
+    id_ = await ticket.save()
+    if not id_:
+        msg = 'ticket executed but failed to save state' if op == 'approve' else 'Failed to save ticket state'
+        raise ApiError(ApiErrors.unknown_exception, description=msg)
+    await ticket.notify('approval')
+    return 'Success'
+
+
 @bp.route('/ticket', methods=['GET'])
 @bp.route('/ticket/{ticket_id:int}', methods=['GET', 'POST'])
 @jsonize
@@ -152,7 +189,6 @@ async def ticket(request):
         if not ticket:
             raise ApiError(ApiErrors.not_found)
 
-    extra_context = {}
     if request.method == 'POST':
         pass
 
@@ -182,11 +218,18 @@ async def ticket(request):
         tickets = await Ticket.get_all_by_submitter(submitter=request.user.name, **kw)
         total = await Ticket.count_by_submitter(submitter=request.user.name)
 
+    def extra_dict(d):
+        id_ = d['id']
+        return dict(url=url_for('api:ticket', request, ticket_id=id_),
+                    approve_url=url_for('api:ticket_op', request, ticket_id=id_, op='approve'),
+                    reject_url=url_for('api:ticket_op', request, ticket_id=id_, op='reject'),
+                    api_url=url_for('api:ticket', request, ticket_id=id_),
+                    **d)
+
     return dict(
         request=request,
-        tickets=tickets,
+        tickets=[extra_dict(t.to_dict(show=True)) for t in tickets],
         page=page,
         page_size=page_size,
         total=total,
-        **extra_context
     )
