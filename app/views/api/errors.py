@@ -14,6 +14,7 @@ class ApiErrors(ApiErrorsBuiltin):
     method_not_allowed = (20003, 'method_not_allowed', 405)
     unknown_config_type = (20004, 'unknown_config_type', 400)
     unknown_operation = (20005, 'unknown_operation', 400)
+    unrepeatable_operation = (20006, 'unrepeatable_operation', 400)
 
     unknown_exception = (22001, 'unknown_exception', 400)
 

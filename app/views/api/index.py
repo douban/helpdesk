@@ -141,7 +141,7 @@ async def action(request):
                     )
 
 
-@bp.route('/ticket/{ticket_id:int}/{op}', methods=['GET'])
+@bp.route('/ticket/{ticket_id:int}/{op}', methods=['POST'])
 @jsonize
 @requires(['authenticated'])
 async def ticket_op(request):
@@ -160,21 +160,21 @@ async def ticket_op(request):
     if op == 'approve':
         ret, msg = ticket.approve(by_user=request.user.name)
         if not ret:
-            return msg
+            raise ApiError(ApiErrors.unrepeatable_operation, description=msg)
         execution, msg = ticket.execute()
         if not execution:
             raise ApiError(ApiErrors.unknown_exception, description=msg)
     elif op == 'reject':
         ret, msg = ticket.reject(by_user=request.user.name)
         if not ret:
-            return msg
+            raise ApiError(ApiErrors.unrepeatable_operation, description=msg)
 
     id_ = await ticket.save()
     if not id_:
         msg = 'ticket executed but failed to save state' if op == 'approve' else 'Failed to save ticket state'
         raise ApiError(ApiErrors.unknown_exception, description=msg)
     await ticket.notify('approval')
-    return 'Success'
+    return dict(msg='Success')
 
 
 @bp.route('/ticket', methods=['GET'])
