@@ -23,6 +23,10 @@ ingress:
     - /
   hosts:
     - helpdesk.example.com
+  webPaths:
+    - /
+  webHosts:
+    - helpdesk-web.example.com
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
@@ -123,25 +127,20 @@ config: |
   # Action Tree Config
   # action name, description/tips, st2 pack/action
   
-  ACCOUNT_SUBTREE = ['账号相关', [
+  ACCOUNT_SUBTREE = ['Accounts', [
       # ['', '', ''],
-      ['申请服务器账号/重置密码', '申请 ssh 登录服务器的账号，或者重置密码', ''],
-      ['申请创建分布式文件系统用户目录', '跑分布式计算脚本常用的前置条件', ''],
-      ['申请加入用户组', '', ''],
+      ['New server account', 'New server account', 'new_server_account'],
+      ['Change password', 'Change password', 'change_password'],
       ]]
   
-  PACKAGE_SUBTREE = ['包管理相关', [
+  PACKAGE_SUBTREE = ['Packages', [
       # ['', '', ''],
-      ['查询服务器上包版本', '可查询的信息有 ebuild 版本号、编译/部署时间，VCS 版本', ''],
-      ['在部分机器上用 nobinpkg 测试包', '常用于在部分服务器上测试新版本，观察可用性与稳定性时', ''],
-      ['build binpkg 并全量更新', '常用于使用 nobinpkg 测试完毕，可以上线到生产环境时', ''],
-      ['将已有的 binpkg 装到指定机器', '常用于将当前稳定版本安装到之前并未部署此包的机器上时', ''],
-      ['仅 build binpkg 而不安装', '此功能并不常用，请慎用，仅用于为即将被部署的包打 binpkg 时', ''],
-      ['使用现有的 binpkg 全量更新', '常用于已在 binhost 上生成 binpkg 的大型软件包', ''],
-      ['回滚包到指定 VCS 版本', '常用于将 9999 包回滚到某个 VCS 版本', ''],
+      ['Query package version', 'Query package version in specific server', 'query_version'],
+      ['Build package', 'Build given package', 'build_package']
+
       ]]
   
-  ACTION_TREE_CONFIG = ['功能导航', [ACCOUNT_SUBTREE, PACKAGE_SUBTREE]]
+  ACTION_TREE_CONFIG = ['Navigation', [ACCOUNT_SUBTREE, PACKAGE_SUBTREE]]
 
 saToolsConfig: |
   # coding: utf-8

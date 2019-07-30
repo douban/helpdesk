@@ -1,6 +1,7 @@
 {{- if .Values.ingress.enabled -}}
 {{- $fullName := include "helpdesk.fullname" . -}}
 {{- $ingressPaths := .Values.ingress.paths -}}
+{{- $ingressWebPaths := .Values.ingress.webPaths -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -31,6 +32,21 @@ spec:
       http:
         paths:
   {{- range $ingressPaths }}
+          - path: {{ . }}api/
+            backend:
+              serviceName: {{ $fullName }}
+              servicePort: http
+          - path: {{ . }}
+            backend:
+              serviceName: {{ $fullName }}-frontend
+              servicePort: http
+  {{- end }}
+  {{- end }}
+  {{- range .Values.ingress.webHosts }}
+    - host: {{ . | quote }}
+      http:
+        paths:
+  {{- range $ingressWebPaths }}
           - path: {{ . }}
             backend:
               serviceName: {{ $fullName }}
