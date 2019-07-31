@@ -1,5 +1,6 @@
 <template>
   <div>
+    <a-input-search style="margin-bottom: 8px" placeholder="Search" v-model="searchText" />
     <a-menu
       v-model="SelectedKeys"
       :openKeys="openKeys"
@@ -7,6 +8,7 @@
       :style="{ height: '100%', borderRight: 0, 'background-color': 'white'}"
       @openChange="onOpenChange"
     >
+
       <template v-for="item in list">
         <!-- 如果要更改此处的自定义渲染, 请同时修改下方 import 的 SubMenu 内的渲染, 以保证一致 -->
         <a-menu-item v-if="!item.children" :key="item.name">
@@ -27,10 +29,12 @@
 <script>
 import SubMenu from './SubMenu'
 import {HRequest} from '../utils/HRequests'
-import {addKeyForEachElement, getElementFromArray} from '../utils/HFinder'
+import {addKeyForEachElement, getElementFromArray, getElementsContains} from '../utils/HFinder'
+import AInputSearch from 'ant-design-vue/es/input/Search'
 
 export default {
   components: {
+    AInputSearch,
     'sub-menu': SubMenu
   },
   data () {
@@ -38,12 +42,16 @@ export default {
       collapsed: false,
       openKeys: [],
       SelectedKeys: [],
-      rootSubmenuKeys: []
+      rootSubmenuKeys: [],
+      searchText: ''
     }
   },
   computed: {
     list () {
-      return this.$store.state.actionTree
+      if (!this.searchText) {
+        return this.$store.state.actionTree
+      }
+      return getElementsContains(this.$store.state.actionTree, this.searchText)
     },
     firstAction () {
       return this.$store.getters.firstAction
