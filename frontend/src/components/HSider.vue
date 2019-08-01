@@ -4,7 +4,7 @@
       v-model="SelectedKeys"
       :openKeys="openKeys"
       mode="inline"
-      :style="{ height: '100%', borderRight: 0 }"
+      :style="{ height: '100%', borderRight: 0, 'background-color': 'white'}"
       @openChange="onOpenChange"
     >
       <template v-for="item in list">
