@@ -17,9 +17,8 @@
       @input="handleInput"
       @keypress.enter.native.prevent=""
       :value="selectedValues"
-      v-decorator="decorator"
     ></v-select>
-    <input type='hidden' :value="value" />
+    <input type='hidden' :value="value" v-decorator="decorator()"/>
   </a-form-item>
 </template>
 
@@ -41,13 +40,14 @@ export default {
       let realValue = event.join()
       this.selectedValues = event
       this.$emit('input', realValue)
-    }
-  },
-  computed: {
+    },
     decorator () {
       return [
         this.name, {
-          rules: [{required: this.required, message: 'This field is required'}]
+          rules: [{
+            required: this.required,
+            message: 'This field is required'
+          }]
         }]
     }
   }
