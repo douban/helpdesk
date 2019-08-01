@@ -1,5 +1,8 @@
 <template>
   <div>
+    <div style="margin: 10px">
+      <a-input-search style="margin-bottom: 8px" placeholder="Search" v-model="searchText" />
+    </div>
     <a-menu
       v-model="SelectedKeys"
       :openKeys="openKeys"
@@ -27,10 +30,12 @@
 <script>
 import SubMenu from './SubMenu'
 import {HRequest} from '../utils/HRequests'
-import {addKeyForEachElement, getElementFromArray} from '../utils/HFinder'
+import {addKeyForEachElement, getElementFromArray, getElementsContains} from '../utils/HFinder'
+import AInputSearch from 'ant-design-vue/es/input/Search'
 
 export default {
   components: {
+    AInputSearch,
     'sub-menu': SubMenu
   },
   data () {
@@ -38,12 +43,16 @@ export default {
       collapsed: false,
       openKeys: [],
       SelectedKeys: [],
-      rootSubmenuKeys: []
+      rootSubmenuKeys: [],
+      searchText: ''
     }
   },
   computed: {
     list () {
-      return this.$store.state.actionTree
+      if (!this.searchText) {
+        return this.$store.state.actionTree
+      }
+      return getElementsContains(this.$store.state.actionTree, this.searchText)
     },
     firstAction () {
       return this.$store.getters.firstAction

@@ -50,3 +50,33 @@ export function addKeyForEachElement (tree, startingKey) {
   }
   return tree
 }
+
+export function filterArray (a, arrayFilter) {
+  let result = []
+  for (let i = 0; i < a.length; i++) {
+    let isElementValid = arrayFilter(a[i])
+    if (isElementValid) {
+      result.push(Object.assign({}, a[i]))
+    } else if (a[i].children) {
+      let innerResult = filterArray(a[i].children, arrayFilter)
+      if (innerResult.length > 0) {
+        let tempElement = Object.assign({}, a[i])
+        tempElement.children = innerResult
+        result.push(tempElement)
+      }
+    }
+  }
+  return result
+}
+
+export function getElementsContains (a, s) {
+  return filterArray(a, function (e) {
+    if (e.name.toLowerCase().indexOf(s.toLowerCase()) !== -1) {
+      return true
+    }
+    if (e.target_object && e.target_object.toLowerCase().indexOf(s.toLowerCase()) !== -1) {
+      return true
+    }
+    return false
+  })
+}
