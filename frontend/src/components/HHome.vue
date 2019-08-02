@@ -23,13 +23,17 @@ export default {
     'h-sider': HSider,
     'h-base': HBase
   },
-  mounted () {
-    setTimeout(() => {
-      // in case of slow network , delay for a while before redirect
-      if (this.$store.getters.firstAction) {
-        this.$router.push({name: 'FormView', params: {name: this.$store.getters.firstAction.target_object}})
+  computed: {
+    firstAction () {
+      return this.$store.getters.firstAction
+    }
+  },
+  watch: {
+    firstAction (value) {
+      if (value) {
+        this.$router.push({name: 'FormView', params: {name: value.target_object}})
       }
-    }, 1000)
+    }
   }
 }
 </script>
