@@ -5,6 +5,7 @@
       theme="dark"
       mode="horizontal"
       :style="{ lineHeight: '64px' }"
+      :selectedKeys = "selectedMenu"
     >
       <a-menu-item key="1">
         <router-link :to="{name: 'Home'}">Helpdesk</router-link>
@@ -42,6 +43,12 @@ export default {
   computed: {
     user () {
       return this.$store.state.userProfile
+    },
+    selectedMenu () {
+      let ticketRouteNames = ['HTicketList', 'HTicketDetail']
+      if (ticketRouteNames.includes(this.$route.name)) {
+        return ['2']
+      } else return ['1']
     }
   },
   mounted () {
