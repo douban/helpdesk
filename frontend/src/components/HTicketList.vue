@@ -11,13 +11,16 @@
         :to="{name: 'HTicketDetail', params: {id: record.id}}">
         {{record.id}}
       </router-link>
-      <span slot="params" slot-scope="text, record">
-        <template v-if="text.length > 50">
+      <span slot="params" slot-scope="text, record"  v-bind:style="{'wordWrap':'break-word','wordBreak': 'break-all'}">
+        <template v-if="Boolean(text) && text.length >50">
           {{text.substring(0,50) + '...'}}<a href="javascript:;" v-on:click="loadParams(record.params)">more</a>
         </template>
         <template v-else>
-          {{text}}
+          {{text || ''}}
         </template>
+      </span>
+      <span slot="reason" slot-scope="text, record"  v-bind:style="{'wordWrap':'break-word','wordBreak': 'break-all'}">
+          {{text || ''}}
       </span>
       <a slot="result" slot-scope="text, record" :href="record.execution_result_url">link</a>
       <span slot="status" slot-scope="status">
@@ -101,7 +104,8 @@ export default {
         title: 'Reason',
         key: 'reason',
         dataIndex: 'reason',
-        sorter: (a, b) => cmp(a, b, 'reason')
+        sorter: (a, b) => cmp(a, b, 'reason'),
+        scopedSlots: { customRender: 'reason' }
       }, {
         title: 'Submitter',
         key: 'submitter',
