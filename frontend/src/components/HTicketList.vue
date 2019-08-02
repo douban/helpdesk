@@ -93,6 +93,7 @@ export default {
       }, {
         title: 'Params',
         key: 'params',
+        width: 150,
         dataIndex: 'display_params',
         sorter: (a, b) => cmp(a, b, 'display_params'),
         scopedSlots: { customRender: 'params' }
@@ -194,7 +195,7 @@ export default {
       this.table_data = response.data.data.tickets
     },
     onConfirm (record, status, actionUrl) {
-      HRequest.get(actionUrl).then(
+      HRequest.post(actionUrl).then(
         (response) => {
           if (response.status === 200) {
             this.$message.success(response.data)
