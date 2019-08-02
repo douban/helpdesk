@@ -19,7 +19,7 @@
       @submit="handleSubmit">
         <dynamic-form
           :schema="schema"
-          v-model="formData">
+          @input="handleInput">
         </dynamic-form>
         <a-form-item
           :wrapper-col="{ span: 12, offset: 5 }"
@@ -102,19 +102,23 @@ export default {
   },
   methods: {
     loadFormDefinition () {
-      this.formData = {}
+      this.resetForm()
       HRequest.get('/api/action/' + this.actionName).then(
         (response) => this.formDefinitionHandler(response)
       )
     },
-    formDefinitionHandler (response) {
+    resetForm () {
+      this.form.resetFields()
       this.formData = {}
+    },
+    formDefinitionHandler (response) {
+      this.resetForm()
       this.actionDefinition = response.data.data
     },
     handleSubmit (e) {
       e.preventDefault()
       this.form.validateFields((err, values) => {
-        if (!err) {
+        if (!err && values) {
           // validate success, let us proceed.
           let submitURL = '/api/action/' + this.actionName
           const qs = require('qs')
@@ -138,6 +142,10 @@ export default {
       this.resultVisible = false
       this.submitResult = ''
       this.resultType = 'success'
+    },
+    handleInput (data) {
+      this.form.setFieldsValue(data)
+      this.formData = data
     }
   },
 
