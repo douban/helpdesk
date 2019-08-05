@@ -4,6 +4,7 @@ import HActionView from '@/components/HActionView'
 import HTicketList from '@/components/HTicketList'
 import Login from '@/components/Login'
 import HHome from '../components/HHome'
+import HTicketDetail from '../components/HTicketDetail'
 
 Vue.use(Router)
 
@@ -24,7 +25,7 @@ let router = new Router({
       path: '/ticket/:id',
       name: 'HTicketDetail',
       // TODO create another component for ticket detail
-      component: HTicketList
+      component: HTicketDetail
     },
     {
       path: '/:name',
