@@ -1,68 +1,74 @@
 <template>
   <h-base>
-    <a-table
-      :columns="columns"
-      :dataSource="displayData"
-      class="whiteBackground"
-    >
-      <router-link
-        slot="id"
-        slot-scope="text, record"
-        :to="{name: 'HTicketDetail', params: {id: record.id}}">
-        {{record.id}}
+    <a-card>
+      <router-link :to="{name: 'HTicketList'}">
+        <a-icon type="left" /> <span>Return to list</span>
       </router-link>
-      <span slot="params" slot-scope="text, record"  v-bind:style="{'wordWrap':'break-word','wordBreak': 'break-all'}">
-        <template v-if="Boolean(text) && text.length >50">
-          {{text.substring(0,50) + '...'}}<a href="javascript:;" v-on:click="loadParams(record.params)">more</a>
-        </template>
-        <template v-else>
-          {{text || ''}}
-        </template>
-      </span>
-      <span slot="reason" slot-scope="text, record"  v-bind:style="{'wordWrap':'break-word','wordBreak': 'break-all'}">
-          {{text || ''}}
-      </span>
-      <a slot="result" slot-scope="text, record" :href="record.execution_result_url">link</a>
-      <span slot="status" slot-scope="status">
-        <a-tag :key="status" :color="approval_color[status]">{{status}}</a-tag>
-      </span>
-      <span slot="action" slot-scope="text, record">
-        <span v-if="record.is_approved === undefined">
-          <a-popconfirm
-            title="Sure to approve?"
-            @confirm="() => onConfirm(record, 'approved', record.approve_url)"
-          >
-              <a :href="record.approve_url">approve</a>
-          </a-popconfirm>
-          <a-divider type="vertical" />
-          <a-popconfirm
-            title="Sure to reject?"
-            @confirm="() => onConfirm(record, 'rejected', record.reject_url)"
-          >
-            <a :href="record.reject_url">reject</a>
-          </a-popconfirm>
-          <a-divider type="vertical" />
-        </span>
+      <a-divider></a-divider>
+      <a-steps :current="currentStage">
+        <a-step key="0">
+          <!-- <span slot="title">Finished</span> -->
+          <template slot="title">
+            Created
+          </template>
+          <template slot="description">
+            by {{ticketInfo.submitter}}<br/>
+            at {{UTCtoLcocalTime(ticketInfo.created_at)}}
+          </template>
+        </a-step>
+        <a-step title="Pending" key="1"/>
+        <a-step v-if="ticketInfo.status==='rejected'" title="Rejected" key="3">
+        </a-step>
+        <a-step v-else title="Approved" key="2">
+          <template slot="description">
+            <span v-if="ticketInfo.is_approved">
+              by {{ticketInfo.confirmed_by}}<br/>
+              at {{UTCtoLcocalTime(ticketInfo.confirmed_at)}}
+            </span>
+          </template>
+        </a-step>
 
-        <a :href="record.api_url">detail</a>
-        </span>
-    </a-table>
-    <a-modal
-      title="Params"
-      :closable="true"
-      @ok="onClose"
-      @cancel="onClose"
-      :visible="param_detail_visible"
-    >
-      <p v-for="p in params_in_modal" v-bind:key="p.id">{{p.name}}: {{p.value}}</p>
-    </a-modal>
+      </a-steps>
+      <a-card title="Basic Info" :style="{ marginTop: '16px' }">
+        <a-row><b>Ticket Title</b>: {{ticketInfo.title}}</a-row>
+        <a-row><b>Reason</b>: {{ticketInfo.reason}}</a-row>
+        <a-row>
+          <a-col :span="12"><b>Created by</b>: {{table_data[0].submitter}}</a-col>
+          <a-col :span="12"><b>Created at</b>: {{UTCtoLcocalTime(ticketInfo.created_at)}}</a-col>
+        </a-row>
+        <a-row v-show="ticketInfo.is_approved">
+          <a-col :span="12">
+            <b>Approved by</b>: {{table_data[0].confirmed_by}}
+            <template v-show="ticketInfo.is_auto_approved">(auto approved)</template>
+          </a-col>
+          <a-col :span="12">
+            <b>Approved at</b>: {{UTCtoLcocalTime(ticketInfo.confirmed_at)}}
+          </a-col>
+        </a-row>
+        <a-row v-show="ticketInfo.executed_at">
+          <a-col :span="12"><b>Executed at</b>: {{UTCtoLcocalTime(ticketInfo.executed_at)}}</a-col>
+        </a-row>
+      </a-card>
+      <a-card title="Params" :style="{ marginTop: '16px' }">
+        <a-row v-for="(value, name, index) in table_data[0].params" :key="index">
+          <b>{{name}}</b>: {{value}}
+        </a-row>
+      </a-card>
+      <a-row :style="{ marginTop: '16px' }">
+        <a-button-group v-show="showActionButtons">
+          <a-button>Cancel</a-button>
+          <a-button type="primary">OK</a-button>
+        </a-button-group>
+        <a-button :style="{ marginLeft: '16px' }">Show result</a-button>
+      </a-row>
+    </a-card>
   </h-base>
 </template>
 
 <script>
 import HBase from '@/components/HBase'
-import {cmp} from '../utils/HComparer'
 import {HRequest} from '../utils/HRequests'
+import {UTCtoLcocalTime} from '../utils/HDate'
 
 export default {
 // TODO a new TicketDetail component for ticket detail view
@@ -80,90 +86,25 @@ export default {
     }
   },
   computed: {
-    columns () {
-      return [{
-        title: 'ID',
-        key: 'id',
-        dataIndex: 'id',
-        sorter: (a, b) => cmp(a, b, 'id'),
-        scopedSlots: { customRender: 'id' }
-      }, {
-        title: 'Title',
-        key: 'title',
-        dataIndex: 'title',
-        sorter: (a, b) => cmp(a, b, 'title')
-      }, {
-        title: 'Params',
-        key: 'params',
-        width: 150,
-        dataIndex: 'display_params',
-        sorter: (a, b) => cmp(a, b, 'display_params'),
-        scopedSlots: { customRender: 'params' }
-      }, {
-        title: 'Reason',
-        key: 'reason',
-        dataIndex: 'reason',
-        sorter: (a, b) => cmp(a, b, 'reason'),
-        scopedSlots: { customRender: 'reason' }
-      }, {
-        title: 'Submitter',
-        key: 'submitter',
-        dataIndex: 'submitter',
-        sorter: (a, b) => cmp(a, b, 'submitter')
-      }, {
-        title: 'Status',
-        key: 'status',
-        dataIndex: 'status',
-        sorter: (a, b) => cmp({'pending': 0, 'approved': 1, 'rejected': 2}[a.status], {'pending': 0, 'approved': 1, 'rejected': 2}[b.status]),
-        scopedSlots: { customRender: 'status' },
-        filters: [
-          {
-            text: 'approved',
-            value: 'approved'
-          }, {
-            text: 'rejected',
-            value: 'rejected'
-          }, {
-            text: 'pending',
-            value: 'pending'
-          }],
-        onFilter: (value, record) => record.status === value,
-        filteredValue: this.filtered.status
-      }, {
-        title: 'By',
-        key: 'confirmed_by',
-        dataIndex: 'confirmed_by',
-        sorter: (a, b) => cmp(a, b, 'confirmed_by')
-      },
-      {
-        title: 'Create Time',
-        key: 'created_at',
-        dataIndex: 'created_at',
-        sorter: (a, b) => cmp(a, b, 'created_at')
-      },
-      {
-        title: 'Result',
-        key: 'result',
-        dataIndex: 'execution_result_url',
-        sorter: (a, b) => cmp(a, b, 'execution_result_url'),
-        scopedSlots: { customRender: 'result' }
-      },
-      {
-        title: 'Execute Time',
-        key: 'executed_at',
-        dataIndex: 'executed_at',
-        sorter: (a, b) => cmp(a, b, 'executed_at')
-      },
-      {
-        title: 'Action',
-        key: 'action',
-        width: 230,
-        scopedSlots: { customRender: 'action' }
-      }
-      ]
+    ticketInfo () {
+      return this.table_data[0]
     },
-    displayData () {
-      return this.table_data
+    currentStage () {
+      switch (this.ticketInfo.status) {
+        case 'created':
+          return 0
+        case 'approved':
+          return 2
+        case 'pending':
+          return 1
+        case 'rejected':
+          return 2
+      }
+    },
+    showActionButtons () {
+      if (this.ticketInfo.status === 'pending' && this.$store.getters.isAdmin) {
+        return true
+      }
     }
   },
   methods: {
@@ -201,7 +142,8 @@ export default {
           } else this.$message.warning(response.data)
         }
       )
-    }
+    },
+    UTCtoLcocalTime
   },
   mounted () {
     this.loadTickets()
