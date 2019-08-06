@@ -59,8 +59,9 @@
           <a-button>Cancel</a-button>
           <a-button type="primary">OK</a-button>
         </a-button-group>
-        <a-button :style="{ marginLeft: '16px' }">Show result</a-button>
+        <a-button :style="{ marginLeft: '16px' }" @click="toggleResult">{{resultButtonText}}</a-button>
       </a-row>
+      <h-ticket-result :style="{ marginTop: '16px' }" :is-visible="resultVisible" :ticket-id="ticketInfo.id"></h-ticket-result>
     </a-card>
   </h-base>
 </template>
@@ -69,11 +70,13 @@
 import HBase from '@/components/HBase'
 import {HRequest} from '../utils/HRequests'
 import {UTCtoLcocalTime} from '../utils/HDate'
+import HTicketResult from './HTicketResult'
 
 export default {
 // TODO a new TicketDetail component for ticket detail view
   name: 'HTicketDetail',
   components: {
+    HTicketResult,
     HBase
   },
   data () {
@@ -82,7 +85,9 @@ export default {
       filtered: {},
       approval_color: {'approved': 'green', 'rejected': 'red', 'pending': 'orange'},
       param_detail_visible: false,
-      params_in_modal: []
+      params_in_modal: [],
+      resultButtonText: 'Show results',
+      resultVisible: false
     }
   },
   computed: {
@@ -108,22 +113,6 @@ export default {
     }
   },
   methods: {
-    showDrawer () {
-      this.param_detail_visible = true
-    },
-    onClose () {
-      this.param_detail_visible = false
-    },
-    loadParams (params) {
-      this.params_in_modal = []
-      let i = 1
-      Object.keys(params).forEach(
-        (key) => {
-          this.params_in_modal.push({id: i, name: key, value: params[key]})
-        }
-      )
-      this.showDrawer()
-    },
     loadTickets () {
       HRequest.get('/api/ticket/' + this.$route.params.id).then(
         (response) => {
@@ -143,10 +132,27 @@ export default {
         }
       )
     },
-    UTCtoLcocalTime
+    UTCtoLcocalTime,
+    toggleResult () {
+      this.resultVisible = !this.resultVisible
+      if (this.resultVisible) {
+        this.resultButtonText = 'Hide results'
+      } else {
+        this.resultButtonText = 'Show results'
+      }
+    },
+    resetResult () {
+      this.resultVisible = false
+    }
   },
   mounted () {
     this.loadTickets()
+  },
+  watch: {
+    '$route' (to, from) {
+      this.loadTickets()
+      this.resetResult()
+    }
   }
 }
 </script>
