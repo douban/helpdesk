@@ -1,9 +1,13 @@
 <template>
   <a-card v-show="isVisible">
     <a-row>
-      {{ticketId}}
+      <h1>{{totalCount}} execution(s) in total , {{successCount}} succeed, {{failedCount}} failed .</h1>
     </a-row>
-    <a-table :dataSource="results" :columns="columns">
+    <a-table
+      :dataSource="results"
+      :columns="columns"
+      rowKey="id"
+      :defaultExpandedRowKeys="defaultExpanedrow">
       <div slot="filterDropdown" slot-scope="{ setSelectedKeys, selectedKeys, confirm, clearFilters, column }" class='custom-filter-dropdown'>
         <a-input
           v-ant-ref="c => searchInput = c"
@@ -41,10 +45,11 @@
           <pre>{{record.stdout}}</pre>
         </span>
       </template>
+      <template slot="status" slot-scope="text">
+        <span v-if="text==='Success'"><a-tag color="green">Success</a-tag></span>
+        <span v-else><a-tag color="red">Failed</a-tag></span>
+      </template>
     </a-table>
-    <a-row v-for="(value, name) in results" :key="name">
-      {{name}} : {{value}}
-    </a-row>
     <a-back-top />
   </a-card>
 </template>
@@ -58,6 +63,11 @@ export default {
   data () {
     return {
       results: [{}],
+      filtered: {},
+      successCount: 0,
+      failedCount: 0,
+      totalCount: 0,
+      defaultExpanedrow: [1],
       columns: [
         {
           title: 'Host',
@@ -75,11 +85,19 @@ export default {
                 this.searchInput.focus()
               }, 0)
             }
-          }},
+          }
+        },
         {
-          title: 'Succeeded',
-          dataIndex: 'succeeded',
-          key: 'succeeded'
+          title: 'Status',
+          dataIndex: 'status',
+          filters: [
+            {text: 'Success', value: 'Success'},
+            {text: 'Failed', value: 'Failed'}
+          ],
+          scopedSlots: {
+            customRender: 'status'
+          },
+          onFilter: (value, record) => record.status === value
         },
         {
           title: 'Return code',
@@ -91,22 +109,45 @@ export default {
   },
   methods: {
     loadResult () {
-      HRequest.get('/api/execution/1').then(
+      HRequest.get('/api/ticket/' + this.ticketId + '/result').then(
         (response) => {
-          this.handleResult(response.data)
+          this.handleResult(response.data.data)
         }
       )
       // this.handleResult({'sa': {'failed': true, 'succeeded': false, 'description': 'farly long description'}})
     },
     handleResult (data) {
-      console.log(data)
       let listData = []
+      let count = 0
+      let successCount = 0
+      let failedCount = 0
       for (let property in data.result) {
         let el = data.result[property]
+        count += 1
+        el.id = count
         el.name = property
+        if (el.succeeded || !el.failed) {
+          successCount += 1
+          el.status = 'Success'
+        } else if (el.succeeded || !el.failed) {
+          failedCount += 1
+          el.status = 'Failed'
+        }
         listData.push(el)
       }
+      this.successCount = successCount
+      this.failedCount = failedCount
+      this.totalCount = count
       this.results = listData
+    },
+    handleSearch (selectedKeys, confirm) {
+      confirm()
+      this.searchText = selectedKeys[0]
+    },
+
+    handleReset (clearFilters) {
+      clearFilters()
+      this.searchText = ''
     }
   },
   watch: {
