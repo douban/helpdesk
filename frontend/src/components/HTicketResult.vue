@@ -34,15 +34,15 @@
       <template slot="expandedRowRender" slot-scope="record" style="margin: 0">
         <span v-show="record.traceback !== '' && record.traceback !== undefined">
           <h3><b>traceback:</b></h3>
-          <pre>{{record.traceback}}</pre>
+          <pre class="text-wrapper">{{record.traceback}}</pre>
         </span>
         <span>
           <h3>stderr: </h3>
-          <pre>{{record.stderr}}</pre>
+          <pre class="text-wrapper">{{record.stderr}}</pre>
         </span>
         <span>
           <h3>stdout: </h3>
-          <pre>{{record.stdout}}</pre>
+          <pre class="text-wrapper">{{record.stdout}}</pre>
         </span>
       </template>
       <template slot="status" slot-scope="text">
@@ -169,5 +169,7 @@ export default {
 </script>
 
 <style scoped>
-
+  .text-wrapper {
+    white-space: pre-wrap;
+  }
 </style>
