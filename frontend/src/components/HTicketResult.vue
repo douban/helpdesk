@@ -7,7 +7,8 @@
       :dataSource="results"
       :columns="columns"
       rowKey="id"
-      :defaultExpandedRowKeys="defaultExpanedrow">
+      :defaultExpandedRowKeys="defaultExpanedrow"
+      :pagination="paginationConfig">
       <div slot="filterDropdown" slot-scope="{ setSelectedKeys, selectedKeys, confirm, clearFilters, column }" class='custom-filter-dropdown'>
         <a-input
           v-ant-ref="c => searchInput = c"
@@ -68,6 +69,11 @@ export default {
       failedCount: 0,
       totalCount: 0,
       defaultExpanedrow: [1],
+      paginationConfig: {
+        pageSizeOptions: ['100', '200', '500'],
+        defaultPageSize: 100,
+        showSizeChanger: true
+      },
       columns: [
         {
           title: 'Host',
@@ -129,7 +135,11 @@ export default {
         if (el.succeeded || !el.failed) {
           successCount += 1
           el.status = 'Success'
-        } else if (el.succeeded || !el.failed) {
+        } else if (el.failed || !el.succeeded) {
+          failedCount += 1
+          el.status = 'Failed'
+        } else {
+          // Unknown count as failed
           failedCount += 1
           el.status = 'Failed'
         }
