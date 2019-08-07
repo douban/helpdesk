@@ -56,8 +56,8 @@
       </a-card>
       <a-row :style="{ marginTop: '16px' }">
         <a-button-group v-show="showActionButtons">
-          <a-button>Cancel</a-button>
-          <a-button type="primary">OK</a-button>
+          <a-button @click="onReject">Reject</a-button>
+          <a-button @click="onApprove" type="primary">Approve</a-button>
         </a-button-group>
         <a-button :style="{ marginLeft: '16px' }" @click="toggleResult">{{resultButtonText}}</a-button>
       </a-row>
@@ -143,6 +143,16 @@ export default {
     },
     resetResult () {
       this.resultVisible = false
+    },
+    onReject () {
+      HRequest.post(this.ticketInfo.reject_url).then(() => {
+        this.loadTickets()
+      })
+    },
+    onApprove () {
+      HRequest.post(this.ticketInfo.approve_url).then(() => {
+        this.loadTickets()
+      })
     }
   },
   mounted () {

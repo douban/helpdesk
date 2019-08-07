@@ -159,6 +159,11 @@ export default {
     executionId: function (to, from) {
       this.resetResult()
     }
+  },
+  mounted () {
+    if (this.isVisible) {
+      this.loadResult()
+    }
   }
 }
 </script>
