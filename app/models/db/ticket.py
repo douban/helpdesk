@@ -165,6 +165,22 @@ class Ticket(db.Model):
         # we don't save the ticket here, we leave it outside
         return execution, 'Success. <a href="%s" target="_blank">result</a>' % (execution['web_url'],)
 
+    def get_result(self, provider=None, is_admin=False):
+        system_provider = get_provider(self.provider_type)
+        # admin use self provider, otherwise use system_provider
+        if is_admin:
+            if not provider:
+                token, msg = system_provider.authenticate(self.submitter)
+                logger.debug('get token: %s, msg: %s', token, msg)
+                token = token['token']
+                provider = get_provider(self.provider_type, token=token, user=self.submitter)
+        else:
+            provider = system_provider
+        execution_id = self.annotation.get('execution', {}).get('id')
+        
+        execution, msg = provider.get_execution(execution_id)
+        return execution, msg
+
     async def notify(self, phase):
         # TODO: support custom template bind to action tree
         from app import config

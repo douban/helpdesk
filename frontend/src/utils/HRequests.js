@@ -12,16 +12,19 @@ HRequest.interceptors.response.use((response) => {
 }, function (error) {
   // Do something with response error
   let currentPath = vm.$route.fullPath
+  let execeptRoutes = ['Login']
+  let execeptApis = ['/api/user/me', '/api/action_tree']
+  console.log(error)
   if (error.response.status === 401) {
     // 401, unauthorized , redirect to login page
     vm.$message.warning('Login required, redirecting to login page...')
-    if (vm.$route.name !== 'Login') {
+    if (!(execeptRoutes.includes(vm.$route.name) || execeptApis.includes(error.config.url))) {
       vm.$router.push({name: 'Login', query: {next: currentPath}})
     }
   } else if (error.response.status === 403) {
     // 403, insufficient privillege, Redirect to login page
     vm.$message.warning('Insufficient privilege!' + error.response.status + ':' + error.response.data)
-    if (vm.$route.name !== 'Login') {
+    if (!(execeptRoutes.includes(vm.$route.name) || execeptApis.includes(error.config.url))) {
       vm.$router.push({name: 'Login', query: {next: currentPath}})
     }
   } else if (error.response.status >= 500) {
