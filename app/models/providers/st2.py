@@ -78,6 +78,15 @@ class ST2Provider(LdapProviderMixin, Provider):
             msg = str(e)
         return (execution.to_dict() if execution else None, msg)
 
+    def get_execution(self, execution_id):
+        execution = None
+        msg = ''
+        try:
+            execution = self.st2.executions.get_by_id(execution_id)
+        except requests.exceptions.HTTPError as e:
+            msg = str(e)
+        return (execution.to_dict() if execution else None, msg)
+
     def authenticate(self, user, password=None):
         ''' return a token dict and msg.
 

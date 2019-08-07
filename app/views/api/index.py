@@ -233,3 +233,20 @@ async def ticket(request):
         page_size=page_size,
         total=total,
     )
+
+@bp.route('/ticket/{ticket_id:int}/result', methods=['GET'])
+@jsonize
+@requires(['authenticated'])
+async def ticket_result(request):
+    ticket_id = request.path_params.get('ticket_id')
+    ticket = None
+    if ticket_id:
+        ticket = await Ticket.get(ticket_id)
+        if not ticket:
+            raise ApiError(ApiErrors.not_found)
+
+    execution, msg = ticket.result
+
+    if execution:
+        return execution
+    raise ApiError(ApiErrors.unknown_exception, description=msg)

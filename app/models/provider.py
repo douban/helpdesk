@@ -43,6 +43,9 @@ class Provider:
     def run_action(self, ref, parameters):
         raise NotImplementedError()
 
+    def get_execution(self, execution_id):
+        raise NotImplementedError()
+
     def authenticate(self, user, password):
         raise NotImplementedError()
 
