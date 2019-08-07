@@ -171,5 +171,7 @@ export default {
 <style scoped>
   .text-wrapper {
     white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
   }
 </style>
