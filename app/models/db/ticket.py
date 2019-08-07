@@ -165,8 +165,7 @@ class Ticket(db.Model):
         # we don't save the ticket here, we leave it outside
         return execution, 'Success. <a href="%s" target="_blank">result</a>' % (execution['web_url'],)
 
-    @property
-    def result(self, provider=None, is_admin=False):
+    def get_result(self, provider=None, is_admin=False):
         system_provider = get_provider(self.provider_type)
         # admin use self provider, otherwise use system_provider
         if is_admin:

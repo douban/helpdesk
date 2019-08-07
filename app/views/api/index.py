@@ -239,14 +239,15 @@ async def ticket(request):
 @requires(['authenticated'])
 async def ticket_result(request):
     ticket_id = request.path_params.get('ticket_id')
+    if not ticket_id:
+        raise ApiError(ApiErrors.unknown_operation, description='Ticket id must be provided')
     ticket = None
-    if ticket_id:
-        ticket = await Ticket.get(ticket_id)
-        if not ticket:
-            raise ApiError(ApiErrors.not_found)
+    ticket = await Ticket.get(ticket_id)
+    if not ticket:
+        raise ApiError(ApiErrors.not_found)
 
-    execution, msg = ticket.result
+    execution, msg = ticket.get_result()
 
-    if execution:
-        return execution
-    raise ApiError(ApiErrors.unknown_exception, description=msg)
+    if not execution:
+        raise ApiError(ApiErrors.unknown_exception, description=msg)
+    return execution
