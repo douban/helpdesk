@@ -59,7 +59,7 @@
           <a-button @click="onReject">Reject</a-button>
           <a-button @click="onApprove" type="primary">Approve</a-button>
         </a-button-group>
-        <a-button :style="{ marginLeft: '16px' }" @click="toggleResult">{{resultButtonText}}</a-button>
+        <a-button v-show="showResultButton" :style="{ marginLeft: '16px' }" @click="toggleResult">{{resultButtonText}}</a-button>
       </a-row>
       <h-ticket-result :style="{ marginTop: '16px' }" :is-visible="resultVisible" :ticket-id="ticketInfo.id"></h-ticket-result>
     </a-card>
@@ -110,6 +110,9 @@ export default {
       if (this.ticketInfo.status === 'pending' && this.$store.getters.isAdmin) {
         return true
       }
+    },
+    showResultButton () {
+      if (this.ticketInfo.status === 'approved') return true
     }
   },
   methods: {
