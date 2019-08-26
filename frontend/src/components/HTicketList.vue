@@ -64,6 +64,7 @@ import HBase from '@/components/HBase'
 import {cmp} from '../utils/HComparer'
 import {HRequest} from '../utils/HRequests'
 import {getElementFromArray} from '../utils/HFinder'
+import {UTCtoLcocalTime} from '../utils/HDate'
 
 export default {
 // TODO a new TicketDetail component for ticket detail view
@@ -140,7 +141,10 @@ export default {
         title: 'Create Time',
         key: 'created_at',
         dataIndex: 'created_at',
-        sorter: (a, b) => cmp(a, b, 'created_at')
+        sorter: (a, b) => cmp(a, b, 'created_at'),
+        customRender: (text) => {
+          return UTCtoLcocalTime(text)
+        }
       },
       {
         title: 'Result',
@@ -153,7 +157,10 @@ export default {
         title: 'Execute Time',
         key: 'executed_at',
         dataIndex: 'executed_at',
-        sorter: (a, b) => cmp(a, b, 'executed_at')
+        sorter: (a, b) => cmp(a, b, 'executed_at'),
+        customRender: (text) => {
+          return UTCtoLcocalTime(text)
+        }
       },
       {
         title: 'Action',
