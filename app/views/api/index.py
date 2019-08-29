@@ -198,7 +198,15 @@ async def ticket(request):
     for (key, value) in request.query_params.items():
         if key in ['page', 'pagesize', 'order_by', 'desc']:
             continue
-        filter_ = and_(filter_, Ticket.__table__.c[key] == value)
+        try:
+            if key.endswith('__icontains'):
+                key = key.split('__icontains')[0]
+                filter_ = and_(filter_, Ticket.__table__.c[key].icontains(value))
+            else:
+                filter_ = and_(filter_, Ticket.__table__.c[key] == value)
+        except KeyError:
+            # incorrect column name, ignore
+            pass
     if page and page.isdigit():
         page = max(1, int(page))
     else:
