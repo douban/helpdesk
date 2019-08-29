@@ -202,6 +202,10 @@ async def ticket(request):
             if key.endswith('__icontains'):
                 key = key.split('__icontains')[0]
                 filter_ = and_(filter_, Ticket.__table__.c[key].icontains(value))
+            elif key.endswith('__in'):
+                key = key.split('__in')[0]
+                value = value.split(',')
+                filter_ = and_(filter_, Ticket.__table__.c[key].in_(value))
             else:
                 filter_ = and_(filter_, Ticket.__table__.c[key] == value)
         except KeyError:
@@ -229,7 +233,7 @@ async def ticket(request):
         total = 1
     elif request.user.is_admin:
         tickets = await Ticket.get_all(**kw)
-        total = await Ticket.count()
+        total = await Ticket.count(filter_=filter_)
     else:
         # only show self tickets if not admin
         tickets = await Ticket.get_all_by_submitter(submitter=request.user.name, **kw)

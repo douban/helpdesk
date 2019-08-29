@@ -214,7 +214,34 @@ export default {
       this.loading = false
     },
     handleTableChange (pagination, filters, sorter) {
-      this.loadTickets({page: pagination.current, pagesize: pagination.pageSize})
+      // sorter example:
+      // {
+      //   "column": {},
+      //   "order": "ascend",
+      //   "field": "confirmed_by",
+      //   "columnKey": "confirmed_by"
+      // }
+      // order can be 'descend'
+      // filters example:
+      // {
+      //   "status": [
+      //   "rejected"
+      // ]
+      // }
+      let queryParams = {page: pagination.current, pagesize: pagination.pageSize}
+      let selectedStatus = filters.status
+      if (selectedStatus !== undefined) {
+        queryParams.status__in = selectedStatus.join()
+      }
+      if (sorter.columnKey !== undefined) {
+        queryParams.order_by = sorter.columnKey
+        if (sorter.order === 'ascend') {
+          queryParams.desc = false
+        } else {
+          queryParams.desc = true
+        }
+      }
+      this.loadTickets(queryParams)
     },
     onConfirm (record, status, actionUrl) {
       HRequest.post(actionUrl).then(
