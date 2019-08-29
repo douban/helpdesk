@@ -2,6 +2,8 @@
 
 import logging
 
+from sqlalchemy import true, and_
+
 from starlette.responses import RedirectResponse  # NOQA
 from starlette.authentication import requires, has_required_scope  # NOQA
 
@@ -189,6 +191,14 @@ async def ticket(request):
 
     page = request.query_params.get('page')
     page_size = request.query_params.get('pagesize')
+    order_by = request.query_params.get('order_by')
+    desc = request.query_params.get('desc')
+    # initialize filter by iterating keys in query_params
+    filter_ = true()
+    for (key, value) in request.query_params.items():
+        if key in ['page', 'pagesize', 'order_by', 'desc']:
+            continue
+        filter_ = and_(filter_, Ticket.__table__.c[key] == value)
     if page and page.isdigit():
         page = max(1, int(page))
     else:
@@ -198,7 +208,11 @@ async def ticket(request):
         page_size = min(page_size, config.TICKETS_PER_PAGE)
     else:
         page_size = config.TICKETS_PER_PAGE
-    kw = dict(desc=True, limit=page_size, offset=(page - 1) * page_size)
+    if desc and str(desc).lower() == 'false':
+        desc = False
+    else:
+        desc = True
+    kw = dict(filter_=filter_, order_by=order_by, desc=desc, limit=page_size, offset=(page - 1) * page_size)
 
     if ticket:
         if not await ticket.can_view(request.user):
@@ -211,7 +225,7 @@ async def ticket(request):
     else:
         # only show self tickets if not admin
         tickets = await Ticket.get_all_by_submitter(submitter=request.user.name, **kw)
-        total = await Ticket.count_by_submitter(submitter=request.user.name)
+        total = await Ticket.count_by_submitter(submitter=request.user.name, filter_=filter_)
 
     def extra_dict(d):
         id_ = d['id']

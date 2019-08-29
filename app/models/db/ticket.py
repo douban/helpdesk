@@ -3,6 +3,8 @@
 import logging
 from datetime import datetime
 
+from sqlalchemy.sql.expression import and_
+
 from app.libs.decorators import cached_property
 from app.models import db
 from app.models.db.param_rule import ParamRule
@@ -42,13 +44,19 @@ class Ticket(db.Model):
     executed_at = db.Column(db.DateTime)
 
     @classmethod
-    async def get_all_by_submitter(cls, submitter, desc=False, limit=None, offset=None):
-        filter_ = cls.__table__.c.submitter == submitter
+    async def get_all_by_submitter(cls, submitter, desc=False, limit=None, offset=None, filter_=None):
+        if filter_:
+            filter_ = and_(filter_, cls.__table__.c.submitter == submitter)
+        else:
+            filter_ = cls.__table__.c.submitter == submitter
         return await cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset)
 
     @classmethod
-    async def count_by_submitter(cls, submitter):
-        filter_ = cls.__table__.c.submitter == submitter
+    async def count_by_submitter(cls, submitter, filter_=None):
+        if filter_:
+            filter_ = and_(filter_, cls.__table__.c.submitter == submitter)
+        else:
+            filter_ = cls.__table__.c.submitter == submitter
         return await cls.count(filter_=filter_)
 
     @property
