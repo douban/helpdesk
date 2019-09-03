@@ -44,19 +44,18 @@ class Ticket(db.Model):
     executed_at = db.Column(db.DateTime)
 
     @classmethod
-    async def get_all_by_submitter(cls, submitter, desc=False, limit=None, offset=None, filter_=None):
+    async def get_all_by_submitter(cls, submitter, desc=False, limit=None, offset=None, filter_=None, **kw):
         if filter_:
             filter_ = and_(cls.__table__.c.submitter == submitter, filter_)
         else:
             filter_ = cls.__table__.c.submitter == submitter
-        return await cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset)
+        return await cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset, **kw)
 
     @classmethod
     async def count_by_submitter(cls, submitter, filter_=None):
+        filter_ = cls.__table__.c.submitter == submitter
         if filter_:
             filter_ = and_(cls.__table__.c.submitter == submitter, filter_)
-        else:
-            filter_ = cls.__table__.c.submitter == submitter
         return await cls.count(filter_=filter_)
 
     @property

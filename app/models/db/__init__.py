@@ -48,16 +48,14 @@ class Model(DictSerializableClassMixin, Base):
             query = query.where(t.c.id.in_(ids))
         elif filter_ is not None:
             query = query.where(filter_)
-        if not order_by:
-            if desc:
-                query = query.order_by(t.c.id.desc())
-            else:
-                query = query.order_by(t.c.id)
-        else:
-            if desc:
-                query = query.order_by(t.c[order_by].desc())
-            else:
-                query = query.order_by(t.c[order_by])
+        try:
+            order_by = t.c[order_by or 'id']
+        except KeyError:
+            # column not exist, ignore error and order by id
+            order_by = t.c['id']
+        if desc:
+            order_by = order_by.desc()
+        query = query.order_by(order_by)
         if limit:
             query = query.limit(limit)
         if offset:
