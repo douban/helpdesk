@@ -98,9 +98,9 @@ class Action(DictSerializableClassMixin):
             return ticket_added.to_dict(), 'Success. Your request has been submitted, please wait for approval.'
 
         # if this ticket is auto approved, execute it immediately
-        execution, msg = ticket_added.execute(provider=provider, is_admin=is_admin)
+        execution, _ = ticket_added.execute(provider=provider, is_admin=is_admin)
         if execution:
             await ticket_added.save()
             await ticket_added.notify('request')
 
-        return execution, msg
+        return ticket_added.to_dict(), 'Success. Your request has been approved automatically, please go to ticket page for details'

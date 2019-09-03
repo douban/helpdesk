@@ -123,17 +123,12 @@ async def action(request):
 
     if request.method == 'POST':
         form = await request.form()
-        execution_or_ticket, msg = await action.run(provider, form,
-                                                    is_admin=has_required_scope(request, ['admin']))
-        msg_level = 'success' if bool(execution_or_ticket) else 'error'
-        execution = ticket = None
-        if execution_or_ticket and execution_or_ticket.get('_class') == 'Ticket':
-            ticket = execution_or_ticket
-        else:
-            execution = execution_or_ticket
+        ticket = None
+        ticket, msg = await action.run(provider, form,
+                                       is_admin=has_required_scope(request, ['admin']))
+        msg_level = 'success' if bool(ticket) else 'error'
 
-        return dict(execution=execution,
-                    ticket=ticket,
+        return dict(ticket=ticket,
                     msg=msg,
                     msg_level=msg_level,
                     debug=config.DEBUG,

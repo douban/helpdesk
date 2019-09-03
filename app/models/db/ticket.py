@@ -146,6 +146,7 @@ class Ticket(db.Model):
         system_provider = get_provider(self.provider_type)
 
         logger.info('run action %s, params: %s', self.provider_object, self.params)
+        self.annotate(execution_submitted=True)
         # admin use self provider, otherwise use system_provider
         if is_admin:
             if not provider:
@@ -157,10 +158,14 @@ class Ticket(db.Model):
         else:
             execution, msg = system_provider.run_action(self.provider_object, self.params)
         if not execution:
+            self.annotate(execution_creation_success=False, execution_creation_msg=msg)
             return execution, msg
 
         self.executed_at = datetime.now()
-        self.annotate(execution=dict(id=execution['id'], result_url=ST2_EXECUTION_RESULT_URL_PATTERN.format(execution_id=execution['id'])))
+        self.annotate(execution=dict(id=execution['id'],
+                                     result_url=ST2_EXECUTION_RESULT_URL_PATTERN.format(execution_id=execution['id'])),
+                      execution_creation_success=True,
+                      execution_creation_msg=msg)
 
         # we don't save the ticket here, we leave it outside
         return execution, 'Success. <a href="%s" target="_blank">result</a>' % (execution['web_url'],)
