@@ -267,15 +267,19 @@ def extract_filter_from_query_params(query_params=None, model=None, exclude_keys
         # initialize filter by iterating keys in query_params
     filter_ = true()
     for (key, value) in query_params.items():
-        if key in exclude_keys:
+        if key.lower() in exclude_keys:
             continue
-        if key.endswith('__icontains'):
-            key = key.split('__icontains')[0]
-            filter_ = and_(filter_, model.__table__.c[key].icontains(value))
-        elif key.endswith('__in'):
-            key = key.split('__in')[0]
-            value = value.split(',')
-            filter_ = and_(filter_, model.__table__.c[key].in_(value))
-        else:
-            filter_ = and_(filter_, model.__table__.c[key] == value)
-    return filter_, ''
+        try:
+            if key.endswith('__icontains'):
+                key = key.split('__icontains')[0]
+                filter_ = and_(filter_, model.__table__.c[key].icontains(value))
+            elif key.endswith('__in'):
+                key = key.split('__in')[0]
+                value = value.split(',')
+                filter_ = and_(filter_, model.__table__.c[key].in_(value))
+            else:
+                filter_ = and_(filter_, model.__table__.c[key] == value)
+        except KeyError:
+            # ignore inexisted keys
+            pass
+    return filter_
