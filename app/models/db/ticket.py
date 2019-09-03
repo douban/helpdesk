@@ -53,9 +53,9 @@ class Ticket(db.Model):
 
     @classmethod
     async def count_by_submitter(cls, submitter, filter_=None):
-        filter_ = cls.__table__.c.submitter == submitter
+        submitter_filter = cls.__table__.c.submitter == submitter
         if filter_:
-            filter_ = and_(cls.__table__.c.submitter == submitter, filter_)
+            filter_ = and_(filter_, submitter_filter)
         return await cls.count(filter_=filter_)
 
     @property

@@ -195,7 +195,7 @@ async def ticket(request):
     desc = request.query_params.get('desc')
     filter_, extract_message = extract_filter_from_query_params(query_params=request.query_params, model=Ticket)
     if not filter_:
-        logger.warning('Extract filter from query_params has failed, {}'.format(extract_message))
+        logger.warning('Extract filter from query_params has failed: %s', extract_message)
     if page and page.isdigit():
         page = max(1, int(page))
     else:
