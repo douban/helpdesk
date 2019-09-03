@@ -193,9 +193,7 @@ async def ticket(request):
     page_size = request.query_params.get('pagesize')
     order_by = request.query_params.get('order_by')
     desc = request.query_params.get('desc')
-    filter_, extract_message = extract_filter_from_query_params(query_params=request.query_params, model=Ticket)
-    if not filter_:
-        logger.warning('Extract filter from query_params has failed: %s', extract_message)
+    filter_ = extract_filter_from_query_params(query_params=request.query_params, model=Ticket)
     if page and page.isdigit():
         page = max(1, int(page))
     else:
@@ -261,9 +259,9 @@ async def ticket_result(request):
 
 def extract_filter_from_query_params(query_params=None, model=None, exclude_keys=None):
     if not hasattr(query_params, 'items'):
-        return None, 'query_params has no items method'
+        raise ValueError('query_params has no items method')
     if not model:
-        return None, 'Model must be set'
+        raise ValueError('Model must be set')
     if exclude_keys is None:
         exclude_keys = ['page', 'pagesize', 'order_by', 'desc']
         # initialize filter by iterating keys in query_params
@@ -271,17 +269,13 @@ def extract_filter_from_query_params(query_params=None, model=None, exclude_keys
     for (key, value) in query_params.items():
         if key in exclude_keys:
             continue
-        try:
-            if key.endswith('__icontains'):
-                key = key.split('__icontains')[0]
-                filter_ = and_(filter_, model.__table__.c[key].icontains(value))
-            elif key.endswith('__in'):
-                key = key.split('__in')[0]
-                value = value.split(',')
-                filter_ = and_(filter_, model.__table__.c[key].in_(value))
-            else:
-                filter_ = and_(filter_, model.__table__.c[key] == value)
-        except KeyError:
-            # incorrect column name, ignore
-            pass
+        if key.endswith('__icontains'):
+            key = key.split('__icontains')[0]
+            filter_ = and_(filter_, model.__table__.c[key].icontains(value))
+        elif key.endswith('__in'):
+            key = key.split('__in')[0]
+            value = value.split(',')
+            filter_ = and_(filter_, model.__table__.c[key].in_(value))
+        else:
+            filter_ = and_(filter_, model.__table__.c[key] == value)
     return filter_, ''
