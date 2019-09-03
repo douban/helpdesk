@@ -2,6 +2,8 @@
 
 import logging
 
+from sqlalchemy import true, and_
+
 from starlette.responses import RedirectResponse  # NOQA
 from starlette.authentication import requires, has_required_scope  # NOQA
 
@@ -189,6 +191,9 @@ async def ticket(request):
 
     page = request.query_params.get('page')
     page_size = request.query_params.get('pagesize')
+    order_by = request.query_params.get('order_by')
+    desc = request.query_params.get('desc')
+    filter_ = extract_filter_from_query_params(query_params=request.query_params, model=Ticket)
     if page and page.isdigit():
         page = max(1, int(page))
     else:
@@ -198,7 +203,11 @@ async def ticket(request):
         page_size = min(page_size, config.TICKETS_PER_PAGE)
     else:
         page_size = config.TICKETS_PER_PAGE
-    kw = dict(desc=True, limit=page_size, offset=(page - 1) * page_size)
+    if desc and str(desc).lower() == 'false':
+        desc = False
+    else:
+        desc = True
+    kw = dict(filter_=filter_, order_by=order_by, desc=desc, limit=page_size, offset=(page - 1) * page_size)
 
     if ticket:
         if not await ticket.can_view(request.user):
@@ -207,11 +216,11 @@ async def ticket(request):
         total = 1
     elif request.user.is_admin:
         tickets = await Ticket.get_all(**kw)
-        total = await Ticket.count()
+        total = await Ticket.count(filter_=filter_)
     else:
         # only show self tickets if not admin
         tickets = await Ticket.get_all_by_submitter(submitter=request.user.name, **kw)
-        total = await Ticket.count_by_submitter(submitter=request.user.name)
+        total = await Ticket.count_by_submitter(submitter=request.user.name, filter_=filter_)
 
     def extra_dict(d):
         id_ = d['id']
@@ -246,3 +255,31 @@ async def ticket_result(request):
     if not execution:
         raise ApiError(ApiErrors.unknown_exception, description=msg)
     return execution
+
+
+def extract_filter_from_query_params(query_params=None, model=None, exclude_keys=None):
+    if not hasattr(query_params, 'items'):
+        raise ValueError('query_params has no items method')
+    if not model:
+        raise ValueError('Model must be set')
+    if exclude_keys is None:
+        exclude_keys = ['page', 'pagesize', 'order_by', 'desc']
+        # initialize filter by iterating keys in query_params
+    filter_ = true()
+    for (key, value) in query_params.items():
+        if key.lower() in exclude_keys:
+            continue
+        try:
+            if key.endswith('__icontains'):
+                key = key.split('__icontains')[0]
+                filter_ = and_(filter_, model.__table__.c[key].icontains(value))
+            elif key.endswith('__in'):
+                key = key.split('__in')[0]
+                value = value.split(',')
+                filter_ = and_(filter_, model.__table__.c[key].in_(value))
+            else:
+                filter_ = and_(filter_, model.__table__.c[key] == value)
+        except KeyError:
+            # ignore inexisted keys
+            pass
+    return filter_

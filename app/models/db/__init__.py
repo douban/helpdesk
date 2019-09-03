@@ -39,7 +39,7 @@ class Model(DictSerializableClassMixin, Base):
         return cls(**rs[0]) if rs else None
 
     @classmethod
-    async def get_all(cls, ids=None, filter_=None, desc=False, limit=None, offset=None):
+    async def get_all(cls, ids=None, filter_=None, order_by=None, desc=False, limit=None, offset=None):
         # logger.debug('%s.get_all(ids=%s, filter_=%s, desc=%s, limit=%s, offset=%s', cls.__name__, ids, filter_, desc, limit, offset)
         t = cls.__table__
         query = select([t])
@@ -48,8 +48,14 @@ class Model(DictSerializableClassMixin, Base):
             query = query.where(t.c.id.in_(ids))
         elif filter_ is not None:
             query = query.where(filter_)
+        try:
+            order_by = t.c[order_by or 'id']
+        except KeyError:
+            # invalid column name => 'id'
+            order_by = t.c['id']
         if desc:
-            query = query.order_by(t.c.id.desc())
+            order_by = order_by.desc()
+        query = query.order_by(order_by)
         if limit:
             query = query.limit(limit)
         if offset:

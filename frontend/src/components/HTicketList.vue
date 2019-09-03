@@ -2,7 +2,11 @@
   <h-base>
     <a-table
       :columns="columns"
-      :dataSource="displayData"
+      :dataSource="tableData"
+      :pagination="pagination"
+      @change="handleTableChange"
+      :loading="loading"
+      rowKey="id"
       class="whiteBackground"
     >
       <router-link
@@ -63,21 +67,23 @@
 import HBase from '@/components/HBase'
 import {cmp} from '../utils/HComparer'
 import {HRequest} from '../utils/HRequests'
-import {getElementFromArray} from '../utils/HFinder'
 import {UTCtoLcocalTime} from '../utils/HDate'
 
 export default {
-// TODO a new TicketDetail component for ticket detail view
   name: 'HTicketList',
   components: {
     HBase
   },
   data () {
     return {
-      table_data: [],
+      tableData: [],
       filtered: {},
       approval_color: {'approved': 'green', 'rejected': 'red', 'pending': 'orange'},
       param_detail_visible: false,
+      loading: false,
+      pagination: {
+        pageSize: 1
+      },
       params_in_modal: []
     }
   },
@@ -169,13 +175,6 @@ export default {
         scopedSlots: { customRender: 'action' }
       }
       ]
-    },
-    displayData () {
-      if (this.$route.params.id === undefined) {
-        return this.table_data
-      }
-      let selectedData = getElementFromArray(this.table_data, 'id', this.$route.params.id)
-      return [selectedData]
     }
   },
   methods: {
@@ -195,15 +194,54 @@ export default {
       )
       this.showDrawer()
     },
-    loadTickets () {
-      HRequest.get('/api/ticket').then(
+    loadTickets (params) {
+      this.pagination.current = params.page
+      this.loading = true
+      HRequest.get('/api/ticket', {params: params}).then(
         (response) => {
           this.handleTicketList(response)
         }
       )
     },
     handleTicketList (response) {
-      this.table_data = response.data.data.tickets
+      this.pagination.total = response.data.data.total
+      this.pagination.current = response.data.data.page
+      this.pagination.pageSize = response.data.data.page_size
+      // pagination.pageSize  and pagination.current are decorated by ```.sync``
+      // the following line is vital. dont know why, just do it.
+      this.pagination = {...this.pagination}
+      this.tableData = response.data.data.tickets
+      this.loading = false
+    },
+    handleTableChange (pagination, filters, sorter) {
+      // sorter example:
+      // {
+      //   "column": {},
+      //   "order": "ascend",
+      //   "field": "confirmed_by",
+      //   "columnKey": "confirmed_by"
+      // }
+      // order can be 'descend'
+      // filters example:
+      // {
+      //   "status": [
+      //   "rejected"
+      // ]
+      // }
+      let queryParams = {page: pagination.current, pagesize: pagination.pageSize}
+      let selectedStatus = filters.status
+      if (selectedStatus !== undefined) {
+        queryParams.status__in = selectedStatus.join()
+      }
+      if (sorter.columnKey !== undefined) {
+        queryParams.order_by = sorter.columnKey
+        if (sorter.order === 'ascend') {
+          queryParams.desc = false
+        } else {
+          queryParams.desc = true
+        }
+      }
+      this.loadTickets(queryParams)
     },
     onConfirm (record, status, actionUrl) {
       HRequest.post(actionUrl).then(
@@ -216,7 +254,16 @@ export default {
     }
   },
   mounted () {
-    this.loadTickets()
+    let queryParams = this.$route.query
+    if (queryParams.page === undefined) {
+      queryParams.page = 1
+    }
+    if (queryParams.pagesize === undefined) {
+      queryParams.pagesize = 10
+    }
+    queryParams.page = Number(queryParams.page)
+    queryParams.pageSize = Number(queryParams.pageSize)
+    this.loadTickets(queryParams)
   }
 }
 </script>
