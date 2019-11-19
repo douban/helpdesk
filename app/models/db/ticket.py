@@ -46,14 +46,14 @@ class Ticket(db.Model):
     @classmethod
     async def get_all_by_submitter(cls, submitter, desc=False, limit=None, offset=None, filter_=None, **kw):
         submitter_filter = cls.__table__.c.submitter == submitter
-        if filter_:
+        if filter_ is not None:
             filter_ = and_(filter_, submitter_filter)
         return await cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset, **kw)
 
     @classmethod
     async def count_by_submitter(cls, submitter, filter_=None):
         submitter_filter = cls.__table__.c.submitter == submitter
-        if filter_:
+        if filter_ is not None:
             filter_ = and_(filter_, submitter_filter)
         return await cls.count(filter_=filter_)
 
