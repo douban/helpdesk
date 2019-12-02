@@ -66,3 +66,4 @@ make helm-install
 ```
 
 Get the url from your nginx ingress and visit it.
+
