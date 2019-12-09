@@ -10,7 +10,7 @@ from app.models import db
 from app.models.db.param_rule import ParamRule
 from app.models.provider import get_provider
 from app.config import (SYSTEM_USER, ST2_EXECUTION_RESULT_URL_PATTERN,
-                        ADMIN_EMAIL_ADDRS,
+                        ADMIN_EMAIL_ADDRS, SLACK_ENABLED,
                         FROM_EMAIL_ADDR)
 
 logger = logging.getLogger(__name__)
@@ -196,7 +196,7 @@ class Ticket(db.Model):
         # TODO: support custom template bind to action tree
         from app import config
         from app.libs.template import render_notification
-        from app.libs.notification import notify
+        from app.libs.notification import notify, send_slack
 
         logger.info('Ticket notify: %s: %s', phase, self)
         assert phase in ('request', 'approval')
@@ -212,3 +212,5 @@ class Ticket(db.Model):
             email_addrs += [system_provider.get_user_email(self.submitter)]
         email_addrs = ','.join(addr for addr in email_addrs if addr)
         notify(email=email_addrs, subject=title, content=content.strip(), from_addr=FROM_EMAIL_ADDR)
+        if SLACK_ENABLED:
+            send_slack(title, content)
