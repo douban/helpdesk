@@ -213,4 +213,4 @@ class Ticket(db.Model):
         email_addrs = ','.join(addr for addr in email_addrs if addr)
         notify(email=email_addrs, subject=title, content=content.strip(), from_addr=FROM_EMAIL_ADDR)
         if SLACK_ENABLED:
-            send_slack(title, content)
+            send_slack(title, content.strip(), truncate=False)
