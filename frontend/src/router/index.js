@@ -24,7 +24,11 @@ let router = new Router({
     {
       path: '/ticket/:id',
       name: 'HTicketDetail',
-      // TODO create another component for ticket detail
+      component: HTicketDetail
+    },
+    {
+      path: '/ticket/:id/:action',
+      name: 'HTicketQuickPass',
       component: HTicketDetail
     },
     {

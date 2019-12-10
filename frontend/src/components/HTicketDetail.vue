@@ -120,6 +120,18 @@ export default {
       HRequest.get('/api/ticket/' + this.$route.params.id).then(
         (response) => {
           this.handleTicketList(response)
+          switch (this.$route.params.action) {
+            case 'approve':
+              this.onApprove()
+              break
+            case 'reject':
+              this.onReject()
+              break
+            case undefined:
+              break
+            default:
+              this.$message.warning('Action ' + this.$route.params.action + 'for this ticket is invalid.')
+          }
         }
       )
     },
@@ -150,11 +162,17 @@ export default {
     onReject () {
       HRequest.post(this.ticketInfo.reject_url).then(() => {
         this.loadTickets()
+        this.$message.info('Ticket rejected.')
+      }).catch((error) => {
+        this.$message.error('Ticket reject failed: ' + error.response.data.message)
       })
     },
     onApprove () {
       HRequest.post(this.ticketInfo.approve_url).then(() => {
         this.loadTickets()
+        this.$message.info('Ticket approved.')
+      }).catch((error) => {
+        this.$message.error('Ticket approved failed: ' + error.response.data.message)
       })
     }
   },
