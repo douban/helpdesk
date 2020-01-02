@@ -5,6 +5,7 @@ import logging
 import binascii
 from datetime import datetime, timedelta
 
+from requests.exceptions import HTTPError
 from starlette.authentication import (AuthenticationBackend,
                                       AuthenticationError, SimpleUser,
                                       AuthCredentials)
@@ -44,6 +45,16 @@ class SessionAuthBackend(AuthenticationBackend):
         from app.models.provider import get_provider
         from app.config import PROVIDER
 
+        # api-key auth
+        if request.headers.get('api-key'):
+            logger.debug('Using api-key auth')
+            provider = get_provider(PROVIDER, api_key=request.headers.get('api-key'))
+            try:
+                username = provider.st2.get_user_info().get('username')
+            except HTTPError:
+                raise AuthenticationError('Invalid api key or st2 unreachable.')
+            user = User(username=username, provider=provider)
+            return user.auth_credentials, user
         logger.debug('request.session: %s, user: %s', request.session, request.session.get('user'))
         if not all([request.session.get('user'), request.session.get('token'), request.session.get('expiry')]):
             return

@@ -19,11 +19,15 @@ logger = logging.getLogger(__name__)
 class ST2Provider(LdapProviderMixin, Provider):
     provider_type = 'st2'
 
-    def __init__(self, token=None, user=None):
+    def __init__(self, token=None, user=None, api_key=None):
         '''if token is not None, get token client; otherwise get service client
         '''
-        super().__init__(token=token, user=user)
-        self.st2 = get_client(token) if token else service_client
+        super().__init__(token=token, user=user, api_key=api_key)
+        # self.st2 is an st2_client instance
+        if token or api_key:
+            self.st2 = get_client(token, api_key=api_key)
+        else:
+            self.st2 = service_client
 
     def get_default_pack(self):
         return ST2_DEFAULT_PACK

@@ -47,7 +47,9 @@ def make_client_proxy(**kw):
 client = make_client_proxy(api_key=ST2_API_KEY)
 
 
-def get_client(token):
+def get_client(token, api_key=None):
+    if api_key:
+        return make_client_proxy(api_key=api_key)
     return make_client_proxy(token=token)
 
 
