@@ -170,7 +170,7 @@ async def ticket_op(request):
     if not id_:
         msg = 'ticket executed but failed to save state' if op == 'approve' else 'Failed to save ticket state'
         raise ApiError(ApiErrors.unknown_exception, description=msg)
-    await ticket.notify('approval')
+    ticket.notify('approval')
     return dict(msg='Success')
 
 

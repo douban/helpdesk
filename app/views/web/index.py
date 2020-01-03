@@ -96,7 +96,7 @@ async def ticket_op(request):
     if not id_:
         msg = 'ticket executed but failed to save state' if op == 'approve' else 'Failed to save ticket state'
         return PlainTextResponse(msg, status_code=500)
-    await ticket.notify('approval')
+    ticket.notify('approval')
     return PlainTextResponse('Success')
 
 

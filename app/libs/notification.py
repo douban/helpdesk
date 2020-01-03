@@ -23,7 +23,7 @@ def send_slack(subject, body, truncate=True):
         body = '\n'.join(bodies)
     text = '`%s`\n```%s```' % (subject, body)
     session = requests.Session()
-    session.mount("https://", requests.adapters.HTTPAdapter(max_retries=2))
+    session.mount("https://", requests.adapters.HTTPAdapter(max_retries=5))
     r = session.post(
         SLACK_WEBHOOK_URL, json={"text": text}, timeout=3)
     r.raise_for_status()
