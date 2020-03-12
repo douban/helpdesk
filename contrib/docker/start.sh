@@ -12,13 +12,6 @@ else
     elif [ -f /app/main.py ]; then
         DEFAULT_MODULE_NAME=main
     fi
-    if [ -f /app/secret/local_config.py ]; then
-        cp /app/secret/local_config.py /app/app/local_config.py
-    fi
-    if [ -f /app/secret/sa_tools_config.py ]; then
-        mkdir -p /etc/sa-tools
-        cp /app/secret/sa_tools_config.py /etc/sa-tools/config.py
-    fi
     MODULE_NAME=${MODULE_NAME:-$DEFAULT_MODULE_NAME}
     VARIABLE_NAME=${VARIABLE_NAME:-app}
     export APP_MODULE=${APP_MODULE:-"$MODULE_NAME:$VARIABLE_NAME"}
