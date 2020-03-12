@@ -6,7 +6,11 @@ image:
   repository: tclh123/helpdesk
   tag: stable
   pullPolicy: IfNotPresent
-
+frontend:
+  image:
+    repository: helpdesk-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
 nameOverride: ""
 fullnameOverride: ""
 
@@ -22,11 +26,11 @@ ingress:
   paths:
     - /
   hosts:
-    - helpdesk.example.com
+    - helpdesk.***REMOVED***
   webPaths:
     - /
   webHosts:
-    - helpdesk-web.example.com
+    - helpdesk-web.***REMOVED***
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
@@ -50,98 +54,6 @@ tolerations: []
 
 affinity: {}
 
-config: |
-  # coding: utf-8
-  # vi: ft=python
-  
-  DEBUG = DEVELOP_MODE = True
-  
-  SENTRY_DSN = ''
-  
-  SESSION_SECRET_KEY = 'NVzLYJSMyw'
-  
-  SESSION_TTL = 24 * 3600
-  
-  SYSTEM_USER = 'admin'
-  SYSTEM_USER_PASSWORD = 'admin'
-  
-  ADMIN_ROLES = ['admin', 'system_admin']
-  
-  PARAM_FILLUP = {
-      # 'reason': 'hehe',
-      'ldap_id': lambda provider: provider.user,
-  }
-  
-  DATABASE_URL = 'mysql://helpdesk:he1pde2k@helpdesk-mysql/helpdesk'
-  
-  PROVIDER = 'st2'
-  
-  ST2_BASE_URL = 'https://st2.example.com'
-  ST2_API_URL = 'https://st2.example.com/api'
-  ST2_AUTH_URL = 'https://st2.example.com/auth'
-  ST2_STREAM_URL = 'https://st2.example.com/stream'
-  
-  ST2_EXECUTION_RESULT_URL_PATTERN = ST2_BASE_URL + '/#/code/result/{execution_id}'
-  
-  ST2_API_KEY = None
-  
-  ST2_CACERT = None
-  
-  ST2_DEFAULT_PACK = ''
-  
-  ST2_WORKFLOW_RUNNER_TYPES = [
-      'action-chain',
-      'mistral-v2',
-      'orquesta'
-  ]
-  
-  ST2_TOKEN_TTL = 24 * 3600
-  
-  # LDAP
-  
-  DEFAULT_EMAIL_DOMAIN = 'example.com'
-  # base url will be used by notifications to show web links
-  DEFAULT_BASE_URL = 'https://example.com'
-  FORCE_HTTPS = False
-  ADMIN_EMAIL_ADDRS = 'admin@example.com,ops@example.com'
-  FROM_EMAIL_ADDR = 'helpdesk@example.com'
-  
-  NOTIFICATION_TITLE_PREFIX = '[helpdesk] '
-  
-  NO_AUTH_TARGET_OBJECTS = ['ldap_pass_reset']
-  
-  URL_RESET_PASSWORD = ''
-  
-  AUTO_APPROVAL_TARGET_OBJECTS = []
-  
-  TICKETS_PER_PAGE = 50
-  
-  
-  def avatar_url_func(ldap_id):
-      import hashlib
-      GRAVATAR_URL = '//www.gravatar.com/avatar/%s'
-      email = '%s@example.com' % ldap_id
-      return GRAVATAR_URL % hashlib.md5(email.encode('utf-8').lower()).hexdigest()
-  
-  
-  # Action Tree Config
-  # action name, description/tips, st2 pack/action
-  
-  ACCOUNT_SUBTREE = ['Accounts', [
-      # ['', '', ''],
-      ['New server account', 'New server account', 'new_server_account'],
-      ['Change password', 'Change password', 'change_password'],
-      ]]
-  
-  PACKAGE_SUBTREE = ['Packages', [
-      # ['', '', ''],
-      ['Query package version', 'Query package version in specific server', 'query_version'],
-      ['Build package', 'Build given package', 'build_package']
-
-      ]]
-  
-  ACTION_TREE_CONFIG = ['Navigation', [ACCOUNT_SUBTREE, PACKAGE_SUBTREE]]
-
 saToolsConfig: |
   # coding: utf-8
   # vi: ft=python
@@ -156,6 +68,118 @@ saToolsConfig: |
   ICINGA_EMAIL = 'icinga@example.com'
   
   SMTP_SERVER = ''
+
+
+configs:
+  existingSecret: helpdesk
+  # local_config.py & sa_tools_config.py , will be mounted at /app/secrets
+  # if existingSecret is set, the following content will be ignored
+  saToolsConfig: |
+    # coding: utf-8
+    # vi: ft=python
+    
+    CONFIG_DIR = '/etc/sa-tools/'
+    
+    NODE_IRC_CHANNEL = '#sysadmin'
+    NODE_SLACK_CHANNEL = '#sa'
+    NODE_MAIL_TO = 'sa@example.com'
+    
+    SYSADMIN_EMAIL = 'sysadmin@example.com'
+    ICINGA_EMAIL = 'icinga@example.com'
+    
+    SMTP_SERVER = ''
+  localConfig : |
+    # coding: utf-8
+    # vi: ft=python
+    
+    DEBUG = DEVELOP_MODE = True
+    
+    SENTRY_DSN = ''
+    
+    SESSION_SECRET_KEY = 'NVzLYJSMyw'
+    
+    SESSION_TTL = 24 * 3600
+    
+    SYSTEM_USER = 'admin'
+    SYSTEM_USER_PASSWORD = 'admin'
+    
+    ADMIN_ROLES = ['admin', 'system_admin']
+    
+    PARAM_FILLUP = {
+        # 'reason': 'hehe',
+        'ldap_id': lambda provider: provider.user,
+    }
+    
+    DATABASE_URL = 'mysql://helpdesk:he1pde2k@helpdesk-mysql/helpdesk'
+    
+    PROVIDER = 'st2'
+    
+    ST2_BASE_URL = 'https://st2.example.com'
+    ST2_API_URL = 'https://st2.example.com/api'
+    ST2_AUTH_URL = 'https://st2.example.com/auth'
+    ST2_STREAM_URL = 'https://st2.example.com/stream'
+    
+    ST2_EXECUTION_RESULT_URL_PATTERN = ST2_BASE_URL + '/#/code/result/{execution_id}'
+    
+    ST2_API_KEY = None
+    
+    ST2_CACERT = None
+    
+    ST2_DEFAULT_PACK = ''
+    
+    ST2_WORKFLOW_RUNNER_TYPES = [
+        'action-chain',
+        'mistral-v2',
+        'orquesta'
+    ]
+    
+    ST2_TOKEN_TTL = 24 * 3600
+    
+    # LDAP
+    
+    DEFAULT_EMAIL_DOMAIN = 'example.com'
+    # base url will be used by notifications to show web links
+    DEFAULT_BASE_URL = 'https://example.com'
+    FORCE_HTTPS = False
+    ADMIN_EMAIL_ADDRS = 'admin@example.com,ops@example.com'
+    FROM_EMAIL_ADDR = 'helpdesk@example.com'
+    
+    NOTIFICATION_TITLE_PREFIX = '[helpdesk] '
+    
+    NO_AUTH_TARGET_OBJECTS = ['ldap_pass_reset']
+    
+    URL_RESET_PASSWORD = ''
+    
+    AUTO_APPROVAL_TARGET_OBJECTS = []
+    
+    TICKETS_PER_PAGE = 50
+    
+    
+    def avatar_url_func(ldap_id):
+        import hashlib
+        GRAVATAR_URL = '//www.gravatar.com/avatar/%s'
+        email = '%s@example.com' % ldap_id
+        return GRAVATAR_URL % hashlib.md5(email.encode('utf-8').lower()).hexdigest()
+    
+    
+    # Action Tree Config
+    # action name, description/tips, st2 pack/action
+    
+    ACCOUNT_SUBTREE = ['Accounts', [
+        # ['', '', ''],
+        ['New server account', 'New server account', 'new_server_account'],
+        ['Change password', 'Change password', 'change_password'],
+        ]]
+    
+    PACKAGE_SUBTREE = ['Packages', [
+        # ['', '', ''],
+        ['Query package version', 'Query package version in specific server', 'query_version'],
+        ['Build package', 'Build given package', 'build_package']
+        ]]
+    
+    ACTION_TREE_CONFIG = ['Navigation', [ACCOUNT_SUBTREE, PACKAGE_SUBTREE]]
+
+  
 
 global:
   sql:

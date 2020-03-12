@@ -1,3 +1,4 @@
+{{- if not .Values.configs.existingSecret -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -8,20 +9,8 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
+  sa_tools_config.py: |
+{{ .Values.configs.saToolsConfig | indent 4 }}
   local_config.py: |
-{{ .Values.config | indent 4 }}
-
----
-
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ include "helpdesk.fullname" . }}-sa-tools
-  labels:
-    app.kubernetes.io/name: {{ include "helpdesk.name" . }}
-    helm.sh/chart: {{ include "helpdesk.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-data:
-  config.py: |
-{{ .Values.saToolsConfig | indent 4 }}
+{{ .Values.configs.localConfig | indent 4 }}
+{{ end }}
