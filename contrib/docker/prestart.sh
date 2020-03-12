@@ -2,7 +2,7 @@
 
 cd /app
 if [ -f /app/secret/local_config.py ]; then
-    cp /app/secret/local_config.py /app/app/local_config.py
+    cp /app/secret/local_config.py /app/local_config.py
 fi
 if [ -f /app/secret/sa_tools_config.py ]; then
     mkdir -p /etc/sa-tools
