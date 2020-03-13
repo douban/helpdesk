@@ -4,7 +4,8 @@ from datetime import datetime
 
 from starlette.authentication import has_required_scope
 
-from app.config import NO_AUTH_TARGET_OBJECTS, PROVIDER
+from app.config import NO_AUTH_TARGET_OBJECTS
+from app.libs.decorators import timed_cache
 
 
 class Provider:
@@ -58,15 +59,19 @@ class Provider:
     def get_user_email(self, user=None):
         raise NotImplementedError()
 
+    def get_execution_output(self, execution_output_id):
+        return self.get_execution(execution_output_id)
 
-# TODO: cache in pool by kw, ttl
+
+@timed_cache(minutes=15)
 def get_provider(provider, **kw):
     from app.models.providers.st2 import ST2Provider
+    from app.models.providers.airflow import AirflowProvider
 
-    return {'st2': ST2Provider}[provider](**kw)
+    return {'st2': ST2Provider, 'airflow': AirflowProvider}[provider](**kw)
 
 
 def get_provider_by_action_auth(request, action):
     if not has_required_scope(request, ['authenticated']):
-        return get_provider(PROVIDER) if action.target_object in NO_AUTH_TARGET_OBJECTS else None
-    return request.user.provider
+        return get_provider(action.provider_type) if action.target_object in NO_AUTH_TARGET_OBJECTS else None
+    return request.user.providers[action.provider_type]

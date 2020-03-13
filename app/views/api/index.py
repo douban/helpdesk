@@ -2,14 +2,13 @@
 
 import logging
 
-from sqlalchemy import true, and_
-
 from starlette.responses import RedirectResponse  # NOQA
 from starlette.authentication import requires, has_required_scope  # NOQA
 
 from app import config
 from app.libs.rest import jsonize, check_parameter, json_validator
 from app.libs.template import url_for
+from app.libs.db import extract_filter_from_query_params
 from app.models.provider import get_provider_by_action_auth
 from app.models.db.ticket import Ticket
 from app.models.db.param_rule import ParamRule
@@ -36,7 +35,9 @@ async def index(request):
 @requires(['authenticated'])
 @jsonize
 async def user(request):
-    return request.user
+    result = request.user.to_dict()
+    result['is_admin'] = request.user.is_admin(config.PROVIDER)
+    return result
 
 
 @bp.route('/admin_panel/{target_object}/{config_type}', methods=['GET'])
@@ -127,7 +128,7 @@ async def action(request):
         form = await request.form()
         ticket = None
         ticket, msg = await action.run(provider, form,
-                                       is_admin=has_required_scope(request, ['admin']))
+                                       is_admin=has_required_scope(request, ['admin', 'Admin']))
         msg_level = 'success' if bool(ticket) else 'error'
 
         return dict(ticket=ticket,
@@ -214,7 +215,7 @@ async def ticket(request):
             raise ApiError(ApiErrors.forbidden)
         tickets = [ticket]
         total = 1
-    elif request.user.is_admin:
+    elif request.user.is_admin(config.PROVIDER):
         tickets = await Ticket.get_all(**kw)
         total = await Ticket.count(filter_=filter_)
     else:
@@ -238,6 +239,7 @@ async def ticket(request):
         total=total,
     )
 
+
 @bp.route('/ticket/{ticket_id:int}/result', methods=['GET'])
 @jsonize
 @requires(['authenticated'])
@@ -245,41 +247,14 @@ async def ticket_result(request):
     ticket_id = request.path_params.get('ticket_id')
     if not ticket_id:
         raise ApiError(ApiErrors.unknown_operation, description='Ticket id must be provided')
-    ticket = None
+
     ticket = await Ticket.get(ticket_id)
     if not ticket:
         raise ApiError(ApiErrors.not_found)
 
-    execution, msg = ticket.get_result()
+    output_execution_id = request.query_params.get('exec_output_id')
+    execution, msg = ticket.get_result(execution_output_id=output_execution_id)
 
     if not execution:
         raise ApiError(ApiErrors.unknown_exception, description=msg)
     return execution
-
-
-def extract_filter_from_query_params(query_params=None, model=None, exclude_keys=None):
-    if not hasattr(query_params, 'items'):
-        raise ValueError('query_params has no items method')
-    if not model:
-        raise ValueError('Model must be set')
-    if exclude_keys is None:
-        exclude_keys = ['page', 'pagesize', 'order_by', 'desc']
-        # initialize filter by iterating keys in query_params
-    filter_ = true()
-    for (key, value) in query_params.items():
-        if key.lower() in exclude_keys:
-            continue
-        try:
-            if key.endswith('__icontains'):
-                key = key.split('__icontains')[0]
-                filter_ = and_(filter_, model.__table__.c[key].icontains(value))
-            elif key.endswith('__in'):
-                key = key.split('__in')[0]
-                value = value.split(',')
-                filter_ = and_(filter_, model.__table__.c[key].in_(value))
-            else:
-                filter_ = and_(filter_, model.__table__.c[key] == value)
-        except KeyError:
-            # ignore inexisted keys
-            pass
-    return filter_

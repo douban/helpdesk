@@ -17,11 +17,12 @@ DATABASE_URL = 'sqlite:///tmp/helpdesk.db'
 SYSTEM_USER = 'admin'
 SYSTEM_USER_PASSWORD = 'password'
 
-ADMIN_ROLES = ['admin', 'system_admin']
+ADMIN_ROLES = ['admin', 'system_admin', 'Admin']
 
 PARAM_FILLUP = {}
 
 PROVIDER = ''
+ENABLED_PROVIDERS = ('st2', 'airflow')
 
 # TODO: LDAP
 # for LdapProviderMixin, to provide the ability to access user metadata like email addrs.
@@ -48,6 +49,10 @@ TICKETS_PER_PAGE = 50
 
 ACTION_TREE_CONFIG = ['功能导航', []]
 
+AIRFLOW_SERVER_URL = os.getenv('HELPDESK_AIRFLOW_SERVER_URL', 'http://airflow.***REMOVED***')
+AIRFLOW_USERNAME = os.getenv('HELPDESK_AIRFLOW_USERNAME', 'sysadmin')
+AIRFLOW_PASSWORD = os.getenv('HELPDESK_AIRFLOW_PASSWORD')
+AIRFLOW_DEFAULT_DAG_TAG = 'helpdesk'
 
 try:
     from local_config import *   # NOQA

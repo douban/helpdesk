@@ -10,7 +10,7 @@
         v-if="Object.keys(value.result).length === 2 && Object.keys(value.result).includes('tasks')"
         :resultData="value.result">
       </sub-tab>
-      <result-host-table v-else :data-loaded="true" :resultData="value.result"></result-host-table>
+      <result-host-table v-else v-bind:data-loaded="props.dataLoaded" v-bind:resultData="value.result" :ticketId="props.ticketId"></result-host-table>
     </a-tab-pane>
   </a-tabs>
 </template>
@@ -18,6 +18,6 @@
 import ResultHostTable from './ResultHostTable'
 export default {
   components: {ResultHostTable},
-  props: ['resultData', 'dataLoaded']
+  props: ['resultData', 'dataLoaded', 'ticketId']
 }
 </script>

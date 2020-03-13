@@ -1,8 +1,10 @@
 <template>
-  <a-card v-show="isVisible">
-    <component :is="currentComponent" :resultData="ticketResult" :dataLoaded="dataLoaded"></component>
-    <a-back-top />
-  </a-card>
+  <a-spin :spinning="spinning" v-show="isVisible">
+    <a-card v-show="isVisible">
+      <component :is="currentComponent" v-bind:resultData="ticketResult" v-bind:dataLoaded="dataLoaded" :ticketId="ticketId"></component>
+      <a-back-top />
+    </a-card>
+  </a-spin>
 </template>
 
 <script>
@@ -18,11 +20,14 @@ export default {
     return {
       ticketResult: {},
       dataLoaded: false,
-      currentComponent: 'ResultHostTable'
+      currentComponent: 'ResultHostTable',
+      spinning: true
     }
   },
   methods: {
     loadResult () {
+      this.spinning = true
+      this.dataLoaded = false
       HRequest.get('/api/ticket/' + this.ticketId + '/result').then(
         (response) => {
           this.handleResult(response.data.data)
@@ -33,6 +38,7 @@ export default {
     handleResult (data) {
       this.ticketResult = data.result
       this.dataLoaded = true
+      this.spinning = false
       if (Object.keys(this.ticketResult).length === 2 && Object.keys(this.ticketResult).includes('tasks')) {
         this.currentComponent = 'SubTab'
       } else this.currentComponent = 'ResultHostTable'

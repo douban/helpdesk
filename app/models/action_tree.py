@@ -65,15 +65,16 @@ class ActionTree:
     def resolve_pack(self, *config):
         name = config[0]
         provider_object = config[-1]
+        provider_type = config[-2]
         pack = provider_object[:-1]
 
         sub_actions = []
-        system_provider = get_provider(PROVIDER)
+        system_provider = get_provider(provider_type)
         actions = system_provider.get_actions(pack=pack)
         for a in actions:
             obj = '.'.join([a.get('pack'), a.get('name')])
             desc = a.get('description')
-            sub_actions.append([obj, desc, obj])
+            sub_actions.append([obj, desc, provider_type, a['id']])
         return [name, sub_actions]
 
     @cached_property_with_ttl(300)

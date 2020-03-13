@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 @jsonize
 async def login(request):
     token, msg = await authenticate(request)
-    return {'success': bool(token), 'msg' :msg, 'token': token}
+    return {'success': bool(token), 'msg': msg, 'token': token}
 
 
 @bp.route('/auth/logout', methods=['POST'])

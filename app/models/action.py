@@ -13,13 +13,14 @@ logger = logging.getLogger(__name__)
 class Action(DictSerializableClassMixin):
     """action name, description/tips, st2 pack/action
     """
-    def __init__(self, name, desc, provider_object):
+    def __init__(self, name, desc, provider_name, provider_object):
         self.name = name
         self.desc = desc
         self.target_object = provider_object
+        self.provider_type = provider_name
 
     def __repr__(self):
-        return 'Action(%s, %s, %s)' % (self.name, self.desc, self.target_object)
+        return 'Action(%s, %s, %s, %s)' % (self.name, self.desc, self.target_object, self.provider_type)
 
     __str__ = __repr__
 

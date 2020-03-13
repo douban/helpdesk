@@ -4,7 +4,7 @@ import logging
 import requests
 
 from app.config import (ST2_DEFAULT_PACK, ST2_WORKFLOW_RUNNER_TYPES,
-                        ST2_TOKEN_TTL,
+                        ST2_TOKEN_TTL, ST2_EXECUTION_RESULT_URL_PATTERN,
                         SYSTEM_USER, SYSTEM_USER_PASSWORD,
                         DEFAULT_EMAIL_DOMAIN)
 from app.libs.st2 import (client as service_client,
@@ -40,6 +40,14 @@ class ST2Provider(LdapProviderMixin, Provider):
     def get_user_email(self, user=None):
         user = user or self.user
         return self.get_user_email_from_ldap(user) or '%s@%s' % (user, DEFAULT_EMAIL_DOMAIN)
+
+    @staticmethod
+    def get_result_url(execution_id):
+        return ST2_EXECUTION_RESULT_URL_PATTERN.format(execution_id=execution_id)
+
+    def generate_annotation(self, execution):
+        return {'provider': self.provider_type, 'id': execution['id'],
+                'result_url': self.get_result_url(execution['id'])}
 
     def get_actions(self, pack=None):
         '''

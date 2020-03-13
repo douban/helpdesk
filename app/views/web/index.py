@@ -133,7 +133,7 @@ async def ticket(request):
             raise HTTPException(status_code=403)
         tickets = [ticket]
         total = 1
-    elif request.user.is_admin:
+    elif request.user.is_admin(config.PROVIDER):
         tickets = await Ticket.get_all(**kw)
         total = await Ticket.count()
     else:
@@ -173,8 +173,7 @@ async def index(request):
     if not action_tree_leaf:
         raise HTTPException(status_code=404)
     action = action_tree_leaf.action
-
-    system_provider = get_provider(PROVIDER)
+    system_provider = get_provider(action.provider_type)
 
     # auth
     _action_tree = action_tree
@@ -185,13 +184,13 @@ async def index(request):
         else:
             return RedirectResponse(url=url_for('web:login', request) + '?r=' + urllib.parse.quote(request.url.path))
     else:
-        provider = request.user.provider
+        provider = request.user.providers[action.provider_type]
 
     extra_context = {}
     if request.method == 'POST':
         form = await request.form()
         execution_or_ticket, msg = await action.run(provider, form,
-                                                    is_admin=has_required_scope(request, ['admin']))
+                                                    is_admin=has_required_scope(request, ['admin', 'Admin']))
         msg_level = 'success' if bool(execution_or_ticket) else 'error'
         execution = ticket = None
         if execution_or_ticket and execution_or_ticket.get('_class') == 'Ticket':

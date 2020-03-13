@@ -6,9 +6,9 @@
     <a-table
       :dataSource="results"
       :columns="columns"
-      rowKey="id"
-      :defaultExpandedRowKeys="defaultExpanedrow"
-      :pagination="paginationConfig">
+      :rowKey="handleRowKey"
+      :pagination="paginationConfig"
+      v-on:expand="handleRowExpand">
       <div slot="filterDropdown" slot-scope="{ setSelectedKeys, selectedKeys, confirm, clearFilters, column }" class='custom-filter-dropdown'>
         <a-input
           v-ant-ref="c => searchInput = c"
@@ -33,18 +33,20 @@
       </div>
       <a-icon slot="filterIcon" slot-scope="filtered" type='search' :style="{ color: filtered ? '#108ee9' : undefined }" />
       <template slot="expandedRowRender" slot-scope="record" style="margin: 0">
-        <span v-show="record.traceback !== '' && record.traceback !== undefined">
-          <h3><b>traceback:</b></h3>
-          <pre class="text-wrapper">{{record.traceback}}</pre>
-        </span>
-        <span>
-          <h3>stderr: </h3>
-          <pre class="text-wrapper">{{record.stderr}}</pre>
-        </span>
-        <span>
-          <h3>stdout: </h3>
-          <pre class="text-wrapper">{{record.stdout}}</pre>
-        </span>
+        <a-spin :spinning="spinning">
+          <span v-show="record.traceback !== '' && record.traceback !== undefined">
+            <h3><b>traceback:</b></h3>
+            <pre class="text-wrapper">{{record.traceback}}</pre>
+          </span>
+          <span>
+            <h3>stderr: </h3>
+            <pre class="text-wrapper">{{typeof(record.stderr) === 'string' ? record.stderr : ''}}</pre>
+          </span>
+          <span>
+            <h3>stdout: </h3>
+            <pre class="text-wrapper">{{typeof(record.stdout) === 'string' ? record.stdout : ''}}</pre>
+          </span>
+        </a-spin>
       </template>
       <template slot="status" slot-scope="text">
         <span v-if="text==='Success'"><a-tag color="green">Success</a-tag></span>
@@ -55,11 +57,14 @@
 </template>
 
 <script>
+import {HRequest} from '../utils/HRequests'
+
 export default {
   name: 'ResultHostTable',
-  props: ['resultData', 'dataLoaded'],
+  props: ['resultData', 'dataLoaded', 'ticketId'],
   data () {
     return {
+      spinning: false,
       results: [{}],
       filtered: {},
       successCount: 0,
@@ -151,6 +156,37 @@ export default {
     handleReset (clearFilters) {
       clearFilters()
       this.searchText = ''
+    },
+
+    handleRowExpand (expanded, record) {
+      if (expanded && (record.stdout.output_load || record.stderr.output_load)) {
+        let std = {
+          'stdout': record.stdout.output_load,
+          'stderr': record.stderr.output_load
+        }
+
+        for (let io in std) {
+          if (std[io]) {
+            this.spinning = true
+            let queryString = io === 'stdout' ? record.stdout.query_string : record.stderr.query_string
+            HRequest.get('/api/ticket/' + this.ticketId + '/result' + queryString).then(
+              (response) => {
+                let output = response.data.data[0]
+                if (io === 'stdout') {
+                  record.stdout = output
+                } else {
+                  record.stderr = output
+                }
+                this.spinning = false
+              }
+            )
+          }
+        }
+      }
+    },
+
+    handleRowKey (record, index) {
+      return 'tickets-result-' + record.id
     }
   },
   mounted () {
@@ -160,7 +196,6 @@ export default {
   },
   watch: {
     dataLoaded: function (to, from) {
-      console.log(this.dataLoaded)
       this.loadResult()
     }
   }

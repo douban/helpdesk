@@ -72,10 +72,10 @@ class Ticket(db.Model):
         return '; '.join(['%s: %s' % (k, v) for k, v in self.params.items() if k not in ('reason',)])
 
     async def can_view(self, user):
-        return user.is_admin or user.name == self.submitter or user.name in self.ccs or user.name in await self.get_rule_actions('approver')
+        return user.is_admin(self.provider_type) or user.name == self.submitter or user.name in self.ccs or user.name in await self.get_rule_actions('approver')
 
     async def can_admin(self, user):
-        return user.is_admin or user.name in await self.get_rule_actions('approver')
+        return user.is_admin(self.provider_type) or user.name in await self.get_rule_actions('approver')
 
     @cached_property
     async def rules(self):
@@ -161,22 +161,23 @@ class Ticket(db.Model):
                 token = token['token']
                 provider = get_provider(self.provider_type, token=token, user=self.submitter)
             execution, msg = provider.run_action(self.provider_object, self.params)
+            annotate = provider.generate_annotation(execution)
         else:
             execution, msg = system_provider.run_action(self.provider_object, self.params)
+            annotate = system_provider.generate_annotation(execution)
         if not execution:
             self.annotate(execution_creation_success=False, execution_creation_msg=msg)
             return execution, msg
 
         self.executed_at = datetime.now()
-        self.annotate(execution=dict(id=execution['id'],
-                                     result_url=ST2_EXECUTION_RESULT_URL_PATTERN.format(execution_id=execution['id'])),
+        self.annotate(execution=annotate,
                       execution_creation_success=True,
                       execution_creation_msg=msg)
 
         # we don't save the ticket here, we leave it outside
         return execution, 'Success. <a href="%s" target="_blank">result</a>' % (execution['web_url'],)
 
-    def get_result(self, provider=None, is_admin=False):
+    def get_result(self, provider=None, is_admin=False, execution_output_id=None):
         system_provider = get_provider(self.provider_type)
         # admin use self provider, otherwise use system_provider
         if is_admin:
@@ -188,8 +189,11 @@ class Ticket(db.Model):
         else:
             provider = system_provider
         execution_id = self.annotation.get('execution', {}).get('id')
-        
-        execution, msg = provider.get_execution(execution_id)
+
+        if execution_output_id:
+            execution, msg = provider.get_execution_output(execution_output_id)
+        else:
+            execution, msg = provider.get_execution(execution_id)
         return execution, msg
 
     async def notify(self, phase):

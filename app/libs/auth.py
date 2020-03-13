@@ -5,7 +5,6 @@ import logging
 import binascii
 from datetime import datetime, timedelta
 
-from requests.exceptions import HTTPError
 from starlette.authentication import (AuthenticationBackend,
                                       AuthenticationError, SimpleUser,
                                       AuthCredentials)
@@ -43,33 +42,26 @@ class SessionAuthBackend(AuthenticationBackend):
     async def authenticate(self, request):
         from app.models.user import User
         from app.models.provider import get_provider
-        from app.config import PROVIDER
+        from app.config import ENABLED_PROVIDERS
 
-        # api-key auth
-        if request.headers.get('api-key'):
-            logger.debug('Using api-key auth')
-            provider = get_provider(PROVIDER, api_key=request.headers.get('api-key'))
-            try:
-                username = provider.st2.get_user_info().get('username')
-            except HTTPError:
-                raise AuthenticationError('Invalid api key or st2 unreachable.')
-            user = User(username=username, provider=provider)
-            return user.auth_credentials, user
         logger.debug('request.session: %s, user: %s', request.session, request.session.get('user'))
-        if not all([request.session.get('user'), request.session.get('token'), request.session.get('expiry')]):
-            return
-        # check token expiry, e.g. '2019-05-28T10:34:03.240708Z'
-        expiry = request.session['expiry']
-        if datetime.strptime(expiry, "%Y-%m-%dT%H:%M:%S.%fZ") < datetime.utcnow() + timedelta(minutes=1):
-            logger.debug('token expiry time is in 1 minute, unauth.')
-            unauth(request)
-            return
+
+        for provider_type in ENABLED_PROVIDERS:
+            if not all([request.session.get('user'), request.session.get(f'{provider_type}_token'),
+                        request.session.get(f'{provider_type}_expiry')]):
+                logger.error(f'{provider_type} auth error, unauth')
+                return
+            # check token expiry, e.g. '2019-05-28T10:34:03.240708Z'
+            expiry = request.session[f'{provider_type}_expiry']
+            if datetime.strptime(expiry, "%Y-%m-%dT%H:%M:%S.%fZ") < datetime.utcnow() + timedelta(minutes=1):
+                logger.debug('token expiry time is in 1 minute, unauth.')
+                unauth(request)
+                return
 
         username = request.session['user']
-        token = request.session['token']
-
-        provider = get_provider(PROVIDER, token=token, user=username)
-        user = User(username=username, provider=provider)
+        providers = {provider_type: get_provider(provider_type, token=request.session[f'{provider_type}_token'], user=username)
+                     for provider_type in ENABLED_PROVIDERS}
+        user = User(username=username, providers=providers)
         return user.auth_credentials, user
 
 
@@ -77,7 +69,7 @@ async def authenticate(request):
     '''Get user, password from request.form and authenticate with the provider to get a token,
     then set the token to session.
     '''
-    from app.config import PROVIDER
+    from app.config import ENABLED_PROVIDERS
     from app.models.provider import get_provider
 
     if request.method != 'POST':
@@ -87,20 +79,26 @@ async def authenticate(request):
     user = form.get('user')
     password = form.get('password')
 
-    system_provider = get_provider(PROVIDER)
-    token, msg = system_provider.authenticate(user, password)
+    tokens, msgs = {}, []
+    for provider in ENABLED_PROVIDERS:
+        system_provider = get_provider(provider)
+        token, msg = system_provider.authenticate(user, password)
+        msgs.append(f'{provider} msg: {msg}')
+        logger.debug('get token: %s, msg: %s', token, msg)
 
-    logger.debug('get token: %s, msg: %s', token, msg)
+        if token:
+            request.session['user'] = user
+            request.session[f'{provider}_token'] = token['token']
+            request.session[f'{provider}_expiry'] = token['expiry']
+            tokens[provider] = token['token']
 
-    if token:
-        request.session['user'] = user
-        request.session['token'] = token['token']
-        request.session['expiry'] = token['expiry']
-
-    return token, msg
+    return tokens, ' '.join(msgs)
 
 
 def unauth(request):
-    request.session.pop('token', None)
-    request.session.pop('expiry', None)
+    from app.config import ENABLED_PROVIDERS
+
+    for provider in ENABLED_PROVIDERS:
+        request.session.pop(f'{provider}_token', None)
+        request.session.pop(f'{provider}_expiry', None)
     return request.session.pop('user', None)

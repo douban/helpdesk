@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import sqlalchemy
+from sqlalchemy import true, and_
 from databases import Database
 
 from app.config import DATABASE_URL
@@ -48,3 +49,31 @@ def init_db():
         create_database(DATABASE_URL)
 
     metadata.create_all(bind=engine)
+
+
+def extract_filter_from_query_params(query_params=None, model=None, exclude_keys=None):
+    if not hasattr(query_params, 'items'):
+        raise ValueError('query_params has no items method')
+    if not model:
+        raise ValueError('Model must be set')
+    if exclude_keys is None:
+        exclude_keys = ['page', 'pagesize', 'order_by', 'desc']
+        # initialize filter by iterating keys in query_params
+    filter_ = true()
+    for (key, value) in query_params.items():
+        if key.lower() in exclude_keys:
+            continue
+        try:
+            if key.endswith('__icontains'):
+                key = key.split('__icontains')[0]
+                filter_ = and_(filter_, model.__table__.c[key].icontains(value))
+            elif key.endswith('__in'):
+                key = key.split('__in')[0]
+                value = value.split(',')
+                filter_ = and_(filter_, model.__table__.c[key].in_(value))
+            else:
+                filter_ = and_(filter_, model.__table__.c[key] == value)
+        except KeyError:
+            # ignore inexisted keys
+            pass
+    return filter_
