@@ -189,8 +189,8 @@ async def index(request):
     extra_context = {}
     if request.method == 'POST':
         form = await request.form()
-        execution_or_ticket, msg = await action.run(provider, form,
-                                                    is_admin=has_required_scope(request, ['admin', 'Admin']))
+        is_admin = any(has_required_scope(request, (admin_role,)) for admin_role in config.ADMIN_ROLES)
+        execution_or_ticket, msg = await action.run(provider, form, is_admin=is_admin)
         msg_level = 'success' if bool(execution_or_ticket) else 'error'
         execution = ticket = None
         if execution_or_ticket and execution_or_ticket.get('_class') == 'Ticket':

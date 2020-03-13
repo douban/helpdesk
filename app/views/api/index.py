@@ -126,9 +126,8 @@ async def action(request):
 
     if request.method == 'POST':
         form = await request.form()
-        ticket = None
-        ticket, msg = await action.run(provider, form,
-                                       is_admin=has_required_scope(request, ['admin', 'Admin']))
+        is_admin = any(has_required_scope(request, (admin_role,)) for admin_role in config.ADMIN_ROLES)
+        ticket, msg = await action.run(provider, form, is_admin=is_admin)
         msg_level = 'success' if bool(ticket) else 'error'
 
         return dict(ticket=ticket,
