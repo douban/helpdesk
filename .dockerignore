@@ -12,4 +12,5 @@ local_config.py
 /values.yaml
 # helm charts
 contrib/charts/
-frontend/node_modules
+# frontend
+frontend

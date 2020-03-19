@@ -3,6 +3,7 @@ const path = require('path')
 module.exports = {
   testURL: 'http://localhost/',
   rootDir: path.resolve(__dirname, '../../'),
+  reporters: [ 'default', 'jest-junit' ],
   moduleFileExtensions: [
     'js',
     'json',
