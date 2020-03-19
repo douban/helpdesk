@@ -24,7 +24,7 @@
         <a-form-item
           :wrapper-col="{ span: 12, offset: 5 }"
         >
-          <a-button type="primary" @click="handleSubmit">Submit</a-button>
+          <a-button type="primary" @click="handleSubmit" :disabled="!canSubmit">Submit</a-button>
         </a-form-item>
       </a-form>
     </a-col>
@@ -50,6 +50,7 @@ export default {
       formData: {},
       form: this.$form.createForm(this),
       resultVisible: false,
+      canSubmit: true,
       submitResult: '',
       resultType: 'success',
       actionDefinition: ''
@@ -117,6 +118,7 @@ export default {
     },
     handleSubmit (e) {
       e.preventDefault()
+      this.canSubmit = false
       this.form.validateFields((err, values) => {
         if (!err && values) {
           // validate success, let us proceed.
@@ -129,6 +131,8 @@ export default {
             url: submitURL}
           HRequest(options).then((response) => {
             this.handleSubmitResult(response)
+          }).finally(() => {
+            this.canSubmit = true
           })
         }
       })
