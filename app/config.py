@@ -22,7 +22,8 @@ ADMIN_ROLES = ['admin', 'system_admin', 'Admin']
 PARAM_FILLUP = {}
 
 PROVIDER = ''
-ENABLED_PROVIDERS = ('st2', 'airflow')
+ENABLED_PROVIDERS = ('st2', 'airflow', 'spincycle')
+AUTH_UNSUPPORT_PROVIDERS = ('spincycle',)
 
 # TODO: LDAP
 # for LdapProviderMixin, to provide the ability to access user metadata like email addrs.
@@ -53,6 +54,10 @@ AIRFLOW_SERVER_URL = os.getenv('HELPDESK_AIRFLOW_SERVER_URL', 'http://airflow.**
 AIRFLOW_USERNAME = os.getenv('HELPDESK_AIRFLOW_USERNAME', 'sysadmin')
 AIRFLOW_PASSWORD = os.getenv('HELPDESK_AIRFLOW_PASSWORD')
 AIRFLOW_DEFAULT_DAG_TAG = 'helpdesk'
+
+SPINCYCLE_RM_URL = os.getenv("HELPDESK_SPINCYCLE_SERVER_URL", "http://spincycle.***REMOVED***")
+SPINCYCLE_USERNAME = os.getenv('HELPDESK_SPINCYCLE_USERNAME', 'sysadmin')
+SPINCYCLE_PASSWORD = os.getenv('HELPDESK_SPINCYCLE_PASSWORD')
 
 try:
     from local_config import *   # NOQA

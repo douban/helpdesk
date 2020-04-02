@@ -42,11 +42,13 @@ class SessionAuthBackend(AuthenticationBackend):
     async def authenticate(self, request):
         from app.models.user import User
         from app.models.provider import get_provider
-        from app.config import ENABLED_PROVIDERS
+        from app.config import ENABLED_PROVIDERS, AUTH_UNSUPPORT_PROVIDERS
 
         logger.debug('request.session: %s, user: %s', request.session, request.session.get('user'))
 
         for provider_type in ENABLED_PROVIDERS:
+            if provider_type in AUTH_UNSUPPORT_PROVIDERS:
+                continue
             if not all([request.session.get('user'), request.session.get(f'{provider_type}_token'),
                         request.session.get(f'{provider_type}_expiry')]):
                 logger.error(f'{provider_type} auth error, unauth')
@@ -69,7 +71,7 @@ async def authenticate(request):
     '''Get user, password from request.form and authenticate with the provider to get a token,
     then set the token to session.
     '''
-    from app.config import ENABLED_PROVIDERS
+    from app.config import ENABLED_PROVIDERS, AUTH_UNSUPPORT_PROVIDERS
     from app.models.provider import get_provider
 
     if request.method != 'POST':
@@ -81,6 +83,8 @@ async def authenticate(request):
 
     tokens, msgs = {}, []
     for provider in ENABLED_PROVIDERS:
+        if provider in AUTH_UNSUPPORT_PROVIDERS:
+            continue
         system_provider = get_provider(provider)
         token, msg = system_provider.authenticate(user, password)
         msgs.append(f'{provider} msg: {msg}')
@@ -96,9 +100,11 @@ async def authenticate(request):
 
 
 def unauth(request):
-    from app.config import ENABLED_PROVIDERS
+    from app.config import ENABLED_PROVIDERS, AUTH_UNSUPPORT_PROVIDERS
 
     for provider in ENABLED_PROVIDERS:
+        if provider in AUTH_UNSUPPORT_PROVIDERS:
+            continue
         request.session.pop(f'{provider}_token', None)
         request.session.pop(f'{provider}_expiry', None)
     return request.session.pop('user', None)

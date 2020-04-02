@@ -67,8 +67,9 @@ class Provider:
 def get_provider(provider, **kw):
     from app.models.providers.st2 import ST2Provider
     from app.models.providers.airflow import AirflowProvider
+    from app.models.providers.spincycle import SpinCycleProvider
 
-    return {'st2': ST2Provider, 'airflow': AirflowProvider}[provider](**kw)
+    return {'st2': ST2Provider, 'airflow': AirflowProvider, 'spincycle': SpinCycleProvider}[provider](**kw)
 
 
 def get_provider_by_action_auth(request, action):
