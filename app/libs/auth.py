@@ -61,7 +61,7 @@ class SessionAuthBackend(AuthenticationBackend):
                 return
 
         username = request.session['user']
-        providers = {provider_type: get_provider(provider_type, token=request.session[f'{provider_type}_token'], user=username)
+        providers = {provider_type: get_provider(provider_type, token=request.session.get(f'{provider_type}_token'), user=username)
                      for provider_type in ENABLED_PROVIDERS}
         user = User(username=username, providers=providers)
         return user.auth_credentials, user
