@@ -46,6 +46,8 @@ class ST2Provider(LdapProviderMixin, Provider):
         return ST2_EXECUTION_RESULT_URL_PATTERN.format(execution_id=execution_id)
 
     def generate_annotation(self, execution):
+        if not execution:
+            return
         return {'provider': self.provider_type, 'id': execution['id'],
                 'result_url': self.get_result_url(execution['id'])}
 

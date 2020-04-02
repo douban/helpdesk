@@ -153,6 +153,8 @@ class SpinCycleProvider(LdapProviderMixin, Provider):
             return None, str(e)
 
     def generate_annotation(self, execution):
+        if not execution:
+            return
         return {'provider': self.provider_type, 'id': execution['id'],
                 'result_url': self.get_result_url(execution['id'])}
 
