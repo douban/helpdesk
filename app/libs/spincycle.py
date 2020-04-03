@@ -60,16 +60,16 @@ class SpinCycleClient:
     ref: https://square.github.io/spincycle/v1.0/api/endpoints.html#find-requests-that-match-certain-conditions
     """
     def __init__(self, username, password, spin_rm_url=SPINCYCLE_RM_URL):
-        self.username = username
-        self.password = password
-        self.auth = (self.username, self.password)
+        self._username = username
+        self._password = password
+        self._auth = (self._username, self._password)
         self.spin_rm_url = spin_rm_url
         self.api_prefix = f"{self.spin_rm_url}/api/v1"
 
     def create_and_start_req(self, req_type, args):
         result = requests.post(
             url=f"{self.api_prefix}/requests",
-            auth=self.auth,
+            auth=self._auth,
             data=json.dumps({"type": req_type, "args": args}),
             headers={'Content-Type': 'application/json'}
         )
@@ -88,21 +88,21 @@ class SpinCycleClient:
     def get_req(self, req_id):
         result = requests.get(
             url=f"{self.api_prefix}/requests/{req_id}",
-            auth=self.auth
+            auth=self._auth
         )
         return self._check_resp(result, SpinClientGetReqException)
 
     def stop_req(self, req_id):
         result = requests.put(
             url=f"{self.api_prefix}/requests/{req_id}/stop",
-            auth=self.auth
+            auth=self._auth
         )
         return self._check_resp(result, SpinClientException)
 
     def get_all_job_logs_by_req(self, req_id):
         result = requests.get(
             url=f"{self.api_prefix}/requests/{req_id}/log",
-            auth=self.auth
+            auth=self._auth
         )
         return self._check_resp(result, SpinClientGetJobLogsException)
 
@@ -112,14 +112,14 @@ class SpinCycleClient:
     def get_job_log_by_req(self, req_id, job_id):
         result = requests.get(
             url=f"{self.api_prefix}/requests/{req_id}/log/{job_id}",
-            auth=self.auth
+            auth=self._auth
         )
         return self._check_resp(result, SpinClientGetJobLogFromReqException)
 
     def get_running_jobs_and_req(self):
         result = requests.get(
             url=f"{self.api_prefix}/status/running",
-            auth=self.auth
+            auth=self._auth
         )
         return self._check_resp(result, SpinClientGetRunningException)
 
@@ -127,7 +127,7 @@ class SpinCycleClient:
         result = requests.get(
             url=f"{self.api_prefix}/requests",
             params=filter_dict,
-            auth=self.auth
+            auth=self._auth
         )
         return self._check_resp(result, SpinClientFindReqException)
 
@@ -135,7 +135,7 @@ class SpinCycleClient:
     def get_req_list(self):
         result = requests.get(
             url=f"{self.api_prefix}/request-list",
-            auth=self.auth
+            auth=self._auth
         )
         return self._check_resp(result, SpinClientGetReqListException)
 
@@ -150,7 +150,7 @@ class SpinCycleClient:
     def get_job_chain_by_req_id(self, req_id):
         result = requests.get(
             url=f"{self.api_prefix}/requests/{req_id}/job-chain",
-            auth=self.auth,
+            auth=self._auth,
         )
         return self._check_resp(result, SpinClientException)
 

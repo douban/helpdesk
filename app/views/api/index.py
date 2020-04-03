@@ -36,6 +36,7 @@ async def index(request):
 @jsonize
 async def user(request):
     result = request.user.to_dict()
+    del result["providers"]
     result['is_admin'] = request.user.is_admin(config.PROVIDER)
     return result
 
@@ -133,9 +134,7 @@ async def action(request):
         return dict(ticket=ticket,
                     msg=msg,
                     msg_level=msg_level,
-                    debug=config.DEBUG,
-                    provider=provider,
-                    )
+                    debug=config.DEBUG)
 
 
 @bp.route('/ticket/{ticket_id:int}/{op}', methods=['POST'])
@@ -145,14 +144,14 @@ async def ticket_op(request):
     ticket_id = request.path_params['ticket_id']
     op = request.path_params['op']
     if op not in ('approve', 'reject'):
-        raise ApiError(ApiErrors.unknown_operation)
+        raise ApiError(ApiErrors.unknown_operation, description=f"unknown operation of {op}")
 
     ticket = await Ticket.get(ticket_id)
     if not ticket:
-        raise ApiError(ApiErrors.not_found)
+        raise ApiError(ApiErrors.not_found, description=f"ticket {ticket_id} not found!")
 
     if not await ticket.can_admin(request.user):
-        raise ApiError(ApiErrors.forbidden)
+        raise ApiError(ApiErrors.forbidden, description=f"You are not allowed {op} action")
 
     if op == 'approve':
         ret, msg = ticket.approve(by_user=request.user.name)

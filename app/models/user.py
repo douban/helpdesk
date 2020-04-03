@@ -8,7 +8,7 @@ from starlette.authentication import BaseUser, AuthCredentials
 from app.libs.decorators import cached_property, timed_cache
 from app.libs.rest import DictSerializableClassMixin
 from app.models.provider import Provider
-from app.config import ADMIN_ROLES, avatar_url_func, PROVIDER
+from app.config import ADMIN_ROLES, avatar_url_func, PROVIDER, AUTH_UNSUPPORT_PROVIDERS
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,6 @@ class User(DictSerializableClassMixin, BaseUser):
     def __init__(self, username: str, providers: Dict[str, Provider]) -> None:
         self.name = username
         self.providers = providers
-
         self.email = self.providers[PROVIDER].get_user_email()
 
     @property
@@ -34,7 +33,14 @@ class User(DictSerializableClassMixin, BaseUser):
 
     @timed_cache(seconds=300)
     def is_admin(self, provider_type) -> bool:
-        return any(role in ADMIN_ROLES for role in self.roles[provider_type])
+        # 对于不支持auth的provider，如果别的provider里有一个role是admin，就视为admin
+        if provider_type in AUTH_UNSUPPORT_PROVIDERS:
+            for role_list in self.roles.values():
+                for role in role_list:
+                    if role in ADMIN_ROLES:
+                        return True
+            return False
+        return any(role in ADMIN_ROLES for role in self.roles.get(provider_type, []))
 
     @cached_property
     def auth_credentials(self) -> List[str]:

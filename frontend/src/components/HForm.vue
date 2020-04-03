@@ -1,35 +1,37 @@
 <template>
-  <a-layout :style="{ background: '#fff', padding: '24px', margin: '0 0 0 24px', minHeight: '280px' }">
-    <a-divider orientation="left"><h3>{{name}}</h3></a-divider>
-    <div
-      v-show="resultVisible"
-      :class="['ant-alert', 'ant-alert-' + resultType, 'ant-alert-no-icon']"
-      style="margin: 16px;"
-      v-html="submitResult"
-    >
-    </div>
-    <a-alert
-      :message="description"
-      type="info"
-      :style="{ margin: '16px' }"
-    />
-    <a-col>
-      <a-form
-      :form="form"
-      @submit="handleSubmit">
-        <dynamic-form
-          :schema="schema"
-          @input="handleInput">
-        </dynamic-form>
-        <a-form-item
-          :wrapper-col="{ span: 12, offset: 5 }"
-        >
-          <a-button type="primary" @click="handleSubmit" :disabled="!canSubmit">Submit</a-button>
-        </a-form-item>
-      </a-form>
-    </a-col>
-    <h-drawer v-if="this.$store.getters.isAdmin" :actionDefinition="this.actionDefinition"></h-drawer>
-  </a-layout>
+  <a-spin tip="Loading ..." :spinning="spinning" :delay="delayTime">
+    <a-layout :style="{ background: '#fff', padding: '24px', margin: '0 0 0 24px', minHeight: '280px' }">
+      <a-divider orientation="left"><h3>{{name}}</h3></a-divider>
+      <div
+        v-show="resultVisible"
+        :class="['ant-alert', 'ant-alert-' + resultType, 'ant-alert-no-icon']"
+        style="margin: 16px;"
+        v-html="submitResult"
+      >
+      </div>
+      <a-alert
+        :message="description"
+        type="info"
+        :style="{ margin: '16px' }"
+      />
+      <a-col>
+        <a-form
+        :form="form"
+        @submit="handleSubmit">
+          <dynamic-form
+            :schema="schema"
+            @input="handleInput">
+          </dynamic-form>
+          <a-form-item
+            :wrapper-col="{ span: 12, offset: 5 }"
+          >
+            <a-button type="primary" @click="handleSubmit" :disabled="!canSubmit">Submit</a-button>
+          </a-form-item>
+        </a-form>
+      </a-col>
+      <h-drawer v-if="this.$store.getters.isAdmin" :actionDefinition="this.actionDefinition"></h-drawer>
+    </a-layout>
+  </a-spin>
 
 </template>
 
@@ -53,7 +55,9 @@ export default {
       canSubmit: true,
       submitResult: '',
       resultType: 'success',
-      actionDefinition: ''
+      actionDefinition: '',
+      spinning: false,
+      delayTime: 500
     }
   },
   computed: {
@@ -103,6 +107,7 @@ export default {
   },
   methods: {
     loadFormDefinition () {
+      this.spinning = true
       this.resetForm()
       HRequest.get('/api/action/' + this.actionName).then(
         (response) => this.formDefinitionHandler(response)
@@ -115,6 +120,7 @@ export default {
     formDefinitionHandler (response) {
       this.resetForm()
       this.actionDefinition = response.data.data
+      this.spinning = false
     },
     handleSubmit (e) {
       e.preventDefault()
