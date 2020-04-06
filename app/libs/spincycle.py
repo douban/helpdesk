@@ -11,7 +11,7 @@ import requests
 try:
     from app.config import SPINCYCLE_RM_URL
 except ImportError:
-    SPINCYCLE_RM_URL = "http://spincycle.***REMOVED***"
+    SPINCYCLE_RM_URL = "https://spincycle.***REMOVED***"
 from app.libs.decorators import timed_cache
 
 
