@@ -186,7 +186,6 @@ class SpinCycleClient:
 
 
 if __name__ == '__main__':
-    import os
     username = os.getenv("SPIN_USERNAME")
     password = os.getenv("SPIN_PASSWORD")
 
