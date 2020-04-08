@@ -50,7 +50,7 @@ class SessionAuthBackend(AuthenticationBackend):
                 continue
             if not all([request.session.get('user'), request.session.get(f'{provider_type}_token'),
                         request.session.get(f'{provider_type}_expiry')]):
-                logger.error(f'{provider_type} auth error, unauth')
+                logger.debug(f'{provider_type} auth error, unauth')
                 return
             # check token expiry, e.g. '2019-05-28T10:34:03.240708Z'
             expiry = request.session[f'{provider_type}_expiry']
