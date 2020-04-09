@@ -32,14 +32,16 @@ let router = new Router({
       component: HTicketDetail
     },
     {
-      path: '/:name',
-      name: 'FormView',
-      component: HActionView
-    },
-    {
       path: '/login',
       name: 'Login',
       component: Login
+    },
+    {
+      // Make sure this route is the last, as it can match all route
+      // See also: https://router.vuejs.org/guide/essentials/dynamic-matching.html#matching-priority
+      path: '/:name',
+      name: 'FormView',
+      component: HActionView
     }
   ]
 })
