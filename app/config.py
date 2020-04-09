@@ -55,9 +55,10 @@ AIRFLOW_USERNAME = os.getenv('HELPDESK_AIRFLOW_USERNAME', 'sysadmin')
 AIRFLOW_PASSWORD = os.getenv('HELPDESK_AIRFLOW_PASSWORD')
 AIRFLOW_DEFAULT_DAG_TAG = 'helpdesk'
 
-SPINCYCLE_RM_URL = os.getenv("HELPDESK_SPINCYCLE_SERVER_URL", "http://spincycle.***REMOVED***")
+SPINCYCLE_RM_URL = os.getenv("HELPDESK_SPINCYCLE_SERVER_URL", "https://spincycle.***REMOVED***")
 SPINCYCLE_USERNAME = os.getenv('HELPDESK_SPINCYCLE_USERNAME', 'sysadmin')
 SPINCYCLE_PASSWORD = os.getenv('HELPDESK_SPINCYCLE_PASSWORD')
+SPINCYCLE_RM_CERT_PATH = os.getenv("HELPDESK_SPINCYCLE_RM_CERT_PATH", "/etc/ssl/certs/Douban_CA.pem")
 
 try:
     from local_config import *   # NOQA
