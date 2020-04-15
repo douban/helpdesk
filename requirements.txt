@@ -56,3 +56,4 @@ uvloop==0.12.2
 wcwidth==0.1.7
 websockets==7.0
 -e git+https://github.com/tclh123/wechat.git@py3k#egg=wechat-0.4.17
+pyjwt==1.7.1

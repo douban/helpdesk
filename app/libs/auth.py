@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 from starlette.authentication import (AuthenticationBackend,
                                       AuthenticationError, SimpleUser,
-                                      AuthCredentials)
+                                      AuthCredentials, UnauthenticatedUser)
 
 logger = logging.getLogger(__name__)
 
@@ -51,13 +51,13 @@ class SessionAuthBackend(AuthenticationBackend):
             if not all([request.session.get('user'), request.session.get(f'{provider_type}_token'),
                         request.session.get(f'{provider_type}_expiry')]):
                 logger.debug(f'{provider_type} auth error, unauth')
-                return
+                return AuthCredentials([]), UnauthenticatedUser()
             # check token expiry, e.g. '2019-05-28T10:34:03.240708Z'
             expiry = request.session[f'{provider_type}_expiry']
             if datetime.strptime(expiry, "%Y-%m-%dT%H:%M:%S.%fZ") < datetime.utcnow() + timedelta(minutes=1):
                 logger.debug('token expiry time is in 1 minute, unauth.')
                 unauth(request)
-                return
+                return AuthCredentials([]), UnauthenticatedUser()
 
         username = request.session['user']
         providers = {provider_type: get_provider(provider_type, token=request.session.get(f'{provider_type}_token'), user=username)

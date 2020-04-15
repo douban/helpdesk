@@ -2,16 +2,18 @@
 
 import logging
 from datetime import datetime
+from urllib.parse import urlencode, quote_plus
 
 from sqlalchemy.sql.expression import and_
+import jwt
 
 from app.libs.decorators import cached_property
 from app.models import db
 from app.models.db.param_rule import ParamRule
 from app.models.provider import get_provider
-from app.config import (SYSTEM_USER, ST2_EXECUTION_RESULT_URL_PATTERN,
+from app.config import (SYSTEM_USER, SESSION_SECRET_KEY, DEFAULT_BASE_URL,
                         ADMIN_EMAIL_ADDRS, SLACK_ENABLED,
-                        FROM_EMAIL_ADDR)
+                        FROM_EMAIL_ADDR, TICKET_CALLBACK_PARAMS)
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +61,27 @@ class Ticket(db.Model):
 
     @property
     def status(self):
-        return 'pending' if self.is_approved is None else ['rejected', 'approved'][self.is_approved]
+        """
+        created -> pending -> rejected/approved -> submitted/submit_error -> running -> succeed/failed/unknown
+        :return:
+        """
+        annotation = self.annotation if self.annotation else {}
+        execution_status = annotation.get('execution_status')
+        execution_submitted = annotation.get('execution_submitted')
+        execution_create_success = annotation.get('execution_creation_success')
+        if execution_status:
+            return execution_status
+        elif execution_submitted:
+            if execution_create_success:
+                return 'submitted'
+            else:
+                return 'submit_error'
+        elif self.is_approved is None:
+            return 'pending'
+        elif self.is_approved in (True, False):
+            return ['rejected', 'approved'][self.is_approved]
+        else:
+            return 'created'
 
     @property
     def ccs(self):
@@ -151,7 +173,7 @@ class Ticket(db.Model):
     def execute(self, provider=None, is_admin=False):
         system_provider = get_provider(self.provider_type)
 
-        logger.info('run action %s, params: %s', self.provider_object, self.params)
+        logger.info('run action %s, params: %s', self.provider_object, self.handle_extra_params())
         self.annotate(execution_submitted=True)
         # admin use self provider, otherwise use system_provider
         if is_admin:
@@ -160,10 +182,10 @@ class Ticket(db.Model):
                 logger.debug('get token: %s, msg: %s', token, msg)
                 token = token['token']
                 provider = get_provider(self.provider_type, token=token, user=self.submitter)
-            execution, msg = provider.run_action(self.provider_object, self.params)
+            execution, msg = provider.run_action(self.provider_object, self.handle_extra_params())
             annotate = provider.generate_annotation(execution)
         else:
-            execution, msg = system_provider.run_action(self.provider_object, self.params)
+            execution, msg = system_provider.run_action(self.provider_object, self.handle_extra_params())
             annotate = system_provider.generate_annotation(execution)
         if not execution:
             self.annotate(execution_creation_success=False, execution_creation_msg=msg)
@@ -203,7 +225,7 @@ class Ticket(db.Model):
         from app.libs.notification import notify, send_slack
 
         logger.info('Ticket notify: %s: %s', phase, self)
-        assert phase in ('request', 'approval')
+        assert phase in ('request', 'approval', 'mark')
 
         title, content = render_notification('ticket_%s.html' % phase, context=dict(ticket=self, config=config))
 
@@ -212,9 +234,33 @@ class Ticket(db.Model):
         system_provider = get_provider(self.provider_type)
         email_addrs = [ADMIN_EMAIL_ADDRS] + [system_provider.get_user_email(cc) for cc in self.ccs]
         email_addrs += [system_provider.get_user_email(approver) for approver in await self.get_rule_actions('approver')]
-        if phase == 'approval':
+        if phase in ('approval', 'mark'):
             email_addrs += [system_provider.get_user_email(self.submitter)]
         email_addrs = ','.join(addr for addr in email_addrs if addr)
         notify(email=email_addrs, subject=title, content=content.strip(), from_addr=FROM_EMAIL_ADDR)
         if SLACK_ENABLED:
             send_slack(title, content.strip(), truncate=False)
+
+    def generate_callback_url(self):
+        """
+        generate callback url for ticket mark status call back
+        providers should call this url with http post and mark ticket's execution status
+        :return: callback url
+        """
+        # todo: replace hardcode with url_path current url_path not working somehow
+        callback_url = f'api/ticket/mark/{self.id}'
+        jwt_token = jwt.encode({'ticket_id': self.id, 'op': 'mark'}, SESSION_SECRET_KEY)
+        callback_url_payload = {"token": jwt_token}
+        return f"{DEFAULT_BASE_URL}/{callback_url}?{urlencode(callback_url_payload, quote_via=quote_plus)}"
+
+    def handle_extra_params(self):
+        """fill up callback params in config, replace with callback url"""
+        if self.extra_params is None:
+            return self.params
+        for param in TICKET_CALLBACK_PARAMS:
+            if param in self.extra_params:
+                params_dict = {param: self.generate_callback_url()}
+                params_dict.update(self.params)
+                logger.debug(f"params for callback {params_dict}")
+                return params_dict
+        return self.params

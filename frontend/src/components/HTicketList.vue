@@ -78,7 +78,19 @@ export default {
     return {
       tableData: [],
       filtered: {},
-      approval_color: {'approved': 'green', 'rejected': 'red', 'pending': 'orange'},
+      approval_color: {
+        'approved': 'green',
+        'rejected': 'red',
+        'pending': 'orange',
+        'failed': 'red',
+        'COMPLETE': 'green',
+        'running': 'orange',
+        'RUNNING': 'orange',
+        'success': 'green',
+        'submitted': 'pink',
+        'submit_error': 'red',
+        'succeeded': 'green'
+      },
       param_detail_visible: false,
       loading: false,
       pagination: {

@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import logging
+import jwt
 
 from starlette.responses import RedirectResponse  # NOQA
 from starlette.authentication import requires, has_required_scope  # NOQA
@@ -173,6 +174,37 @@ async def ticket_op(request):
     return dict(msg='Success')
 
 
+@bp.route('/ticket/mark/{ticket_id:int}', methods=['POST'])
+@jsonize
+async def mark_ticket(request):
+    """call ticket op to handle this handler only make authenticate disappear for provider"""
+    # verify jwt for callback url
+    token = request.query_params.get('token')
+    ticket_id = request.path_params['ticket_id']
+
+    try:
+        payload = jwt.decode(token, config.SESSION_SECRET_KEY)
+        logger.debug(f'recieved callback req: {payload}')
+        assert payload['ticket_id'] == ticket_id
+    except (jwt.exceptions.InvalidSignatureError, AssertionError):
+        raise ApiError(ApiErrors.parameter_validation_failed, description=f"token error")
+    ticket = await Ticket.get(ticket_id)
+    if not ticket:
+        raise ApiError(ApiErrors.not_found, description=f"ticket {ticket_id} not found!")
+
+    try:
+        data = await request.json()
+        assert 'execution_status' in data, "mark body fields error"
+        ticket.annotate(execution_status=data["execution_status"])
+        logger.debug(f"tocket annotaion: {ticket.annotation}")
+        # add notification to ticket mark action
+        await ticket.notify('mark')
+        await ticket.save()
+    except (RuntimeError, AssertionError) as e:
+        raise ApiError(ApiErrors.parameter_validation_failed, description=f'decode mark body error: {str(e)}')
+    return dict(msg='Success')
+
+
 @bp.route('/ticket', methods=['GET'])
 @bp.route('/ticket/{ticket_id:int}', methods=['GET', 'POST'])
 @jsonize
@@ -252,6 +284,13 @@ async def ticket_result(request):
 
     output_execution_id = request.query_params.get('exec_output_id')
     execution, msg = ticket.get_result(execution_output_id=output_execution_id)
+    # update ticket status by result
+    if not output_execution_id:
+        annotation_execution_status = ticket.annotation.get('execution_status')
+        exec_status = execution.get('status')
+        if exec_status and annotation_execution_status != exec_status:
+            ticket.annotate(execution_status=exec_status)
+            await ticket.save()
 
     if not execution:
         raise ApiError(ApiErrors.unknown_exception, description=msg)

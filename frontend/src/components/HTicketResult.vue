@@ -32,7 +32,9 @@ export default {
         (response) => {
           this.handleResult(response.data.data)
         }
-      )
+      ).catch((error) => {
+        this.$message.error('Get result error: ' + error.response.data.data.description, 10)
+      })
       // this.handleResult({'sa': {'failed': true, 'succeeded': false, 'description': 'farly long description'}})
     },
     handleResult (data) {

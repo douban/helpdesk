@@ -20,6 +20,7 @@ SYSTEM_USER_PASSWORD = 'password'
 ADMIN_ROLES = ['admin', 'system_admin', 'Admin']
 
 PARAM_FILLUP = {}
+TICKET_CALLBACK_PARAMS = ('helpdesk_ticket_callback_url', 'helpdeskTicketCallbackUrl')
 
 PROVIDER = ''
 ENABLED_PROVIDERS = ('st2', 'airflow', 'spincycle')
