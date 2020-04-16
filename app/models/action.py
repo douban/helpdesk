@@ -35,6 +35,8 @@ class Action(DictSerializableClassMixin):
     def parameters(self, provider):
         parameters = self.get_action(provider).get('parameters', {})
         for k, v in parameters.items():
+            if k in TICKET_CALLBACK_PARAMS:
+                parameters[k].update({"immutable": True})
             if k in PARAM_FILLUP:
                 fill = PARAM_FILLUP[k]
                 if callable(fill):
