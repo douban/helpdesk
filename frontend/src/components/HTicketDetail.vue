@@ -82,7 +82,7 @@
         </a-button-group>
         <a-button v-show="showResultButton" :style="{ marginLeft: '16px' }" @click="toggleResult">{{resultButtonText}}</a-button>
       </a-row>
-      <h-ticket-result :style="{ marginTop: '16px' }" :is-visible="resultVisible" :ticket-id="ticketInfo.id"></h-ticket-result>
+      <h-ticket-result :style="{ marginTop: '16px' }" :is-visible="resultVisible" :ticket-id="ticketInfo.id" :ticketProvider="ticketInfo.provider_type"></h-ticket-result>
     </a-card>
   </h-base>
 </template>

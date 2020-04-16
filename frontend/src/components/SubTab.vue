@@ -1,10 +1,10 @@
 <template functional>
-  <a-tabs type="card">
+  <a-tabs type="card" :tabPosition="props.ticketProvider==='st2' ? 'top':'left'">
     <a-tab-pane v-for="(value, index) in props.resultData.tasks" :key="index">
       <template slot="tab">
         <a-icon v-if="value.state==='succeeded'" type="check-circle" theme="twoTone" twoToneColor="#52c41a" />
         <a-icon v-if="value.state==='failed'" type="close-circle" theme="twoTone" twoToneColor="#eb2f96" />
-        {{value.name}}
+        {{ value.name.length > 30 ? value.name.slice(0, 30) + '...': value.name }}
       </template>
       <sub-tab
         v-if="Object.keys(value.result).length === 2 && Object.keys(value.result).includes('tasks')"
@@ -18,6 +18,6 @@
 import ResultHostTable from './ResultHostTable'
 export default {
   components: {ResultHostTable},
-  props: ['resultData', 'dataLoaded', 'ticketId']
+  props: ['resultData', 'dataLoaded', 'ticketId', 'ticketProvider']
 }
 </script>

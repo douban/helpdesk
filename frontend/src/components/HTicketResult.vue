@@ -1,7 +1,7 @@
 <template>
   <a-spin :spinning="spinning" v-show="isVisible">
     <a-card v-show="isVisible">
-      <component :is="currentComponent" v-bind:resultData="ticketResult" v-bind:dataLoaded="dataLoaded" :ticketId="ticketId"></component>
+      <component :is="currentComponent" v-bind:resultData="ticketResult" v-bind:dataLoaded="dataLoaded" :ticketId="ticketId" :ticketProvider="ticketProvider"></component>
       <a-back-top />
     </a-card>
   </a-spin>
@@ -15,7 +15,7 @@ import SubTab from './SubTab'
 export default {
   name: 'HTicketResult',
   components: {ResultHostTable, SubTab},
-  props: ['isVisible', 'ticketId'],
+  props: ['isVisible', 'ticketId', 'ticketProvider'],
   data () {
     return {
       ticketResult: {},
