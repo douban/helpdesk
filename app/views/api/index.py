@@ -284,14 +284,16 @@ async def ticket_result(request):
 
     output_execution_id = request.query_params.get('exec_output_id')
     execution, msg = ticket.get_result(execution_output_id=output_execution_id)
+    if not execution:
+        raise ApiError(ApiErrors.unknown_exception, description=msg)
     # update ticket status by result
     if not output_execution_id:
         annotation_execution_status = ticket.annotation.get('execution_status')
-        exec_status = execution.get('status')
-        if exec_status and annotation_execution_status != exec_status:
-            ticket.annotate(execution_status=exec_status)
-            await ticket.save()
-
-    if not execution:
-        raise ApiError(ApiErrors.unknown_exception, description=msg)
+        try:
+            exec_status = execution.get('status')
+            if exec_status and annotation_execution_status != exec_status:
+                ticket.annotate(execution_status=exec_status)
+                await ticket.save()
+        except AttributeError as e:
+            logger.warning(f"can not get status from execution, error: {str(e)}")
     return execution
