@@ -35,7 +35,7 @@
         </a-step>
         <a-step title="Submitted" key="4">
           <template slot="description">
-            <span v-if="ticketAnnotation.hasOwnProperty('execution_creation_success') && ticketAnnotation.execution_creation_success"
+            <span v-if="ticketAnnotation.hasOwnProperty('execution_creation_success')"
             :title="ticketAnnotation.execution_creation_msg">
               {{ ticketAnnotation.execution_creation_msg.length>150 ? ticketAnnotation.execution_creation_msg.slice(0, 150) + '...':ticketAnnotation.execution_creation_msg }}<br/>
               at {{UTCtoLcocalTime(ticketInfo.executed_at)}}
