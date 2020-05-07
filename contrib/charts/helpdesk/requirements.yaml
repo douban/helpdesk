@@ -1,5 +1,5 @@
 dependencies:
   - name: mysql
-    version: 0.19.2
+    version: 1.6.3
     repository: http://mirror.azure.cn/kubernetes/charts
     condition: mysql.install
