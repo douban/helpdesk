@@ -21,11 +21,6 @@ from . import bp
 logger = logging.getLogger(__name__)
 
 
-@bp.route('/favicon.ico', methods=['GET'])
-async def favicon(request):
-    return RedirectResponse(url=request.url_for('static', path='/images/favicon.ico'))
-
-
 @bp.route('/')
 @jsonize
 async def index(request):
@@ -74,12 +69,13 @@ async def config_param_rule(request, action):
         if op == 'add':
             rule = check_parameter(payload, 'rule', str, json_validator)
 
-            param_rule = ParamRule(id=payload.get('id'),
-                                   title=payload.get('title', 'Untitled'),
-                                   provider_object=action.target_object,
-                                   rule=rule,
-                                   is_auto_approval=payload.get('is_auto_approval', False),
-                                   approver=payload.get('approver'))
+            param_rule = ParamRule(
+                id=payload.get('id'),
+                title=payload.get('title', 'Untitled'),
+                provider_object=action.target_object,
+                rule=rule,
+                is_auto_approval=payload.get('is_auto_approval', False),
+                approver=payload.get('approver'))
             id_ = await param_rule.save()
             param_rule_added = await ParamRule.get(id_)
             return param_rule_added
@@ -132,10 +128,7 @@ async def action(request):
         ticket, msg = await action.run(provider, form, is_admin=is_admin)
         msg_level = 'success' if bool(ticket) else 'error'
 
-        return dict(ticket=ticket,
-                    msg=msg,
-                    msg_level=msg_level,
-                    debug=config.DEBUG)
+        return dict(ticket=ticket, msg=msg, msg_level=msg_level, debug=config.DEBUG)
 
 
 @bp.route('/ticket/{ticket_id:int}/{op}', methods=['POST'])
@@ -255,11 +248,12 @@ async def ticket(request):
 
     def extra_dict(d):
         id_ = d['id']
-        return dict(url=url_for('api:ticket', request, ticket_id=id_),
-                    approve_url=url_for('api:ticket_op', request, ticket_id=id_, op='approve'),
-                    reject_url=url_for('api:ticket_op', request, ticket_id=id_, op='reject'),
-                    api_url=url_for('api:ticket', request, ticket_id=id_),
-                    **d)
+        return dict(
+            url=url_for('api:ticket', request, ticket_id=id_),
+            approve_url=url_for('api:ticket_op', request, ticket_id=id_, op='approve'),
+            reject_url=url_for('api:ticket_op', request, ticket_id=id_, op='reject'),
+            api_url=url_for('api:ticket', request, ticket_id=id_),
+            **d)
 
     return dict(
         request=request,

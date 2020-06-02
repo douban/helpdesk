@@ -23,7 +23,7 @@ jsonpath-rw==1.4.0
 jsonschema==2.6.0
 MarkupSafe==1.1.1
 mccabe==0.6.1
-mysqlclient==1.4.2.post1
+mysqlclient==1.4.2
 ply==3.11
 prettytable==0.7.2
 prompt-toolkit==1.0.15
@@ -41,7 +41,6 @@ pytz==2019.1
 PyYAML==5.1
 requests==2.14.2
 rule==0.1.1
--e git+git@github.***REMOVED***:sa/sa-tools-core.git@b6bc93cd65f4db66a30ea7d4e4db8a4103966df3#egg=sa_tools_core
 sentry-asgi==0.1.5
 sentry-sdk==0.7.14
 six==1.12.0
@@ -55,5 +54,4 @@ uvicorn==0.6.1
 uvloop==0.12.2
 wcwidth==0.1.7
 websockets==7.0
--e git+https://github.com/tclh123/wechat.git@py3k#egg=wechat-0.4.17
 pyjwt==1.7.1
