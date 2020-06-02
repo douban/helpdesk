@@ -11,6 +11,5 @@ databases[postgresql,mysql,sqlite]
 SQLAlchemy-Utils>=0.33.11
 mysqlclient>=1.4.2
 cached-property>=1.5.1
-git+https://github.***REMOVED***/sa/sa-tools-core.git@master#egg=sa_tools_core
 rule
 pyjwt==1.7.1

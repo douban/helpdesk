@@ -34,7 +34,7 @@
             <a-form-item label="Rule">
               <a-textarea name="rule"
                           rows="1"
-                          placeholder='e.g. ["onlycontains", ["split", "hosts", ","], "***REMOVED***", "***REMOVED***", "***REMOVED***"]'
+                          placeholder='e.g. ["onlycontains", ["split", "hosts", ","], "host1", "host2", "host3"]'
                           autosize
                           required="true"
                           v-model="paramRule.rule"
