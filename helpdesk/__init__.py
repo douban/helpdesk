@@ -11,7 +11,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.authentication import AuthenticationMiddleware
 
-import app.libs.template as template
+import helpdesk.libs.template as template
 from helpdesk.libs.auth import SessionAuthBackend
 from helpdesk.config import DEBUG, SESSION_SECRET_KEY, SESSION_TTL, SENTRY_DSN
 from helpdesk.views.api import bp as api_bp
