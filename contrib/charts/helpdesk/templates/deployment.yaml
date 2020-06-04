@@ -28,9 +28,9 @@ spec:
               mountPath: /app/local_config.py
               subPath: local_config.py
               readOnly: true
-          {{- range .Values.volumeMounts }}
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- range .Values.volumeMounts }}
+            - {{ . }}
+            {{- end }}
           ports:
             - name: http
               containerPort: 80
@@ -61,9 +61,9 @@ spec:
         - name: local-config
           secret:
             secretName: {{ include "helpdesk.fullname" . }}
-      {{- range .Values.volumes }}
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- range .Values.volumes }}
+        - {{ . }}
+        {{- end }}
 
 ---
 apiVersion: apps/v1
