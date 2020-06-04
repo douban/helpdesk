@@ -4,7 +4,6 @@ from datetime import datetime
 
 from starlette.authentication import has_required_scope
 
-from helpdesk.config import NO_AUTH_TARGET_OBJECTS
 from helpdesk.libs.decorators import timed_cache
 
 
@@ -74,5 +73,5 @@ def get_provider(provider, **kw):
 
 def get_provider_by_action_auth(request, action):
     if not has_required_scope(request, ['authenticated']):
-        return get_provider(action.provider_type) if action.target_object in NO_AUTH_TARGET_OBJECTS else None
+        return None
     return request.user.providers[action.provider_type]
