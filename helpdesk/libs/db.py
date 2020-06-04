@@ -4,7 +4,7 @@ import sqlalchemy
 from sqlalchemy import true, and_
 from databases import Database
 
-from app.config import DATABASE_URL
+from helpdesk.config import DATABASE_URL
 
 name_convention = {
     "ix": 'idx_%(column_0_label)s',

@@ -4,8 +4,8 @@ from datetime import datetime
 
 from starlette.authentication import has_required_scope
 
-from app.config import NO_AUTH_TARGET_OBJECTS
-from app.libs.decorators import timed_cache
+from helpdesk.config import NO_AUTH_TARGET_OBJECTS
+from helpdesk.libs.decorators import timed_cache
 
 
 class Provider:
@@ -65,9 +65,9 @@ class Provider:
 
 @timed_cache(minutes=15)
 def get_provider(provider, **kw):
-    from app.models.providers.st2 import ST2Provider
-    from app.models.providers.airflow import AirflowProvider
-    from app.models.providers.spincycle import SpinCycleProvider
+    from helpdesk.models.providers.st2 import ST2Provider
+    from helpdesk.models.providers.airflow import AirflowProvider
+    from helpdesk.models.providers.spincycle import SpinCycleProvider
 
     return {'st2': ST2Provider, 'airflow': AirflowProvider, 'spincycle': SpinCycleProvider}[provider](**kw)
 

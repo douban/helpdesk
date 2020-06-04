@@ -5,10 +5,10 @@ from typing import List, Dict
 
 from starlette.authentication import BaseUser, AuthCredentials
 
-from app.libs.decorators import cached_property, timed_cache
-from app.libs.rest import DictSerializableClassMixin
-from app.models.provider import Provider
-from app.config import ADMIN_ROLES, avatar_url_func, PROVIDER, AUTH_UNSUPPORT_PROVIDERS
+from helpdesk.libs.decorators import cached_property, timed_cache
+from helpdesk.libs.rest import DictSerializableClassMixin
+from helpdesk.models.provider import Provider
+from helpdesk.config import ADMIN_ROLES, avatar_url_func, PROVIDER, AUTH_UNSUPPORT_PROVIDERS
 
 logger = logging.getLogger(__name__)
 

@@ -8,8 +8,8 @@ from urllib.parse import quote
 
 import requests
 
-from app.config import AIRFLOW_SERVER_URL
-from app.libs.decorators import timed_cache
+from helpdesk.config import AIRFLOW_SERVER_URL
+from helpdesk.libs.decorators import timed_cache
 
 logger = logging.getLogger(__name__)
 

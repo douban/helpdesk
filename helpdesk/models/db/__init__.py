@@ -6,8 +6,8 @@ from datetime import datetime
 from sqlalchemy.sql import select, func
 from sqlalchemy.ext.declarative import declarative_base
 
-from app.libs.db import metadata, get_db
-from app.libs.rest import json_unpack, DictSerializableClassMixin
+from helpdesk.libs.db import metadata, get_db
+from helpdesk.libs.rest import json_unpack, DictSerializableClassMixin
 
 logger = logging.getLogger(__name__)
 

@@ -14,4 +14,3 @@ local_config.py
 contrib/charts/*/charts/*.tgz
 # chart requirements lock
 requirements.lock
-..bfg-report/

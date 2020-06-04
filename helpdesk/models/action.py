@@ -3,9 +3,9 @@
 import logging
 from datetime import datetime
 
-from app.libs.rest import DictSerializableClassMixin
-from app.models.db.ticket import Ticket
-from app.config import AUTO_APPROVAL_TARGET_OBJECTS, PARAM_FILLUP, TICKET_CALLBACK_PARAMS
+from helpdesk.libs.rest import DictSerializableClassMixin
+from helpdesk.models.db.ticket import Ticket
+from helpdesk.config import AUTO_APPROVAL_TARGET_OBJECTS, PARAM_FILLUP, TICKET_CALLBACK_PARAMS
 
 logger = logging.getLogger(__name__)
 

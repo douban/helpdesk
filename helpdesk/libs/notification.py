@@ -4,7 +4,7 @@ from sentry_sdk import capture_exception
 
 from sa_tools_core.client import Client
 import requests
-from app.config import SLACK_WEBHOOK_URL
+from helpdesk.config import SLACK_WEBHOOK_URL
 
 logger = logging.getLogger(__name__)
 notify = Client().notify

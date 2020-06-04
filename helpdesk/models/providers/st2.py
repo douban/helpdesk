@@ -3,7 +3,7 @@
 import logging
 import requests
 
-from app.config import (
+from helpdesk.config import (
     ST2_DEFAULT_PACK,
     ST2_WORKFLOW_RUNNER_TYPES,
     ST2_TOKEN_TTL,
@@ -12,9 +12,9 @@ from app.config import (
     SYSTEM_USER_PASSWORD,
     DEFAULT_EMAIL_DOMAIN,
 )
-from app.libs.st2 import (client as service_client, get_client, Execution, Token)
-from app.models.provider import Provider
-from app.models.providers.ldap import LdapProviderMixin
+from helpdesk.libs.st2 import (client as service_client, get_client, Execution, Token)
+from helpdesk.models.provider import Provider
+from helpdesk.models.providers.ldap import LdapProviderMixin
 
 logger = logging.getLogger(__name__)
 

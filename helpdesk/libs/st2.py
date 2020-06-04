@@ -8,7 +8,7 @@ from st2client.client import Client
 from st2client.models.action import Execution  # NOQA
 from st2client.models.auth import Token  # NOQA
 
-from app.config import (
+from helpdesk.config import (
     ST2_BASE_URL,
     ST2_API_URL,
     ST2_AUTH_URL,

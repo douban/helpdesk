@@ -7,11 +7,11 @@ from urllib.parse import urlencode, quote_plus
 from sqlalchemy.sql.expression import and_
 import jwt
 
-from app.libs.decorators import cached_property
-from app.models import db
-from app.models.db.param_rule import ParamRule
-from app.models.provider import get_provider
-from app.config import (
+from helpdesk.libs.decorators import cached_property
+from helpdesk.models import db
+from helpdesk.models.db.param_rule import ParamRule
+from helpdesk.models.provider import get_provider
+from helpdesk.config import (
     SYSTEM_USER,
     SESSION_SECRET_KEY,
     DEFAULT_BASE_URL,
@@ -228,8 +228,8 @@ class Ticket(db.Model):
     async def notify(self, phase):
         # TODO: support custom template bind to action tree
         from app import config
-        from app.libs.template import render_notification
-        from app.libs.notification import notify, send_slack
+        from helpdesk.libs.template import render_notification
+        from helpdesk.libs.notification import notify, send_slack
 
         logger.info('Ticket notify: %s: %s', phase, self)
         assert phase in ('request', 'approval', 'mark')

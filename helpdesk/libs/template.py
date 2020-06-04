@@ -8,7 +8,7 @@ from starlette.templating import Jinja2Templates as _Jinja2Templates, _TemplateR
 from starlette.background import BackgroundTask
 from starlette.datastructures import URL
 
-from app.config import DEFAULT_BASE_URL, FORCE_HTTPS
+from helpdesk.config import DEFAULT_BASE_URL, FORCE_HTTPS
 
 logger = logging.getLogger(__name__)
 

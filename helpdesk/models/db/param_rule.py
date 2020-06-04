@@ -2,8 +2,8 @@
 
 import logging
 
-from app.libs.rule import Rule
-from app.models import db
+from helpdesk.libs.rule import Rule
+from helpdesk.models import db
 
 logger = logging.getLogger(__name__)
 

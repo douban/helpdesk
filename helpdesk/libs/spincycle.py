@@ -8,9 +8,9 @@ import os
 
 import requests
 
-from app.config import SPINCYCLE_RM_URL
-from app.libs.decorators import timed_cache
-from app.config import SPINCYCLE_RM_CERT_PATH
+from helpdesk.config import SPINCYCLE_RM_URL
+from helpdesk.libs.decorators import timed_cache
+from helpdesk.config import SPINCYCLE_RM_CERT_PATH
 
 logger = logging.getLogger(__name__)
 

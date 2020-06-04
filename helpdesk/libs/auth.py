@@ -44,9 +44,9 @@ class BasicAuthBackend(AuthenticationBackend):
 
 class SessionAuthBackend(AuthenticationBackend):
     async def authenticate(self, request):
-        from app.models.user import User
-        from app.models.provider import get_provider
-        from app.config import ENABLED_PROVIDERS, AUTH_UNSUPPORT_PROVIDERS
+        from helpdesk.models.user import User
+        from helpdesk.models.provider import get_provider
+        from helpdesk.config import ENABLED_PROVIDERS, AUTH_UNSUPPORT_PROVIDERS
         logger.debug('request.session: %s, user: %s', request.session, request.session.get('user'))
 
         for provider_type in ENABLED_PROVIDERS:
@@ -77,8 +77,8 @@ async def authenticate(request):
     '''Get user, password from request.form and authenticate with the provider to get a token,
     then set the token to session.
     '''
-    from app.config import ENABLED_PROVIDERS
-    from app.models.provider import get_provider
+    from helpdesk.config import ENABLED_PROVIDERS
+    from helpdesk.models.provider import get_provider
 
     if request.method != 'POST':
         return
@@ -104,7 +104,7 @@ async def authenticate(request):
 
 
 def unauth(request):
-    from app.config import ENABLED_PROVIDERS, AUTH_UNSUPPORT_PROVIDERS
+    from helpdesk.config import ENABLED_PROVIDERS, AUTH_UNSUPPORT_PROVIDERS
 
     for provider in ENABLED_PROVIDERS:
         if provider in AUTH_UNSUPPORT_PROVIDERS:

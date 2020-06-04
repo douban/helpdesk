@@ -4,10 +4,10 @@ import logging
 import json
 import datetime
 
-from app.config import SPINCYCLE_RM_URL, SPINCYCLE_USERNAME, SPINCYCLE_PASSWORD, DEFAULT_EMAIL_DOMAIN
-from app.libs.spincycle import SpinCycleClient
-from app.models.provider import Provider
-from app.models.providers.ldap import LdapProviderMixin
+from helpdesk.config import SPINCYCLE_RM_URL, SPINCYCLE_USERNAME, SPINCYCLE_PASSWORD, DEFAULT_EMAIL_DOMAIN
+from helpdesk.libs.spincycle import SpinCycleClient
+from helpdesk.models.provider import Provider
+from helpdesk.models.providers.ldap import LdapProviderMixin
 
 logger = logging.getLogger(__name__)
 

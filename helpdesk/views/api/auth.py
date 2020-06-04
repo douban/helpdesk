@@ -3,8 +3,8 @@ import logging
 from starlette.authentication import requires, has_required_scope  # NOQA
 
 from . import bp
-from app.libs.rest import jsonize
-from app.libs.auth import authenticate, unauth
+from helpdesk.libs.rest import jsonize
+from helpdesk.libs.auth import authenticate, unauth
 
 logger = logging.getLogger(__name__)
 

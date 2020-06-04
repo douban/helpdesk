@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from app.libs.rest import ApiError, ApiErrors as ApiErrorsBuiltin, jsonize
+from helpdesk.libs.rest import ApiError, ApiErrors as ApiErrorsBuiltin, jsonize
 
 from starlette.exceptions import HTTPException
 

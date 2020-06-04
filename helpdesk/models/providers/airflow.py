@@ -3,16 +3,16 @@
 import logging
 import json
 
-from app.config import (
+from helpdesk.config import (
     AIRFLOW_SERVER_URL,
     AIRFLOW_USERNAME,
     AIRFLOW_PASSWORD,
     AIRFLOW_DEFAULT_DAG_TAG,
     DEFAULT_EMAIL_DOMAIN,
 )
-from app.libs.airflow import AirflowClient
-from app.models.provider import Provider
-from app.models.providers.ldap import LdapProviderMixin
+from helpdesk.libs.airflow import AirflowClient
+from helpdesk.models.provider import Provider
+from helpdesk.models.providers.ldap import LdapProviderMixin
 
 logger = logging.getLogger(__name__)
 

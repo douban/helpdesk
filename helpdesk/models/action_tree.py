@@ -2,10 +2,10 @@
 
 import logging
 
-from app.libs.decorators import cached_property_with_ttl
-from app.models.action import Action
-from app.models.provider import get_provider
-from app.config import ACTION_TREE_CONFIG
+from helpdesk.libs.decorators import cached_property_with_ttl
+from helpdesk.models.action import Action
+from helpdesk.models.provider import get_provider
+from helpdesk.config import ACTION_TREE_CONFIG
 
 logger = logging.getLogger(__name__)
 

@@ -7,14 +7,14 @@ from starlette.responses import RedirectResponse  # NOQA
 from starlette.authentication import requires, has_required_scope  # NOQA
 
 from app import config
-from app.libs.rest import jsonize, check_parameter, json_validator
-from app.libs.template import url_for
-from app.libs.db import extract_filter_from_query_params
-from app.models.provider import get_provider_by_action_auth
-from app.models.db.ticket import Ticket
-from app.models.db.param_rule import ParamRule
-from app.models.action_tree import action_tree
-from app.views.api.errors import ApiError, ApiErrors
+from helpdesk.libs.rest import jsonize, check_parameter, json_validator
+from helpdesk.libs.template import url_for
+from helpdesk.libs.db import extract_filter_from_query_params
+from helpdesk.models.provider import get_provider_by_action_auth
+from helpdesk.models.db.ticket import Ticket
+from helpdesk.models.db.param_rule import ParamRule
+from helpdesk.models.action_tree import action_tree
+from helpdesk.views.api.errors import ApiError, ApiErrors
 
 from . import bp
 
