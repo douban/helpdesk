@@ -1,0 +1,38 @@
+name: frontend
+
+on:
+  push:
+    branches: [ master ]
+
+
+jobs:
+
+  build:
+    name: Build and Push
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '12'
+
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - run: npm install
+      working-directory: frontend
+    - run: npm run lint
+      working-directory: frontend
+    - run: npm run unit --runInBand --maxWorkers=4
+      working-directory: frontend
+    - run: npm run build
+      working-directory: frontend
+
+    - uses: docker/build-push-action@v1
+      with:
+        path: frontend
+        dockerfile: frontend/Dockerfile
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        repository: douz/helpdesk-frontend
+        tags: latest
