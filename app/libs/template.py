@@ -51,13 +51,13 @@ class Jinja2Templates(_Jinja2Templates):
         return self.env.get_template(name)
 
     def TemplateResponse(
-        self,
-        name: str,
-        context: dict,
-        status_code: int = 200,
-        headers: dict = None,
-        media_type: str = None,
-        background: BackgroundTask = None,
+            self,
+            name: str,
+            context: dict,
+            status_code: int = 200,
+            headers: dict = None,
+            media_type: str = None,
+            background: BackgroundTask = None,
     ) -> _TemplateResponse:
         # if "request" not in context:
         #     raise ValueError('context must include a "request" key')
@@ -72,13 +72,7 @@ class Jinja2Templates(_Jinja2Templates):
         )
 
 
-templates = Jinja2Templates(directory='app/templates')
-notification_templates = Jinja2Templates(directory='app/templates/notification')
-
-
-def render(template, context, status_code=200):
-    # context must include the "request"
-    return templates.TemplateResponse(template, context, status_code=status_code)
+notification_templates = Jinja2Templates(directory='templates/notification')
 
 
 def render_notification(template, context):

@@ -1,0 +1,21 @@
+{% extends "_message_layout.html" %}
+
+{% block _title %}{{ ticket.confirmed_by }} {{ 'approved' if ticket.is_approved else 'rejected' }} {{ ticket.submitter }}'s request to {{ ticket.title }}{% endblock %}
+
+{% block _content %}
+Ticket: {{ url_for('web:ticket', ticket_id=ticket.id) }}
+Parameters:
+{%- for k, v in ticket.params.items() %}
+    {%- if k != 'reason' %}
+    - {{ k }}: {{ v -}}
+    {% endif -%}
+{% endfor %}
+Request time: {{ ticket.created_at }}
+Reason: {{ ticket.reason }}
+Status: {{ 'Approved' if ticket.is_approved else 'Rejected' }}
+{{ 'Approval' if ticket.is_approved else 'Reject' }} time: {{ ticket.confirmed_at }}
+{% if ticket.is_approved %}
+Execution result:
+{{ ticket.execution_result_url }}
+{% endif %}
+{% endblock %}
