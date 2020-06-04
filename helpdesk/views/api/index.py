@@ -6,7 +6,7 @@ import jwt
 from starlette.responses import RedirectResponse  # NOQA
 from starlette.authentication import requires, has_required_scope  # NOQA
 
-from app import config
+from helpdesk import config
 from helpdesk.libs.rest import jsonize, check_parameter, json_validator
 from helpdesk.libs.template import url_for
 from helpdesk.libs.db import extract_filter_from_query_params
