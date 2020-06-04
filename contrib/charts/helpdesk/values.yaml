@@ -18,6 +18,7 @@ frontend:
     pullPolicy: IfNotPresent
 
 secretName: helpdesk
+existingSecret: false
 
 imagePullSecrets: []
 nameOverride: ""
@@ -74,9 +75,9 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
-volumeMounts: []
+# volumeMounts: []
 
-volumes: []
+# volumes: []
 
 nodeSelector: {}
 
