@@ -17,9 +17,6 @@ frontend:
     tag: latest
     pullPolicy: IfNotPresent
 
-secretName: helpdesk
-existingSecret: false
-
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
@@ -75,9 +72,9 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
-# volumeMounts: []
+volumeMounts: []
 
-# volumes: []
+volumes: []
 
 nodeSelector: {}
 
@@ -85,6 +82,6 @@ tolerations: []
 
 affinity: {}
 
-useConfigDir: false
-
+secretName: helpdesk
+existingSecret: false
 config: ""
