@@ -3,6 +3,7 @@
 import logging
 from datetime import datetime
 
+from sqlalchemy import Column, Integer, String, JSON, Boolean, DateTime  # NOQA
 from sqlalchemy.sql import select, func
 from sqlalchemy.ext.declarative import declarative_base
 
