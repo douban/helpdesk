@@ -13,4 +13,4 @@ COPY ./ /app
 
 ENV PYTHONPATH=/app
 
-CMD ["/app/contrib/docker/start.sh", "python"]
+CMD ["/app/contrib/docker/start.sh"]
