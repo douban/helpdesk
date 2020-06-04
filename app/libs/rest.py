@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 def jsonize(func):
     if asyncio.iscoroutinefunction(func):
+
         @wraps(func)
         async def _(*args, **kwargs):
             ret = await func(*args, **kwargs)
@@ -21,8 +22,10 @@ def jsonize(func):
             # logger.debug('jsonize: args: %s, kwargs: %s, ret: %s, data: %s', args, kwargs, ret, data)
             status_code = data.get('status_code') if data and isinstance(data, dict) else None
             return JSONResponse(dict(data=data), status_code=status_code or 200)
+
         return _
     else:
+
         @wraps(func)
         def _(*args, **kwargs):
             ret = func(*args, **kwargs)
@@ -30,6 +33,7 @@ def jsonize(func):
             # logger.debug('jsonize: args: %s, kwargs: %s, ret: %s, data: %s', args, kwargs, ret, data)
             status_code = data.get('status_code') if data and isinstance(data, dict) else None
             return JSONResponse(dict(data=data), status_code=status_code or 200)
+
         return _
 
 
@@ -80,8 +84,7 @@ def json_unpack(obj, visited=None):
         return [json_unpack(v, visited) for v in obj]
     d = dictify(obj)
     visited[id(obj)] = True
-    return ({k: json_unpack(v, visited)
-             for k, v in d.items() if id(v) not in visited and not k.startswith('_')}
+    return ({k: json_unpack(v, visited) for k, v in d.items() if id(v) not in visited and not k.startswith('_')}
             if d is not None else None)
 
 
@@ -114,8 +117,11 @@ class ApiErrors(object):
     parameter_validation_failed = (10003, 'parameter_validation_failed', 400)
 
 
-RE_PATTERN_IPADDRESS = re.compile("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$")  # NOQA
-RE_PATTERN_IPADDRESS_OR_SECTION = re.compile("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])?$")  # NOQA
+RE_PATTERN_IPADDRESS = re.compile(
+    "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$")  # NOQA
+RE_PATTERN_IPADDRESS_OR_SECTION = re.compile(
+    "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])?$"
+)  # NOQA
 
 
 def ip_address_or_section_validator(ip):
@@ -151,16 +157,13 @@ def check_parameter(params, name, type_, validator=None, optional=False, default
         if default is not None:
             return default
         if not optional:
-            raise ApiError(ApiErrors.parameter_required,
-                           'parameter `{name}` is required'.format(name=name))
+            raise ApiError(ApiErrors.parameter_required, 'parameter `{name}` is required'.format(name=name))
         return None
     if not isinstance(value, type_):
         try:
             value = type_(value)
         except Exception:
-            raise ApiError(ApiErrors.parameter_type_mismatch,
-                           'parameter `{name}` type mismatch'.format(name=name))
+            raise ApiError(ApiErrors.parameter_type_mismatch, 'parameter `{name}` type mismatch'.format(name=name))
     if validator and not validator(value):
-        raise ApiError(ApiErrors.parameter_validation_failed,
-                       'parameter `{name}` validation failed'.format(name=name))
+        raise ApiError(ApiErrors.parameter_validation_failed, 'parameter `{name}` validation failed'.format(name=name))
     return value

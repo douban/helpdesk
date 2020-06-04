@@ -3,13 +3,16 @@
 import logging
 import requests
 
-from app.config import (ST2_DEFAULT_PACK, ST2_WORKFLOW_RUNNER_TYPES,
-                        ST2_TOKEN_TTL, ST2_EXECUTION_RESULT_URL_PATTERN,
-                        SYSTEM_USER, SYSTEM_USER_PASSWORD,
-                        DEFAULT_EMAIL_DOMAIN)
-from app.libs.st2 import (client as service_client,
-                          get_client,
-                          Execution, Token)
+from app.config import (
+    ST2_DEFAULT_PACK,
+    ST2_WORKFLOW_RUNNER_TYPES,
+    ST2_TOKEN_TTL,
+    ST2_EXECUTION_RESULT_URL_PATTERN,
+    SYSTEM_USER,
+    SYSTEM_USER_PASSWORD,
+    DEFAULT_EMAIL_DOMAIN,
+)
+from app.libs.st2 import (client as service_client, get_client, Execution, Token)
 from app.models.provider import Provider
 from app.models.providers.ldap import LdapProviderMixin
 
@@ -48,8 +51,11 @@ class ST2Provider(LdapProviderMixin, Provider):
     def generate_annotation(self, execution):
         if not execution:
             return
-        return {'provider': self.provider_type, 'id': execution['id'],
-                'result_url': self.get_result_url(execution['id'])}
+        return {
+            'provider': self.provider_type,
+            'id': execution['id'],
+            'result_url': self.get_result_url(execution['id'])
+        }
 
     def get_actions(self, pack=None):
         '''
@@ -81,9 +87,8 @@ class ST2Provider(LdapProviderMixin, Provider):
     def run_action(self, ref, parameters):
         ref = self._ref(ref)
         action = self.get_action(ref)
-        execution_kwargs = dict(action=ref,
-                                action_is_workflow=action['runner_type'] in ST2_WORKFLOW_RUNNER_TYPES,
-                                parameters=parameters)
+        execution_kwargs = dict(
+            action=ref, action_is_workflow=action['runner_type'] in ST2_WORKFLOW_RUNNER_TYPES, parameters=parameters)
         execution = None
         msg = ''
         try:

@@ -6,13 +6,12 @@ from databases import Database
 
 from app.config import DATABASE_URL
 
-
 name_convention = {
-  "ix": 'idx_%(column_0_label)s',
-  "uq": "uk_%(table_name)s_%(column_0_name)s",
-  "ck": "ck_%(table_name)s_%(column_0_name)s",
-  "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-  "pk": "pk_%(table_name)s"
+    "ix": 'idx_%(column_0_label)s',
+    "uq": "uk_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(column_0_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s"
 }
 
 engine = sqlalchemy.create_engine(DATABASE_URL, convert_unicode=True)

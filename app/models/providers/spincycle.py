@@ -27,16 +27,7 @@ class SpinCycleProvider(LdapProviderMixin, Provider):
 
     spin_status_to_num = {v: k for k, v in spin_req_status.items()}
 
-    status_to_emoji = {
-        3: '✔️',
-        2: '🏃',
-        4: '❌',
-        6: '🛑',
-        5: '🔄',
-        7: '▶',
-        1: '👯',
-        0: '😿'
-    }
+    status_to_emoji = {3: '✔️', 2: '🏃', 4: '❌', 6: '🛑', 5: '🔄', 7: '▶', 1: '👯', 0: '😿'}
 
     def __init__(self, token=None, user=None):
         super().__init__(token=token, user=user)
@@ -155,8 +146,11 @@ class SpinCycleProvider(LdapProviderMixin, Provider):
     def generate_annotation(self, execution):
         if not execution:
             return
-        return {'provider': self.provider_type, 'id': execution['id'],
-                'result_url': self.get_result_url(execution['id'])}
+        return {
+            'provider': self.provider_type,
+            'id': execution['id'],
+            'result_url': self.get_result_url(execution['id'])
+        }
 
     def _format_exec_status(self, status):
         if status not in self.status_to_emoji:
@@ -197,7 +191,10 @@ class SpinCycleProvider(LdapProviderMixin, Provider):
             'status': self.spin_req_status[execution['state']],
             'start_timestamp': execution['startedAt'],
             'web_url': self.get_result_url(execution_id),
-            'result': {'tasks': [self._build_graph_of_req(execution_id)], 'req_id': execution_id},
+            'result': {
+                'tasks': [self._build_graph_of_req(execution_id)],
+                'req_id': execution_id
+            },
             'id': execution_id,
         }
         all_jobs_log = self.spin_client.get_all_job_logs_by_req(execution_id)
@@ -230,8 +227,7 @@ class SpinCycleProvider(LdapProviderMixin, Provider):
     def get_execution(self, execution_id):
         try:
             execution = self.spin_client.get_req(execution_id)
-            return self._build_result_from_req_exec(execution, execution_id) \
-                       if execution else None, ''
+            return self._build_result_from_req_exec(execution, execution_id) if execution else None, ''
         except Exception as e:
             logger.error(f'get spin cycle execution from {execution_id}, error: {str(e)}')
             return None, str(e)

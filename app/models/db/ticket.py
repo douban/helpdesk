@@ -11,9 +11,15 @@ from app.libs.decorators import cached_property
 from app.models import db
 from app.models.db.param_rule import ParamRule
 from app.models.provider import get_provider
-from app.config import (SYSTEM_USER, SESSION_SECRET_KEY, DEFAULT_BASE_URL,
-                        ADMIN_EMAIL_ADDRS, SLACK_ENABLED,
-                        FROM_EMAIL_ADDR, TICKET_CALLBACK_PARAMS)
+from app.config import (
+    SYSTEM_USER,
+    SESSION_SECRET_KEY,
+    DEFAULT_BASE_URL,
+    ADMIN_EMAIL_ADDRS,
+    SLACK_ENABLED,
+    FROM_EMAIL_ADDR,
+    TICKET_CALLBACK_PARAMS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +100,10 @@ class Ticket(db.Model):
         return '; '.join(['%s: %s' % (k, v) for k, v in self.params.items() if k not in ('reason',)])
 
     async def can_view(self, user):
-        return user.is_admin(self.provider_type) or user.name == self.submitter or user.name in self.ccs or user.name in await self.get_rule_actions('approver')
+        return user.is_admin(
+            self.provider_type
+        ) or user.name == self.submitter or user.name in self.ccs or user.name in await self.get_rule_actions(
+            'approver')
 
     async def can_admin(self, user):
         return user.is_admin(self.provider_type) or user.name in await self.get_rule_actions('approver')
@@ -192,9 +201,7 @@ class Ticket(db.Model):
             return execution, msg
 
         self.executed_at = datetime.now()
-        self.annotate(execution=annotate,
-                      execution_creation_success=True,
-                      execution_creation_msg=msg)
+        self.annotate(execution=annotate, execution_creation_success=True, execution_creation_msg=msg)
 
         # we don't save the ticket here, we leave it outside
         return execution, 'Success. <a href="%s" target="_blank">result</a>' % (execution['web_url'],)
@@ -233,7 +240,9 @@ class Ticket(db.Model):
         #   support slack etc.
         system_provider = get_provider(self.provider_type)
         email_addrs = [ADMIN_EMAIL_ADDRS] + [system_provider.get_user_email(cc) for cc in self.ccs]
-        email_addrs += [system_provider.get_user_email(approver) for approver in await self.get_rule_actions('approver')]
+        email_addrs += [
+            system_provider.get_user_email(approver) for approver in await self.get_rule_actions('approver')
+        ]
         if phase in ('approval', 'mark'):
             email_addrs += [system_provider.get_user_email(self.submitter)]
         email_addrs = ','.join(addr for addr in email_addrs if addr)

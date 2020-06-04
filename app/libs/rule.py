@@ -1,6 +1,5 @@
 # coding: utf-8
 
-
 from rule import Rule  # NOQA
 from rule.op import Op, register
 

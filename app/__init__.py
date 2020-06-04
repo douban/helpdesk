@@ -25,9 +25,10 @@ def create_app():
     logging.getLogger('multipart').setLevel(logging.INFO)
     logging.getLogger('uvicorn').setLevel(logging.INFO)
 
-    app = Starlette(debug=DEBUG, routes=[
-        Mount('/api', app=api_bp, name='api'),
-    ])
+    app = Starlette(
+        debug=DEBUG, routes=[
+            Mount('/api', app=api_bp, name='api'),
+        ])
 
     app.add_middleware(AuthenticationMiddleware, backend=SessionAuthBackend())
     app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY, max_age=SESSION_TTL)

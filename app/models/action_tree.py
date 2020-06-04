@@ -5,7 +5,7 @@ import logging
 from app.libs.decorators import cached_property_with_ttl
 from app.models.action import Action
 from app.models.provider import get_provider
-from app.config import ACTION_TREE_CONFIG, PROVIDER
+from app.config import ACTION_TREE_CONFIG
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +113,8 @@ class ActionTree:
     def path_to(self, tree_node, pattern='{level}-{name}'):
         if not tree_node:
             return []
-        return self.path_to(tree_node.parent, pattern) + [pattern.format(**tree_node.__dict__) if pattern else tree_node]
+        return self.path_to(tree_node.parent,
+                            pattern) + [pattern.format(**tree_node.__dict__) if pattern else tree_node]
 
     def get_tree_list(self, node_formatter):
         """
@@ -135,8 +136,7 @@ class ActionTree:
         return local_list
 
     def get_action_by_target_obj(self, target_object):
-        action_tree_leaf = self.find(
-            target_object) if target_object != '' else self.first()
+        action_tree_leaf = self.find(target_object) if target_object != '' else self.first()
         if not action_tree_leaf:
             return
         return action_tree_leaf.action

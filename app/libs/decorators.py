@@ -21,5 +21,7 @@ def timed_cache(**timedelta_kwargs):
                 f.cache_clear()
                 next_update = now + update_delta
             return f(*args, **kwargs)
+
         return _wrapped
+
     return _wrapper

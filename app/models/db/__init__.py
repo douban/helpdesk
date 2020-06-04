@@ -3,8 +3,6 @@
 import logging
 from datetime import datetime
 
-from sqlalchemy import (Column, Integer, String, JSON,  # NOQA
-                        Boolean, DateTime)  # NOQA
 from sqlalchemy.sql import select, func
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -40,11 +38,10 @@ class Model(DictSerializableClassMixin, Base):
 
     @classmethod
     async def get_all(cls, ids=None, filter_=None, order_by=None, desc=False, limit=None, offset=None):
-        # logger.debug('%s.get_all(ids=%s, filter_=%s, desc=%s, limit=%s, offset=%s', cls.__name__, ids, filter_, desc, limit, offset)
         t = cls.__table__
         query = select([t])
         if ids:
-            # see https://docs.sqlalchemy.org/en/13/core/sqlelement.html?highlight=in_#sqlalchemy.sql.expression.ColumnElement.in_
+            # see https://docs.sqlalchemy.org/en/13/core/sqlelement.html?highlight=in_#sqlalchemy.sql.expression.ColumnElement.in_  # NOQA
             query = query.where(t.c.id.in_(ids))
         elif filter_ is not None:
             query = query.where(filter_)
@@ -109,7 +106,7 @@ class Model(DictSerializableClassMixin, Base):
         t = cls.__table__
         query = t.delete()
         if ids:
-            # see https://docs.sqlalchemy.org/en/13/core/sqlelement.html?highlight=in_#sqlalchemy.sql.expression.ColumnElement.in_
+            # see https://docs.sqlalchemy.org/en/13/core/sqlelement.html?highlight=in_#sqlalchemy.sql.expression.ColumnElement.in_  # NOQA
             query = query.where(t.c.id.in_(ids))
         elif filter_ is not None:
             query = query.where(filter_)

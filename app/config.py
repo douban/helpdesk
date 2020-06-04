@@ -2,7 +2,6 @@
 
 import os
 
-
 DEBUG = DEVELOP_MODE = False
 SENTRY_DSN = ''
 
@@ -62,6 +61,6 @@ SPINCYCLE_PASSWORD = os.getenv('HELPDESK_SPINCYCLE_PASSWORD')
 SPINCYCLE_RM_CERT_PATH = os.getenv("HELPDESK_SPINCYCLE_RM_CERT_PATH", "/etc/ssl/certs/Douban_CA.pem")
 
 try:
-    from local_config import *   # NOQA
+    from local_config import *  # NOQA
 except ImportError as e:
     print('Import from local_config failed, %s' % str(e))

@@ -27,8 +27,7 @@ def send_slack(subject, body, truncate=True):
     session = requests.Session()
     session.mount("https://", requests.adapters.HTTPAdapter(max_retries=5))
     try:
-        r = session.post(
-            SLACK_WEBHOOK_URL, json={"text": text}, timeout=3)
+        r = session.post(SLACK_WEBHOOK_URL, json={"text": text}, timeout=3)
         r.raise_for_status()
     except Exception as e:
         capture_exception(e)

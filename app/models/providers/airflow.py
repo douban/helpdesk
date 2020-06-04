@@ -3,7 +3,13 @@
 import logging
 import json
 
-from app.config import AIRFLOW_SERVER_URL, AIRFLOW_USERNAME, AIRFLOW_PASSWORD, AIRFLOW_DEFAULT_DAG_TAG, DEFAULT_EMAIL_DOMAIN
+from app.config import (
+    AIRFLOW_SERVER_URL,
+    AIRFLOW_USERNAME,
+    AIRFLOW_PASSWORD,
+    AIRFLOW_DEFAULT_DAG_TAG,
+    DEFAULT_EMAIL_DOMAIN,
+)
 from app.libs.airflow import AirflowClient
 from app.models.provider import Provider
 from app.models.providers.ldap import LdapProviderMixin
@@ -112,8 +118,11 @@ class AirflowProvider(LdapProviderMixin, Provider):
     def generate_annotation(self, execution):
         if not execution:
             return
-        return {'provider': self.provider_type, 'id': execution['id'],
-                'result_url': self.get_result_url(execution['id'])}
+        return {
+            'provider': self.provider_type,
+            'id': execution['id'],
+            'result_url': self.get_result_url(execution['id'])
+        }
 
     @staticmethod
     def _format_exec_status(status):
@@ -139,7 +148,10 @@ class AirflowProvider(LdapProviderMixin, Provider):
             'status': execution['status'],
             'start_timestamp': execution_date,
             'web_url': self.get_result_url(execution_id),
-            'result': {'tasks': [], 'dag_id': dag_id},    # frontend only render subtab when len(result) == 2
+            'result': {
+                'tasks': [],
+                'dag_id': dag_id
+            },  # frontend only render subtab when len(result) == 2
             'id': execution_id,
         }
 
@@ -157,16 +169,25 @@ class AirflowProvider(LdapProviderMixin, Provider):
 
             # check log result return
             if task_tried_times <= 0:
-                tasks_result = {task_id: {'failed': True, 'stderr': task_instance['state'],
-                                          'return_code': 1, 'succeeded': False, 'stdout': ''}}
+                tasks_result = {
+                    task_id: {
+                        'failed': True,
+                        'stderr': task_instance['state'],
+                        'return_code': 1,
+                        'succeeded': False,
+                        'stdout': ''
+                    }
+                }
             else:
                 for tries_time in range(task_tried_times):
                     output_execution_date = self.airflow_client.get_out_put_id_date(execution_date)
-                    msg = {'output_load': True,
-                           'query_string': f'?exec_output_id={dag_id}|{output_execution_date}|{task_id}|{tries_time+1}'}
-                    is_success_try = tries_time+1 == task_tried_times and is_task_success
+                    msg = {
+                        'output_load': True,
+                        'query_string': f'?exec_output_id={dag_id}|{output_execution_date}|{task_id}|{tries_time+1}'
+                    }
+                    is_success_try = tries_time + 1 == task_tried_times and is_task_success
                     tasks_result[f'{task_id} -> [{tries_time+1}/{task_tried_times}]'] = {
-                        'failed': tries_time+1 != task_tried_times or not is_task_success,
+                        'failed': tries_time + 1 != task_tried_times or not is_task_success,
                         'stderr': msg if not is_success_try else '',
                         'return_code': int(not is_success_try),
                         'succeeded': is_success_try,
@@ -188,8 +209,8 @@ class AirflowProvider(LdapProviderMixin, Provider):
         dag_id, execution_date = execution_id.split('|')
         try:
             execution = self.airflow_client.get_dag_result(dag_id, execution_date)
-            return self._build_result_from_dag_exec(execution, execution_id, filter_status=('skipped',)) \
-                       if execution else None, ''
+            return self._build_result_from_dag_exec(
+                execution, execution_id, filter_status=('skipped',)) if execution else None, ''
         except Exception as e:
             logger.error(f'get execution from {execution_id}, error: {str(e)}')
             return None, str(e)

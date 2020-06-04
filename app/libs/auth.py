@@ -5,9 +5,13 @@ import logging
 import binascii
 from datetime import datetime, timedelta
 
-from starlette.authentication import (AuthenticationBackend,
-                                      AuthenticationError, SimpleUser,
-                                      AuthCredentials, UnauthenticatedUser)
+from starlette.authentication import (
+    AuthenticationBackend,
+    AuthenticationError,
+    SimpleUser,
+    AuthCredentials,
+    UnauthenticatedUser,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +64,11 @@ class SessionAuthBackend(AuthenticationBackend):
                 return AuthCredentials([]), UnauthenticatedUser()
 
         username = request.session['user']
-        providers = {provider_type: get_provider(provider_type, token=request.session.get(f'{provider_type}_token'), user=username)
-                     for provider_type in ENABLED_PROVIDERS}
+        providers = {
+            provider_type:
+            get_provider(provider_type, token=request.session.get(f'{provider_type}_token'), user=username)
+            for provider_type in ENABLED_PROVIDERS
+        }
         user = User(username=username, providers=providers)
         return user.auth_credentials, user
 

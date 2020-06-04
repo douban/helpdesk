@@ -77,19 +77,19 @@ class Action(DictSerializableClassMixin):
                 params[k] = live_value
 
         # create ticket
-        ticket = Ticket(title=self.name,
-                        provider_type=provider.provider_type,
-                        provider_object=self.target_object,
-                        params=params,
-                        extra_params=extra_params,
-                        submitter=provider.user,
-                        reason=params.get('reason'),
-                        created_at=datetime.now())
+        ticket = Ticket(
+            title=self.name,
+            provider_type=provider.provider_type,
+            provider_object=self.target_object,
+            params=params,
+            extra_params=extra_params,
+            submitter=provider.user,
+            reason=params.get('reason'),
+            created_at=datetime.now())
 
         # if auto pass
-        if (self.target_object in AUTO_APPROVAL_TARGET_OBJECTS
-                or is_admin
-                or await ticket.get_rule_actions('is_auto_approval')):
+        if (self.target_object in AUTO_APPROVAL_TARGET_OBJECTS or is_admin or
+                await ticket.get_rule_actions('is_auto_approval')):
             ret, msg = ticket.approve(auto=True)
             if not ret:
                 return None, msg
@@ -110,4 +110,6 @@ class Action(DictSerializableClassMixin):
             await ticket_added.notify('request')
         await ticket_added.save()
 
-        return ticket_added.to_dict(), 'Success. Your request has been approved automatically, please go to ticket page for details'
+        return (
+            ticket_added.to_dict(),
+            'Success. Your request has been approved automatically, please go to ticket page for details')
