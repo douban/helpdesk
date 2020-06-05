@@ -52,7 +52,7 @@ def render_notification(template, context):
     jinja_template = notification_templates.get_template(template)
     message = jinja_template.render(context)
     logger.debug('render_notification: message: %s', message)
-    tree = ET.fromstring(message)
+    tree = ET.fromstring(message.strip())
     title = ''.join(piece.text for piece in tree.findall('title'))
     content = ''.join(piece.text for piece in tree.findall('content'))
     return title, content
