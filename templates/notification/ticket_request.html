@@ -4,7 +4,7 @@
 {% block _title %}{{ ticket.submitter }} request to {{ ticket.title }}{% endblock %}
 
 {% block _content %}
-Ticket: {{ url_for('web:ticket', ticket_id=ticket.id) }}
+Ticket: {{ BASE_URL }}/ticket/{{ ticket.id }}
 Parameters:
 {%- for k, v in ticket.params.items() %}
     {%- if k != 'reason' %}
@@ -19,7 +19,7 @@ Execution result:
 {{ ticket.execution_result_url }}
 {% else %}
 Do you want to approve this request?
-Approve: {{ url_for('web:ticket_op', ticket_id=ticket.id, op='approve') }}
-Reject: {{ url_for('web:ticket_op', ticket_id=ticket.id, op='reject') }}
+Approve: {{ BASE_URL }}/ticket/{{ ticket.id }}/approve
+Reject: {{ BASE_URL }}/ticket/{{ ticket.id }}/reject
 {% endif %}
 {% endblock %}
