@@ -38,7 +38,7 @@ def send_mail(to, subject, body):
         smtp.quit()
 
 
-def send_webhook(target, subject, body, truncate=True):
+def send_webhook(subject, body, truncate=True):
     if not WEBHOOK_URL:
         return
     body = body.replace("\n\n", "\n")
@@ -55,11 +55,10 @@ def send_webhook(target, subject, body, truncate=True):
         body = '\n'.join(bodies)
     msg = {
         'from': 'helpdesk',
-        'to': target,
         'title': subject,
         'text': subject + '\n' + body,
         'markdown': body,
     }
     r = requests.post(WEBHOOK_URL, json=msg, timeout=3)
     if r.status_code != 200:
-        logger.warning('send channels failed(%s): %s', target, r.text)
+        logger.warning('send channels failed: %s', r.text)
