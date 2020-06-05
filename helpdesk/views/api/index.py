@@ -8,7 +8,7 @@ from starlette.authentication import requires, has_required_scope  # NOQA
 
 from helpdesk import config
 from helpdesk.libs.rest import jsonize, check_parameter, json_validator
-from helpdesk.libs.template import url_for
+from helpdesk.libs.template import get_base_url
 from helpdesk.libs.db import extract_filter_from_query_params
 from helpdesk.models.provider import get_provider_by_action_auth
 from helpdesk.models.db.ticket import Ticket
@@ -249,10 +249,10 @@ async def ticket(request):
     def extra_dict(d):
         id_ = d['id']
         return dict(
-            url=url_for('api:ticket', request, ticket_id=id_),
-            approve_url=url_for('api:ticket_op', request, ticket_id=id_, op='approve'),
-            reject_url=url_for('api:ticket_op', request, ticket_id=id_, op='reject'),
-            api_url=url_for('api:ticket', request, ticket_id=id_),
+            url=f"{get_base_url(request)}/ticket/{id_}",
+            approve_url=f"{get_base_url(request)}/ticket/{id_}/approve",
+            reject_url=f"{get_base_url(request)}/ticket/{id_}/reject",
+            api_url=f"{get_base_url(request)}/api/ticket/{id_}",
             **d)
 
     return dict(
