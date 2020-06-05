@@ -5,25 +5,17 @@ import logging
 import jinja2
 from starlette.templating import Jinja2Templates as _Jinja2Templates, _TemplateResponse
 from starlette.background import BackgroundTask
-from starlette.datastructures import URL
 
-from helpdesk.config import DEFAULT_BASE_URL, FORCE_HTTPS
+from helpdesk.config import DEFAULT_BASE_URL
 
 logger = logging.getLogger(__name__)
-
-
-def get_base_url(request=None):
-    if request:
-        url = URL(request['url'])
-        return f"{'https' if FORCE_HTTPS else url.scheme}://{url.netloc}"
-    return DEFAULT_BASE_URL
 
 
 class Jinja2Templates(_Jinja2Templates):
     def get_env(self, directory: str) -> "jinja2.Environment":
         loader = jinja2.FileSystemLoader(directory)
         env = jinja2.Environment(loader=loader, autoescape=True)
-        env.globals["BASE_URL"] = get_base_url()
+        env.globals["BASE_URL"] = DEFAULT_BASE_URL
         return env
 
     def get_template(self, name: str) -> "jinja2.Template":
