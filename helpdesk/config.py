@@ -35,8 +35,14 @@ FORCE_HTTPS = False
 ADMIN_EMAIL_ADDRS = ''
 FROM_EMAIL_ADDR = ''
 
-SLACK_ENABLED = False
-SLACK_WEBHOOK_URL = ''
+
+WEBHOOK_URL = ''
+
+FROM_EMAIL_ADDR = 'sysadmin+helpdesk@example.com'
+SMTP_SERVER = 'example.smtp.com'
+SMTP_SERVER_PORT = 25
+SMTP_SSL = False
+SMTP_CREDENTIALS = ''
 
 NOTIFICATION_TITLE_PREFIX = ''
 

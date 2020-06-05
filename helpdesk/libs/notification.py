@@ -1,16 +1,46 @@
 # coding: utf-8
-import logging
-from sentry_sdk import capture_exception
 
-from sa_tools_core.client import Client
+import logging
+import smtplib
+from email.message import EmailMessage
+
 import requests
-from helpdesk.config import SLACK_WEBHOOK_URL
+from helpdesk.config import (
+    WEBHOOK_URL,
+    FROM_EMAIL_ADDR,
+    SMTP_SERVER,
+    SMTP_SERVER_PORT,
+    SMTP_SSL,
+    SMTP_CREDENTIALS,
+)
 
 logger = logging.getLogger(__name__)
-notify = Client().notify
 
 
-def send_slack(subject, body, truncate=True):
+def send_mail(to, subject, body):
+    server_info = (SMTP_SERVER, SMTP_SERVER_PORT)
+    smtp = smtplib.SMTP_SSL(*server_info) if SMTP_SSL else smtplib.SMTP(*server_info)
+    if SMTP_CREDENTIALS:
+        user, password = SMTP_CREDENTIALS.split(':')
+        smtp.login(user, password)
+
+    msg = EmailMessage()
+    msg.set_content(body)
+    msg['Subject'] = subject
+    msg['From'] = FROM_EMAIL_ADDR
+    msg['To'] = to
+
+    try:
+        smtp.send_message(msg)
+    except Exception as e:
+        logger.warning('send email failed(%s): %s', to, e)
+    finally:
+        smtp.quit()
+
+
+def send_webhook(subject, body, truncate=True):
+    if not WEBHOOK_URL:
+        return
     body = body.replace("\n\n", "\n")
     if truncate:
         bodies = body.split('\n')
@@ -23,11 +53,12 @@ def send_slack(subject, body, truncate=True):
             tmp.append(line)
         bodies = tmp
         body = '\n'.join(bodies)
-    text = '`%s`\n```%s```' % (subject, body)
-    session = requests.Session()
-    session.mount("https://", requests.adapters.HTTPAdapter(max_retries=5))
-    try:
-        r = session.post(SLACK_WEBHOOK_URL, json={"text": text}, timeout=3)
-        r.raise_for_status()
-    except Exception as e:
-        capture_exception(e)
+    msg = {
+        'from': 'helpdesk',
+        'title': subject,
+        'text': subject + '\n' + body,
+        'markdown': body,
+    }
+    r = requests.post(WEBHOOK_URL, json=msg, timeout=3)
+    if r.status_code != 200:
+        logger.warning('send channels failed: %s', r.text)
