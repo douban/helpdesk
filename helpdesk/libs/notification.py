@@ -17,7 +17,7 @@ from helpdesk.config import (
 logger = logging.getLogger(__name__)
 
 
-def send_mail(to, subject, body):
+def send_mail(addrs, subject, body):
     server_info = (SMTP_SERVER, SMTP_SERVER_PORT)
     smtp = smtplib.SMTP_SSL(*server_info) if SMTP_SSL else smtplib.SMTP(*server_info)
     if SMTP_CREDENTIALS:
@@ -28,12 +28,12 @@ def send_mail(to, subject, body):
     msg.set_content(body)
     msg['Subject'] = subject
     msg['From'] = FROM_EMAIL_ADDR
-    msg['To'] = to
+    msg['To'] = addrs
 
     try:
         smtp.send_message(msg)
     except Exception as e:
-        logger.warning('send email failed(%s): %s', to, e)
+        logger.warning('send email failed(%s): %s', addrs, e)
     finally:
         smtp.quit()
 
