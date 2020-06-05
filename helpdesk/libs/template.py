@@ -21,13 +21,9 @@ def get_base_url(request=None):
 
 class Jinja2Templates(_Jinja2Templates):
     def get_env(self, directory: str) -> "jinja2.Environment":
-        @jinja2.contextfunction
-        def _get_base_url(context: dict) -> str:
-            return get_base_url(context.get("request", None))
-
         loader = jinja2.FileSystemLoader(directory)
         env = jinja2.Environment(loader=loader, autoescape=True)
-        env.globals["BASE_URL"] = _get_base_url
+        env.globals["BASE_URL"] = get_base_url()
         return env
 
     def get_template(self, name: str) -> "jinja2.Template":
