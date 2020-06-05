@@ -72,6 +72,8 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
+env: []
+
 volumeMounts: []
 
 volumes: []
