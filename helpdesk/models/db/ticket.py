@@ -238,7 +238,7 @@ class Ticket(db.Model):
             module, _class = method.split(':')
             try:
                 notify = getattr(importlib.import_module(module), _class)
-                notify(system_provider, phase, self).send()
+                await notify(system_provider, phase, self).send()
             except Exception as e:
                 report()
                 logger.warning('notify to %s failed: %s: %s', method, e)
