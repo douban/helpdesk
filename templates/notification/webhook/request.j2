@@ -18,7 +18,7 @@ Execution result:
 {{ ticket.execution_result_url }}
 {% else %}
 Do you want to approve this request?
-Approve: {{ BASE_URL }}/ticket/{{ ticket.id }}/approve
-Reject: {{ BASE_URL }}/ticket/{{ ticket.id }}/reject
+Approve: {{ ticket.web_url }}/approve
+Reject: {{ ticket.web_url }}/reject
 {% endif %}
 {% endblock %}

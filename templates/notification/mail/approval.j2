@@ -3,7 +3,7 @@
 {% block _title %}{{ ticket.confirmed_by }} {{ 'approved' if ticket.is_approved else 'rejected' }} {{ ticket.submitter }}'s request to {{ ticket.title }}{% endblock %}
 
 {% block _content %}
-Ticket: {{ BASE_URL }}/ticket/{{ ticket.id }}
+Ticket: {{ ticket.web_url }}
 Parameters:
 {%- for k, v in ticket.params.items() %}
     {%- if k != 'reason' %}

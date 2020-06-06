@@ -9,7 +9,6 @@ from starlette.templating import Jinja2Templates
 
 from helpdesk.config import (
     NOTIFICATION_TITLE_PREFIX,
-    DEFAULT_BASE_URL,
     WEBHOOK_URL,
     ADMIN_EMAIL_ADDRS,
     FROM_EMAIL_ADDR,
@@ -96,7 +95,7 @@ class WebhookNotification(Notification):
         #         tmp.append(line)
         #     bodies = tmp
         #     body = '\n'.join(bodies)
-        link = f'{DEFAULT_BASE_URL}/ticket/{self.ticket.id}'
+        link = self.ticket.web_url
         msg = {
             'from': 'helpdesk',
             'title': title,

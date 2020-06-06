@@ -3,7 +3,7 @@
 {% block _title %}{{ ticket.submitter }}'s request to {{ ticket.title }} has been marked as {{ ticket.status }} {% endblock %}
 
 {% block _content %}
-Ticket: {{ BASE_URL }}/ticket/{{ ticket.id }}
+Ticket: {{ ticket.web_id }}
 Parameters:
 {%- for k, v in ticket.params.items() %}
     {%- if k != 'reason' %}

@@ -147,6 +147,10 @@ class Ticket(db.Model):
             return False
         return self.annotation.get('auto_approved', False)
 
+    @property
+    def web_url(self):
+        return f'{DEFAULT_BASE_URL}/ticket/{self.id}'
+
     def check_confirmed(self):
         if self.is_confirmed:
             op = 'approved' if self.is_approved else 'rejected'
