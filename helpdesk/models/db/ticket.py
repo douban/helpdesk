@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import logging
+import importlib
 from datetime import datetime
 from urllib.parse import urlencode, quote_plus
 
@@ -8,6 +9,7 @@ from sqlalchemy.sql.expression import and_
 import jwt
 
 from helpdesk.libs.decorators import cached_property
+from helpdesk.libs.sentry import report
 from helpdesk.models import db
 from helpdesk.models.db.param_rule import ParamRule
 from helpdesk.models.provider import get_provider
@@ -15,9 +17,8 @@ from helpdesk.config import (
     SYSTEM_USER,
     SESSION_SECRET_KEY,
     DEFAULT_BASE_URL,
-    ADMIN_EMAIL_ADDRS,
     TICKET_CALLBACK_PARAMS,
-    NOTIFICATION_TITLE_PREFIX,
+    NOTIFICATION_METHODS,
 )
 
 logger = logging.getLogger(__name__)
@@ -225,26 +226,18 @@ class Ticket(db.Model):
         return execution, msg
 
     async def notify(self, phase):
-        # TODO: support custom template bind to action tree
-        from helpdesk.libs.template import render_notification
-        from helpdesk.libs.notification import send_mail, send_webhook
-
         logger.info('Ticket notify: %s: %s', phase, self)
         assert phase in ('request', 'approval', 'mark')
 
-        title, content = render_notification('ticket_%s.html' % phase, context=dict(ticket=self))
-
-        # TODO: make notification methods configurable.
         system_provider = get_provider(self.provider_type)
-        email_addrs = [ADMIN_EMAIL_ADDRS] + [system_provider.get_user_email(cc) for cc in self.ccs]
-        email_addrs += [
-            system_provider.get_user_email(approver) for approver in await self.get_rule_actions('approver')
-        ]
-        if phase in ('approval', 'mark'):
-            email_addrs += [system_provider.get_user_email(self.submitter)]
-        email_addrs = ','.join(addr for addr in email_addrs if addr)
-        send_mail(addrs=email_addrs, subject=NOTIFICATION_TITLE_PREFIX+title, body=content.strip())
-        send_webhook(subject=title, body=content.strip(), truncate=False)
+        for method in NOTIFICATION_METHODS:
+            module, _class = method.split(':')
+            try:
+                notify = getattr(importlib.import_module(module), _class)
+                notify(system_provider, phase, self).send()
+            except Exception as e:
+                report()
+                logger.warning('notify to %s failed: %s: %s', method, e)
 
     def generate_callback_url(self):
         """

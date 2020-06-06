@@ -56,6 +56,10 @@ ADMIN_EMAIL_ADDRS = 'admin@example.com,ops@example.com'
 FROM_EMAIL_ADDR = 'helpdesk@example.com'
 
 NOTIFICATION_TITLE_PREFIX = '[helpdesk] '
+NOTIFICATION_METHODS = [
+    'helpdesk.libs.notification:MailNotification',
+    'helpdesk.libs.notification:WebhookNotification',
+]
 
 AUTO_APPROVAL_TARGET_OBJECTS = []
 

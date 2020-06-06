@@ -1,6 +1,7 @@
 *.sw[po]
 /tmp
 /venv
+/.vscode
 
 __pycache__/
 
