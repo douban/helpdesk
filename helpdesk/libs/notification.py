@@ -7,7 +7,6 @@ from email.message import EmailMessage
 import requests
 from starlette.templating import Jinja2Templates
 
-from helpdesk.libs.sentry import report
 from helpdesk.config import (
     NOTIFICATION_TITLE_PREFIX,
     DEFAULT_BASE_URL,
@@ -75,9 +74,6 @@ class MailNotification(Notification):
 
         try:
             smtp.send_message(msg)
-        except Exception as e:
-            report()
-            logger.warning('send email failed(%s): %s', addrs, e)
         finally:
             smtp.quit()
 
