@@ -52,7 +52,6 @@ ST2_TOKEN_TTL = 24 * 3600
 DEFAULT_EMAIL_DOMAIN = 'example.com'
 # base url will be used by notifications to show web links
 DEFAULT_BASE_URL = 'https://example.com'
-FORCE_HTTPS = False
 ADMIN_EMAIL_ADDRS = 'admin@example.com,ops@example.com'
 FROM_EMAIL_ADDR = 'helpdesk@example.com'
 

@@ -34,12 +34,6 @@ def create_app():
     app.add_middleware(GZipMiddleware)
     app.add_middleware(SentryMiddleware)
 
-    # NOTE: redirect in app level is evil, do it in your load balancer instead.
-    # from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
-    # from helpdesk.config import FORCE_HTTPS
-    # if FORCE_HTTPS:
-    #     app.add_middleware(HTTPSRedirectMiddleware)
-
     return app
 
 
