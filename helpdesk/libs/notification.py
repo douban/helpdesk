@@ -5,6 +5,7 @@ import smtplib
 from email.message import EmailMessage
 
 import requests
+from helpdesk.libs.sentry import report
 from helpdesk.config import (
     WEBHOOK_URL,
     FROM_EMAIL_ADDR,
@@ -33,6 +34,7 @@ def send_mail(addrs, subject, body):
     try:
         smtp.send_message(msg)
     except Exception as e:
+        report()
         logger.warning('send email failed(%s): %s', addrs, e)
     finally:
         smtp.quit()
@@ -59,6 +61,9 @@ def send_webhook(subject, body, truncate=True):
         'text': subject + '\n' + body,
         'markdown': body,
     }
-    r = requests.post(WEBHOOK_URL, json=msg, timeout=3)
-    if r.status_code != 200:
-        logger.warning('send channels failed: %s', r.text)
+    try:
+        r = requests.post(WEBHOOK_URL, json=msg, timeout=3)
+        r.raise_for_status()
+    except Exception as e:
+        report()
+        logger.warning('send channels failed: %s: %s', r.text, e)
