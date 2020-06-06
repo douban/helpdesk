@@ -12,11 +12,9 @@ Parameters:
 {% endfor %}
 Request time: {{ ticket.created_at }}
 Reason: {{ ticket.reason }}
-{% if ticket.is_approved and ticket.is_auto_approved %}
+{%- if ticket.is_approved and ticket.is_auto_approved %}
 This request is auto approved.
-Execution result:
-{{ ticket.execution_result_url }}
-{% else %}
+{%- else %}
 Do you want to approve this request?
 Approve: {{ ticket.web_url }}/approve
 Reject: {{ ticket.web_url }}/reject

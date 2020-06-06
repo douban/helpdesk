@@ -13,8 +13,4 @@ Request time: {{ ticket.created_at }}
 Reason: {{ ticket.reason }}
 Status: {{ ticket.status }}
 {{ 'Approval' if ticket.is_approved else 'Reject' }} time: {{ ticket.confirmed_at }}
-{% if ticket.is_approved %}
-Execution result:
-{{ ticket.execution_result_url }}
-{% endif %}
 {% endblock %}
