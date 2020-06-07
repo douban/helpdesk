@@ -267,7 +267,7 @@ class Ticket(db.Model):
                 await notify(system_provider, phase, self).send()
             except Exception as e:
                 report()
-                logger.warning('notify to %s failed: %s: %s', method, e)
+                logger.warning('notify to %s failed: %s', method, e)
 
     def generate_callback_url(self):
         """

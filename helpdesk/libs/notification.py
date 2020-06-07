@@ -38,7 +38,7 @@ class Notification:
 
     def __init__(self, provider, phase, ticket):
         self.provider = provider
-        self.phase = str(phase)
+        self.phase = phase
         self.ticket = ticket
 
     async def send(self):
@@ -47,7 +47,7 @@ class Notification:
     def render(self):
         import xml.etree.ElementTree as ET
 
-        message = _templates.get_template(f'{self.method}/{self.phase}.j2').render(dict(ticket=self.ticket))
+        message = _templates.get_template(f'{self.method}/{self.phase.value}.j2').render(dict(ticket=self.ticket))
         logger.debug('render_notification: message: %s', message)
         tree = ET.fromstring(message.strip())
         title = ''.join(piece.text for piece in tree.findall('title'))
@@ -61,7 +61,7 @@ class MailNotification(Notification):
     async def get_mail_addrs(self):
         email_addrs = [ADMIN_EMAIL_ADDRS] + [self.provider.get_user_email(cc) for cc in self.ccs]
         email_addrs += [self.provider.get_user_email(approver) for approver in await self.get_rule_actions('approver')]
-        if self.phase in ('approval', 'mark'):
+        if self.phase.value in ('approval', 'mark'):
             email_addrs += [self.provider.get_user_email(self.submitter)]
         email_addrs = ','.join(addr for addr in email_addrs if addr)
 
@@ -91,7 +91,7 @@ class WebhookNotification(Notification):
     method = 'webhook'
 
     def get_color(self):
-        if self.phase == 'request':
+        if self.phase.value == 'request':
             if self.ticket.is_approved:
                 color = 'cyan'
             else:
