@@ -10,7 +10,7 @@ from helpdesk import config
 from helpdesk.libs.rest import jsonize, check_parameter, json_validator
 from helpdesk.libs.db import extract_filter_from_query_params
 from helpdesk.models.provider import get_provider_by_action_auth
-from helpdesk.models.db.ticket import Ticket
+from helpdesk.models.db.ticket import Ticket, TicketPhase
 from helpdesk.models.db.param_rule import ParamRule
 from helpdesk.models.action_tree import action_tree
 from helpdesk.views.api.errors import ApiError, ApiErrors
@@ -162,7 +162,7 @@ async def ticket_op(request):
     if not id_:
         msg = 'ticket executed but failed to save state' if op == 'approve' else 'Failed to save ticket state'
         raise ApiError(ApiErrors.unknown_exception, description=msg)
-    await ticket.notify('approval')
+    await ticket.notify(TicketPhase.APPROVAL)
     return dict(msg='Success')
 
 
@@ -179,7 +179,7 @@ async def mark_ticket(request):
         logger.debug(f'recieved callback req: {payload}')
         assert payload['ticket_id'] == ticket_id
     except (jwt.exceptions.InvalidSignatureError, AssertionError):
-        raise ApiError(ApiErrors.parameter_validation_failed, description=f"token error")
+        raise ApiError(ApiErrors.parameter_validation_failed, description="token error")
     ticket = await Ticket.get(ticket_id)
     if not ticket:
         raise ApiError(ApiErrors.not_found, description=f"ticket {ticket_id} not found!")
@@ -190,7 +190,7 @@ async def mark_ticket(request):
         ticket.annotate(execution_status=data["execution_status"])
         logger.debug(f"tocket annotaion: {ticket.annotation}")
         # add notification to ticket mark action
-        await ticket.notify('mark')
+        await ticket.notify(TicketPhase.MARK)
         await ticket.save()
     except (RuntimeError, AssertionError) as e:
         raise ApiError(ApiErrors.parameter_validation_failed, description=f'decode mark body error: {str(e)}')

@@ -2,6 +2,7 @@
 
 import logging
 import importlib
+from enum import Enum
 from datetime import datetime
 from urllib.parse import urlencode, quote_plus
 
@@ -22,6 +23,27 @@ from helpdesk.config import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+TICKET_COLORS = {
+    'approved': 'green',
+    'rejected': 'red',
+    'pending': 'orange',
+    'failed': 'red',
+    'COMPLETE': 'green',
+    'running': 'orange',
+    'RUNNING': 'orange',
+    'success': 'green',
+    'submitted': 'pink',
+    'submit_error': 'red',
+    'succeeded': 'green'
+}
+
+
+class TicketPhase(Enum):
+    APPROVAL = 'approval'
+    MARK = 'mark'
+    REQUEST = 'request'
 
 
 class Ticket(db.Model):
@@ -88,6 +110,10 @@ class Ticket(db.Model):
             return ['rejected', 'approved'][self.is_approved]
         else:
             return 'created'
+
+    @property
+    def color(self):
+        return TICKET_COLORS.get(self.status, 'cyan')
 
     @property
     def ccs(self):
@@ -231,7 +257,7 @@ class Ticket(db.Model):
 
     async def notify(self, phase):
         logger.info('Ticket notify: %s: %s', phase, self)
-        assert phase in ('request', 'approval', 'mark')
+        assert isinstance(phase, TicketPhase)
 
         system_provider = get_provider(self.provider_type)
         for method in NOTIFICATION_METHODS:

@@ -22,13 +22,21 @@ logger = logging.getLogger(__name__)
 
 _templates = Jinja2Templates(directory='templates/notification')
 
+NAME2RGB = {
+    'green': '#008000',
+    'orange': '#FFA500',
+    'red': '#FF0000',
+    'pink': '#FFC0CB',
+    'cyan': '#00FFFF',
+}
+
 
 class Notification:
     method = None
 
     def __init__(self, provider, phase, ticket):
         self.provider = provider
-        self.phase = phase
+        self.phase = str(phase)
         self.ticket = ticket
 
     async def send(self):
@@ -100,6 +108,7 @@ class WebhookNotification(Notification):
             'from': 'helpdesk',
             'title': title,
             'link': link,
+            'color': NAME2RGB[self.ticket.color],
             'text': f'{title}\n{link}\n{content}',
             'markdown': content,
         }
