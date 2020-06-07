@@ -113,7 +113,7 @@ class Ticket(db.Model):
 
     @property
     def color(self):
-        return TICKET_COLORS.get(self.status, 'cyan')
+        return TICKET_COLORS.get(self.status, 'grey')
 
     @property
     def ccs(self):

@@ -25,9 +25,11 @@ _templates = Jinja2Templates(directory='templates/notification')
 NAME2RGB = {
     'green': '#008000',
     'orange': '#FFA500',
+    'yellow': '#FFFF00',
     'red': '#FF0000',
     'pink': '#FFC0CB',
     'cyan': '#00FFFF',
+    'grey': '#CDCDCD',
 }
 
 
@@ -88,6 +90,16 @@ class MailNotification(Notification):
 class WebhookNotification(Notification):
     method = 'webhook'
 
+    def get_color(self):
+        if self.phase == 'request':
+            if self.ticket.is_approved:
+                color = 'cyan'
+            else:
+                color = 'yellow'
+        else:
+            color = self.ticket.color
+        return NAME2RGB[color]
+
     async def send(self):
         if not WEBHOOK_URL:
             return
@@ -108,7 +120,7 @@ class WebhookNotification(Notification):
             'from': 'helpdesk',
             'title': title,
             'link': link,
-            'color': NAME2RGB[self.ticket.color],
+            'color': self.get_color(),
             'text': f'{title}\n{link}\n{content}',
             'markdown': content,
         }
