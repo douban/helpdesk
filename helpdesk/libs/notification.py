@@ -59,10 +59,10 @@ class MailNotification(Notification):
     method = 'mail'
 
     async def get_mail_addrs(self):
-        email_addrs = [ADMIN_EMAIL_ADDRS] + [self.provider.get_user_email(cc) for cc in self.ccs]
-        email_addrs += [self.provider.get_user_email(approver) for approver in await self.get_rule_actions('approver')]
+        email_addrs = [ADMIN_EMAIL_ADDRS] + [self.provider.get_user_email(cc) for cc in self.ticket.ccs]
+        email_addrs += [self.provider.get_user_email(approver) for approver in await self.ticket.get_rule_actions('approver')]
         if self.phase.value in ('approval', 'mark'):
-            email_addrs += [self.provider.get_user_email(self.submitter)]
+            email_addrs += [self.provider.get_user_email(self.ticket.submitter)]
         email_addrs = ','.join(addr for addr in email_addrs if addr)
 
     async def send(self):
