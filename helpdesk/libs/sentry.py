@@ -6,15 +6,32 @@ import logging
 from functools import wraps
 
 import sentry_sdk
+from sentry_sdk.client import Client
 from sentry_sdk.hub import Hub
+from sentry_sdk.integrations.excepthook import ExcepthookIntegration
+from sentry_sdk.integrations.dedupe import DedupeIntegration
+from sentry_sdk.integrations.stdlib import StdlibIntegration
+from sentry_sdk.integrations.modules import ModulesIntegration
+from sentry_sdk.integrations.argv import ArgvIntegration
+
+from helpdesk.config import SENTRY_DSN
 
 logger = logging.getLogger(__name__)
 
-client = sentry_sdk.Hub.current.client
-if client:
-    _hub = Hub(client)
-else:
-    _hub = None
+_client = Client(
+    dsn=SENTRY_DSN,
+    default_integrations=False,
+    integrations=[
+        ExcepthookIntegration(),
+        DedupeIntegration(),
+        StdlibIntegration(),
+        ModulesIntegration(),
+        ArgvIntegration(),
+    ],
+    max_breadcrumbs=5,
+    attach_stacktrace=True,
+)
+_hub = Hub(_client)
 
 
 def report(msg=None, **kw):
