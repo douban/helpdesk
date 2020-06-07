@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 
 from helpdesk.libs.rest import DictSerializableClassMixin
-from helpdesk.models.db.ticket import Ticket
+from helpdesk.models.db.ticket import Ticket, TicketPhase
 from helpdesk.config import AUTO_APPROVAL_TARGET_OBJECTS, PARAM_FILLUP, TICKET_CALLBACK_PARAMS
 
 logger = logging.getLogger(__name__)
@@ -101,13 +101,13 @@ class Action(DictSerializableClassMixin):
             return ticket_added, 'Failed to create ticket.'
 
         if not ticket_added.is_approved:
-            await ticket_added.notify('request')
+            await ticket_added.notify(TicketPhase.REQUEST)
             return ticket_added.to_dict(), 'Success. Your request has been submitted, please wait for approval.'
 
         # if this ticket is auto approved, execute it immediately
         execution, _ = ticket_added.execute(provider=provider, is_admin=is_admin)
         if execution:
-            await ticket_added.notify('request')
+            await ticket_added.notify(TicketPhase.REQUEST)
         await ticket_added.save()
 
         return (
