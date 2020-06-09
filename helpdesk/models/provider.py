@@ -46,18 +46,6 @@ class Provider:
     def get_execution(self, execution_id):
         raise NotImplementedError()
 
-    def authenticate(self, user, password):
-        raise NotImplementedError()
-
-    def get_user_roles(self, user=None):
-        '''return a list of roles,
-            e.g. ["admin"]
-        '''
-        raise NotImplementedError()
-
-    def get_user_email(self, user=None):
-        raise NotImplementedError()
-
     def get_execution_output(self, execution_output_id):
         return self.get_execution(execution_output_id)
 

@@ -14,12 +14,11 @@ from helpdesk.config import (
 )
 from helpdesk.libs.st2 import (client as service_client, get_client, Execution, Token)
 from helpdesk.models.provider import Provider
-from helpdesk.models.providers.ldap import LdapProviderMixin
 
 logger = logging.getLogger(__name__)
 
 
-class ST2Provider(LdapProviderMixin, Provider):
+class ST2Provider(Provider):
     provider_type = 'st2'
 
     def __init__(self, token=None, user=None, api_key=None):

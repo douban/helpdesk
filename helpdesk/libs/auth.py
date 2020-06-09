@@ -1,57 +1,29 @@
 # coding: utf-8
 
-import base64
 import logging
-import binascii
 from datetime import datetime, timedelta
 
 from starlette.authentication import (
     AuthenticationBackend,
-    AuthenticationError,
-    SimpleUser,
     AuthCredentials,
     UnauthenticatedUser,
 )
 
 logger = logging.getLogger(__name__)
 
-
-class BasicAuthBackend(AuthenticationBackend):
-    '''
-    copy from https://www.starlette.io/authentication/
-    '''
-    async def authenticate(self, request):
-        if "Authorization" not in request.headers:
-            return
-
-        auth = request.headers["Authorization"]
-        try:
-            scheme, credentials = auth.split()
-            if scheme.lower() != 'basic':
-                return
-            decoded = base64.b64decode(credentials).decode("ascii")
-        except (ValueError, UnicodeDecodeError, binascii.Error):
-            raise AuthenticationError('Invalid basic auth credentials')
-
-        username, _, password = decoded.partition(":")
-        # You'd want to verify the username and password here,
-        # possibly by installing `DatabaseMiddleware`
-        # and retrieving user information from `request.database`.
-
-        # scopes
-        return AuthCredentials(["authenticated"]), SimpleUser(username)
+# ref: https://www.starlette.io/authentication/
 
 
 class SessionAuthBackend(AuthenticationBackend):
     async def authenticate(self, request):
         from helpdesk.models.user import User
         from helpdesk.models.provider import get_provider
-        from helpdesk.config import ENABLED_PROVIDERS, AUTH_UNSUPPORT_PROVIDERS
+        from helpdesk.config import ENABLED_PROVIDERS
         logger.debug('request.session: %s, user: %s', request.session, request.session.get('user'))
 
         for provider_type in ENABLED_PROVIDERS:
-            if provider_type in AUTH_UNSUPPORT_PROVIDERS:
-                continue
+            # if provider_type in AUTH_UNSUPPORT_PROVIDERS:
+            #     continue
             if not all([request.session.get('user'), request.session.get(f'{provider_type}_token'),
                         request.session.get(f'{provider_type}_expiry')]):
                 logger.debug(f'{provider_type} auth error, unauth')
