@@ -249,8 +249,8 @@ async def ticket(request):
         id_ = d['id']
         return dict(
             url=f"/ticket/{id_}",
-            approve_url=f"/ticket/{id_}/approve",
-            reject_url=f"/ticket/{id_}/reject",
+            approve_url=f"/api/ticket/{id_}/approve",
+            reject_url=f"/api/ticket/{id_}/reject",
             api_url=f"/api/ticket/{id_}",
             **d)
 
