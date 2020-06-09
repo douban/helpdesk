@@ -10,7 +10,6 @@ from helpdesk.config import (
     ST2_EXECUTION_RESULT_URL_PATTERN,
     SYSTEM_USER,
     SYSTEM_USER_PASSWORD,
-    DEFAULT_EMAIL_DOMAIN,
 )
 from helpdesk.libs.st2 import (client as service_client, get_client, Execution, Token)
 from helpdesk.models.provider import Provider
