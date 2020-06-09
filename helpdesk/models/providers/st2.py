@@ -39,10 +39,6 @@ class ST2Provider(Provider):
             ref = '.'.join([ST2_DEFAULT_PACK, ref])
         return ref
 
-    def get_user_email(self, user=None):
-        user = user or self.user
-        return self.get_user_email_from_ldap(user) or '%s@%s' % (user, DEFAULT_EMAIL_DOMAIN)
-
     @staticmethod
     def get_result_url(execution_id):
         return ST2_EXECUTION_RESULT_URL_PATTERN.format(execution_id=execution_id)

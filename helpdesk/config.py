@@ -23,10 +23,6 @@ TICKET_CALLBACK_PARAMS = ('helpdesk_ticket_callback_url', 'helpdeskTicketCallbac
 
 PROVIDER = ''
 ENABLED_PROVIDERS = ('st2', 'airflow', 'spincycle')
-AUTH_UNSUPPORT_PROVIDERS = ('spincycle',)
-
-# TODO: LDAP
-# for LdapProviderMixin, to provide the ability to access user metadata like email addrs.
 
 DEFAULT_EMAIL_DOMAIN = ''
 # base url will be used by notifications to show web links
