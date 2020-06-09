@@ -31,8 +31,7 @@ def create_app():
             Mount('/auth', app=auth_bp, name='auth'),
         ])
 
-    # app.add_middleware(AuthenticationMiddleware, backend=SessionAuthBackend())
-    app.add_middleware(AuthenticationMiddleware)
+    app.add_middleware(AuthenticationMiddleware, backend=SessionAuthBackend())
     app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY, max_age=SESSION_TTL)
     app.add_middleware(GZipMiddleware)
     app.add_middleware(SentryMiddleware)
