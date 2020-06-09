@@ -39,7 +39,7 @@ FROM_EMAIL_ADDR = ''
 WEBHOOK_URL = ''
 
 FROM_EMAIL_ADDR = 'sysadmin+helpdesk@example.com'
-SMTP_SERVER = 'example.smtp.com'
+SMTP_SERVER = 'localhost'
 SMTP_SERVER_PORT = 25
 SMTP_SSL = False
 SMTP_CREDENTIALS = ''
