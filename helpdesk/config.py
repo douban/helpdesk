@@ -31,7 +31,6 @@ AUTH_UNSUPPORT_PROVIDERS = ('spincycle',)
 DEFAULT_EMAIL_DOMAIN = ''
 # base url will be used by notifications to show web links
 DEFAULT_BASE_URL = ''
-FORCE_HTTPS = False
 ADMIN_EMAIL_ADDRS = ''
 
 WEBHOOK_URL = ''
