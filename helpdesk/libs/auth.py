@@ -10,9 +10,8 @@ from starlette.authentication import (
 
 logger = logging.getLogger(__name__)
 
+
 # ref: https://www.starlette.io/authentication/
-
-
 class SessionAuthBackend(AuthenticationBackend):
     async def authenticate(self, request):
         from helpdesk.models.user import User
