@@ -77,10 +77,9 @@ AUTO_APPROVAL_TARGET_OBJECTS = []
 TICKETS_PER_PAGE = 50
 
 
-def avatar_url_func(ldap_id):
+def avatar_url_func(email):
     import hashlib
     GRAVATAR_URL = '//www.gravatar.com/avatar/%s'
-    email = '%s@example.com' % ldap_id
     return GRAVATAR_URL % hashlib.md5(email.encode('utf-8').lower()).hexdigest()
 
 

@@ -18,7 +18,7 @@ class User(DictSerializableClassMixin, BaseUser):
         self.name = name
         self.email = email
         self.roles = roles
-        self.avatar = avatar if avatar else avatar_url_func(self.name)
+        self.avatar = avatar if avatar else avatar_url_func(self.email)
 
     @property
     def is_authenticated(self) -> bool:

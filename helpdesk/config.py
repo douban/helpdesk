@@ -9,7 +9,7 @@ APP_BASE = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 TRUSTED_HOSTS = '127.0.0.1'
 
-avatar_url_func = lambda username: ''  # NOQA
+avatar_url_func = lambda email: ''  # NOQA
 
 DATABASE_URL = 'sqlite:///tmp/helpdesk.db'
 # postgres://user:pass@localhost/dbname
