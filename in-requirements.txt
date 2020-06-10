@@ -14,3 +14,4 @@ cached-property>=1.5.1
 rule
 pyjwt==1.7.1
 authlib
+httpx

@@ -31,8 +31,7 @@ async def index(request):
 @jsonize
 async def user(request):
     result = request.user.to_dict()
-    del result["providers"]
-    result['is_admin'] = request.user.is_admin(config.PROVIDER)
+    result['is_admin'] = request.user.is_admin
     return result
 
 
