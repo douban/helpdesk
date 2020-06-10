@@ -47,7 +47,25 @@ ST2_WORKFLOW_RUNNER_TYPES = [
 
 ST2_TOKEN_TTL = 24 * 3600
 
-# LDAP
+OPENID_PRIVIDERS = [
+    {
+        'keycloak': {
+            'server_metadata_url': 'https://keycload.example.com/realms/abc/.well-known/openid-configuration',
+            'client_id': 'xxxx',
+            'client_secret': 'yyyy',
+            'scope': 'openid email profile',
+        }
+    },
+    {
+        'google': {
+            'server_metadata_url': 'https://accounts.google.com/.well-known/openid-configuration',
+            'client_id': 'xxxx',
+            'client_secret': 'yyyy',
+            'scope': 'openid email profile',
+            'proxy': 'localhost:3128'
+        }
+    }
+]
 
 DEFAULT_EMAIL_DOMAIN = 'example.com'
 # base url will be used by notifications to show web links
