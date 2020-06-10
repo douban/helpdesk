@@ -44,15 +44,15 @@ ST2_TOKEN_TTL = 24 * 3600
 
 OPENID_PRIVIDERS = {
     'keycloak': {
-        'server_metadata_url': 'https://keycloak.example.com/realms/abc/.well-known/openid-configuration',
+        'server_metadata_url': 'https://keycloak.example.com/realms/apps/.well-known/openid-configuration',
         'client_id': 'helpdesk',
-        'client_secret': 'yyyy',
+        'client_secret': 'CLIENT_SECRET',
         'scope': 'openid email profile',
     },
     'google': {
         'server_metadata_url': 'https://accounts.google.com/.well-known/openid-configuration',
-        'client_id': 'xxxx',
-        'client_secret': 'yyyy',
+        'client_id': 'CLIENT_ID',
+        'client_secret': 'CLIENT_SECRET',
         'scope': 'openid email profile',
         'proxies': 'http://localhost:3128',
     }
