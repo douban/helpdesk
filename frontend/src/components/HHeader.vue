@@ -69,7 +69,7 @@ export default {
       }
     },
     logout () {
-      HRequest.post('/api/auth/logout').then(() => {
+      HRequest.post('/auth/logout').then(() => {
         document.cookie = 'session' + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;'
         this.$router.push({name: 'Login'})
       })
