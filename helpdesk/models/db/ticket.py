@@ -24,7 +24,6 @@ from helpdesk.config import (
 
 logger = logging.getLogger(__name__)
 
-
 TICKET_COLORS = {
     'approved': 'green',
     'rejected': 'red',
@@ -126,13 +125,12 @@ class Ticket(db.Model):
         return '; '.join(['%s: %s' % (k, v) for k, v in self.params.items() if k not in ('reason',)])
 
     async def can_view(self, user):
-        return user.is_admin(
-            self.provider_type
-        ) or user.name == self.submitter or user.name in self.ccs or user.name in await self.get_rule_actions(
-            'approver')
+        return (
+            user.is_admin or user.name == self.submitter or user.name in self.ccs or
+            user.name in await self.get_rule_actions('approver'))
 
     async def can_admin(self, user):
-        return user.is_admin(self.provider_type) or user.name in await self.get_rule_actions('approver')
+        return user.is_admin or user.name in await self.get_rule_actions('approver')
 
     @cached_property
     async def rules(self):
