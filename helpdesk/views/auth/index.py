@@ -1,6 +1,6 @@
 import logging
 
-from starlette.responses import RedirectResponse
+from starlette.responses import RedirectResponse, PlainTextResponse
 from starlette.authentication import requires, has_required_scope  # NOQA
 from authlib.integrations.starlette_client import OAuth
 
@@ -46,8 +46,7 @@ async def callback(request):
     username = id_token['name']
     email = id_token['email']
     if not User.validate_email(email):
-        # TODO: show error message
-        return RedirectResponse('/')
+        return PlainTextResponse("invalid email", 403)
 
     roles = []
     access = id_token.get('resource_access', {})
@@ -58,7 +57,7 @@ async def callback(request):
 
     request.session['user'] = user.to_json()
 
-    return RedirectResponse('/')
+    return PlainTextResponse(f"welcome {user.name}!", 200)
 
 
 @bp.route('/logout')

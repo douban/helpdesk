@@ -44,7 +44,7 @@ export default {
       const strWindowFeatures = 'toolbar=no, menubar=no, width=800, height=600, top=100, left=100'
       const popup = window.open('/auth/oauth/keycloak', 'oauth', strWindowFeatures)
       if (!popup) return 'POPUP_FAILED'
-      console.log(popup)
+      // console.log(popup)
       popup.focus()
 
       // popup.close()
