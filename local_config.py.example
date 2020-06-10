@@ -54,7 +54,7 @@ OPENID_PRIVIDERS = {
         'client_id': 'xxxx',
         'client_secret': 'yyyy',
         'scope': 'openid email profile',
-        'proxy': 'localhost:3128'
+        'proxies': 'http://localhost:3128',
     }
 }
 

@@ -38,13 +38,16 @@ async def callback(request):
     user = await client.parse_id_token(request, token)
     logger.debug("auth succeed %s", user)
 
-    request.session['user'] = user['preferred_username']
+    request.session['user'] = user['name']
     request.session['email'] = user['email']
+
+    request.session['avatar'] = user.get('picture')
     roles = []
     access = user.get('resource_access', {})
     for rs in access.values():
         roles.extend(rs.get('roles', []))
     request.session['roles'] = ','.join(roles)
+    # TODO:(everpcpc) redirect
     return JSONResponse(user, 200)
 
 
