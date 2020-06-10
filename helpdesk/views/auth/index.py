@@ -27,6 +27,8 @@ async def oauth(request):
     client = oauth_clients[provider]
 
     redirect_uri = request.url_for('auth:callback', provider=provider)
+    logger.debug('redirect to: %s', redirect_uri)
+    logger.debug(request.__dict__)
     return await client.authorize_redirect(request, redirect_uri)
 
 

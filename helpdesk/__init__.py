@@ -12,6 +12,7 @@ from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.authentication import AuthenticationMiddleware
 
 from helpdesk.libs.auth import SessionAuthBackend
+from helpdesk.libs.proxy import ProxyHeadersMiddleware
 from helpdesk.config import DEBUG, SESSION_SECRET_KEY, SESSION_TTL, SENTRY_DSN
 from helpdesk.views.api import bp as api_bp
 from helpdesk.views.auth import bp as auth_bp
@@ -33,6 +34,7 @@ def create_app():
         ],
     )
 
+    app.add_middleware(ProxyHeadersMiddleware)
     app.add_middleware(AuthenticationMiddleware, backend=SessionAuthBackend())
     app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY, max_age=SESSION_TTL)
     app.add_middleware(GZipMiddleware)
