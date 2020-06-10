@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import json
 import logging
 from typing import List
 
@@ -7,16 +8,17 @@ from starlette.authentication import BaseUser, AuthCredentials
 
 from helpdesk.libs.decorators import cached_property
 from helpdesk.libs.rest import DictSerializableClassMixin
-from helpdesk.config import ADMIN_ROLES, avatar_url_func
+from helpdesk.config import ADMIN_ROLES, AUTHORIZED_EMAIL_DOMAINS, avatar_url_func
 
 logger = logging.getLogger(__name__)
 
 
 class User(DictSerializableClassMixin, BaseUser):
-    def __init__(self, username: str, email: str, roles: list) -> None:
-        self.name = username
+    def __init__(self, name: str, email: str, roles: list, avatar: str) -> None:
+        self.name = name
         self.email = email
         self.roles = roles
+        self.avatar = avatar if avatar else avatar_url_func(self.name)
 
     @property
     def is_authenticated(self) -> bool:
@@ -37,6 +39,17 @@ class User(DictSerializableClassMixin, BaseUser):
         auths += ['role:' + r for r in self.roles]
         return AuthCredentials(auths)
 
-    @property
-    def avatar_url(self) -> str:
-        return avatar_url_func(self.name)
+    def to_json(self) -> str:
+        return json.dumps(self.__dict__)
+
+    @classmethod
+    def from_json(cls, info: str) -> object:
+        _info = json.loads(info)
+        return cls(_info['name'], _info['email'], _info['roles'], _info['avatar'])
+
+    @classmethod
+    def validate_email(cls, email: str) -> bool:
+        for suffix in AUTHORIZED_EMAIL_DOMAINS:
+            if email.endswith(suffix):
+                return True
+        return False

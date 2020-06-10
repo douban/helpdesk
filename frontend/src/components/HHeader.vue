@@ -17,7 +17,7 @@
         <span slot="title">
             <span>{{ user.display_name }}</span>
             <a-avatar shape="square" icon="user"
-                      :src="user.avatar_url"
+                      :src="user.avatar"
             />
         </span>
         <a-menu-item key="3">

@@ -16,15 +16,15 @@ class SessionAuthBackend(AuthenticationBackend):
     async def authenticate(self, request):
         from helpdesk.models.user import User
         logger.debug('request.session: %s, user: %s', request.session, request.session.get('user'))
-        username = request.session.get('user')
-        email = request.session.get('email')
-        roles = request.session.get('roles', '').split(",")
-
-        if not username or not email:
+        userinfo = request.session.get('user')
+        if not userinfo:
             return AuthCredentials([]), UnauthenticatedUser()
 
-        user = User(username=username, email=email, roles=roles)
-        return user.auth_credentials, user
+        try:
+            user = User.from_json(userinfo)
+            return user.auth_credentials, user
+        except Exception:
+            return AuthCredentials([]), UnauthenticatedUser()
 
 
 def unauth(request):

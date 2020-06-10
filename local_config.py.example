@@ -57,8 +57,8 @@ OPENID_PRIVIDERS = {
         'proxies': 'http://localhost:3128',
     }
 }
+AUTHORIZED_EMAIL_DOMAINS = ['@example.com']
 
-DEFAULT_EMAIL_DOMAIN = 'example.com'
 # base url will be used by notifications to show web links
 DEFAULT_BASE_URL = 'https://example.com'
 ADMIN_EMAIL_ADDRS = 'admin@example.com,ops@example.com'

@@ -5,6 +5,7 @@ from starlette.authentication import requires, has_required_scope  # NOQA
 from authlib.integrations.starlette_client import OAuth
 
 from helpdesk.config import OPENID_PRIVIDERS
+from helpdesk.models.user import User
 
 from . import bp
 
@@ -20,7 +21,7 @@ for provider, info in OPENID_PRIVIDERS.items():
     oauth_clients[provider] = client
 
 
-@bp.route('/oauth/{provider}', methods=['GET'])
+@bp.route('/oauth/{provider}')
 async def oauth(request):
     provider = request.path_params.get('provider', '')
     client = oauth_clients[provider]
@@ -35,26 +36,29 @@ async def callback(request):
     client = oauth_clients[provider]
 
     token = await client.authorize_access_token(request)
-    user = await client.parse_id_token(request, token)
-    logger.debug("auth succeed %s", user)
+    id_token = await client.parse_id_token(request, token)
+    logger.debug("auth succeed %s", id_token)
 
-    request.session['user'] = user['name']
-    request.session['email'] = user['email']
+    username = id_token['name']
+    email = id_token['email']
+    if not User.validate_email(email):
+        # TODO: show error message
+        return RedirectResponse('/')
 
-    request.session['avatar'] = user.get('picture')
     roles = []
-    access = user.get('resource_access', {})
+    access = id_token.get('resource_access', {})
     for rs in access.values():
         roles.extend(rs.get('roles', []))
-    request.session['roles'] = ','.join(roles)
+
+    user = User(username, email, roles, id_token.get('picture', ''))
+
+    request.session['user'] = user.to_json()
+
     return RedirectResponse('/')
 
 
-@bp.route('/logout', methods=['POST'])
+@bp.route('/logout')
 @requires(['authenticated'])
 async def logout(request):
     request.session.pop('user', None)
-    request.session.pop('email', None)
-    request.session.pop('avatar', None)
-    request.session.pop('roles', None)
     return RedirectResponse('/')

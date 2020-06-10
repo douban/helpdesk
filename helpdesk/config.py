@@ -24,7 +24,6 @@ TICKET_CALLBACK_PARAMS = ('helpdesk_ticket_callback_url', 'helpdeskTicketCallbac
 PROVIDER = ''
 ENABLED_PROVIDERS = ('st2', 'airflow', 'spincycle')
 
-DEFAULT_EMAIL_DOMAIN = ''
 # base url will be used by notifications to show web links
 DEFAULT_BASE_URL = ''
 ADMIN_EMAIL_ADDRS = ''
@@ -41,7 +40,7 @@ NOTIFICATION_TITLE_PREFIX = ''
 NOTIFICATION_METHODS = []
 
 OPENID_PRIVIDERS = {}
-
+AUTHORIZED_EMAIL_DOMAINS = []
 
 AUTO_APPROVAL_TARGET_OBJECTS = []
 TICKETS_PER_PAGE = 50
