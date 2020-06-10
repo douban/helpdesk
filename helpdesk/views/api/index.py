@@ -236,7 +236,7 @@ async def ticket(request):
             raise ApiError(ApiErrors.forbidden)
         tickets = [ticket]
         total = 1
-    elif request.user.is_admin(config.PROVIDER):
+    elif request.user.is_admin:
         tickets = await Ticket.get_all(**kw)
         total = await Ticket.count(filter_=filter_)
     else:
