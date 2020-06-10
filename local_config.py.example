@@ -47,7 +47,7 @@ OPENID_PRIVIDERS = {
         'server_metadata_url': 'https://keycloak.example.com/realms/abc/.well-known/openid-configuration',
         'client_id': 'helpdesk',
         'client_secret': 'yyyy',
-        'scope': 'openid email profile roles',
+        'scope': 'openid email profile',
     },
     'google': {
         'server_metadata_url': 'https://accounts.google.com/.well-known/openid-configuration',
