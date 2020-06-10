@@ -60,7 +60,7 @@ async def callback(request):
     return PlainTextResponse(f"welcome {user.name}!", 200)
 
 
-@bp.route('/logout')
+@bp.route('/logout', methods=['POST'])
 @requires(['authenticated'])
 async def logout(request):
     request.session.pop('user', None)
