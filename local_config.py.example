@@ -56,7 +56,9 @@ OPENID_PRIVIDERS = {
         'client_id': 'CLIENT_ID',
         'client_secret': 'CLIENT_SECRET',
         'scope': 'openid email profile',
-        'proxies': 'http://localhost:3128',
+        'client_kwargs': {
+            'proxies': {'all': 'http://localhost:3128'},
+        },
     }
 }
 AUTHORIZED_EMAIL_DOMAINS = ['@example.com']
