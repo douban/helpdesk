@@ -1,6 +1,6 @@
 import logging
 
-from starlette.responses import JSONResponse
+from starlette.responses import RedirectResponse
 from starlette.authentication import requires, has_required_scope  # NOQA
 from authlib.integrations.starlette_client import OAuth
 
@@ -47,12 +47,14 @@ async def callback(request):
     for rs in access.values():
         roles.extend(rs.get('roles', []))
     request.session['roles'] = ','.join(roles)
-    # TODO:(everpcpc) redirect
-    return JSONResponse(user, 200)
+    return RedirectResponse('/')
 
 
 @bp.route('/logout', methods=['POST'])
 @requires(['authenticated'])
 async def logout(request):
-    # unauth(request)
-    return {'success': True, 'msg': ''}
+    request.session.pop('user', None)
+    request.session.pop('email', None)
+    request.session.pop('avatar', None)
+    request.session.pop('roles', None)
+    return RedirectResponse('/')
