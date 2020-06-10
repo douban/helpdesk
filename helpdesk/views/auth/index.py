@@ -1,11 +1,12 @@
 import logging
 
-from starlette.responses import RedirectResponse, HTMLResponse
+from starlette.responses import HTMLResponse
 from starlette.authentication import requires, has_required_scope  # NOQA
 from authlib.integrations.starlette_client import OAuth
 
 from helpdesk.config import OPENID_PRIVIDERS
 from helpdesk.models.user import User
+from helpdesk.libs.rest import jsonize
 
 from . import bp
 
@@ -62,6 +63,7 @@ async def callback(request):
 
 @bp.route('/logout', methods=['POST'])
 @requires(['authenticated'])
+@jsonize
 async def logout(request):
     request.session.pop('user', None)
-    return RedirectResponse('/')
+    return {'success': True, 'msg': ''}
