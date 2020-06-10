@@ -44,18 +44,19 @@ export default {
       const strWindowFeatures = 'toolbar=no, menubar=no, width=800, height=600, top=100, left=100'
       const popup = window.open('/auth/oauth/keycloak', 'oauth', strWindowFeatures)
       if (!popup) return 'POPUP_FAILED'
-      // console.log(popup)
       popup.focus()
-
-      // popup.close()
-    },
-    onSuccess () {
-      let next = this.$route.query.next
-      if (next) {
-        this.$router.push(next)
-      } else {
-        this.$router.push({name: 'Home'})
-      }
+      const app = this
+      var timer = setInterval(function () {
+        if (popup.closed) {
+          clearInterval(timer)
+          let next = app.$route.query.next
+          if (next) {
+            app.$router.push(next)
+          } else {
+            app.$router.push({name: 'Home'})
+          }
+        }
+      }, 500)
     },
     purgeUserProfile () {
       this.$store.dispatch('deleteUserProfile')

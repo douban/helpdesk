@@ -62,4 +62,4 @@ def get_provider(provider, **kw):
 def get_provider_by_action_auth(request, action):
     if not has_required_scope(request, ['authenticated']):
         return None
-    return get_provider[action.provider_type]
+    return get_provider(action.provider_type)
