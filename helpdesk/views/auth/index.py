@@ -11,7 +11,6 @@ from . import bp
 
 logger = logging.getLogger(__name__)
 
-
 oauth_clients = {}
 
 for provider, info in OPENID_PRIVIDERS.items():
@@ -26,9 +25,12 @@ async def oauth(request):
     provider = request.path_params.get('provider', '')
     client = oauth_clients[provider]
 
-    redirect_uri = request.url_for('auth:callback', provider=provider)
-    logger.debug('redirect to: %s', redirect_uri)
-    logger.debug(request.__dict__)
+    # FIXME: url_for behind proxy
+    url_path = request['router'].url_path_for('auth:callback', provider=provider)
+    server = request["server"]
+    base_url = f"{request['scheme']}://{server[0]}:{server[1]}{request.get('app_root_path', '/')}"
+    redirect_uri = url_path.make_absolute_url(base_url=base_url)
+
     return await client.authorize_redirect(request, redirect_uri)
 
 
