@@ -1,23 +1,24 @@
 # coding: utf-8
 
+import json
 import logging
-from typing import List, Dict
+from typing import List
 
 from starlette.authentication import BaseUser, AuthCredentials
 
-from helpdesk.libs.decorators import cached_property, timed_cache
+from helpdesk.libs.decorators import cached_property
 from helpdesk.libs.rest import DictSerializableClassMixin
-from helpdesk.models.provider import Provider
-from helpdesk.config import ADMIN_ROLES, avatar_url_func, PROVIDER, AUTH_UNSUPPORT_PROVIDERS
+from helpdesk.config import ADMIN_ROLES, AUTHORIZED_EMAIL_DOMAINS, avatar_url_func
 
 logger = logging.getLogger(__name__)
 
 
 class User(DictSerializableClassMixin, BaseUser):
-    def __init__(self, username: str, providers: Dict[str, Provider]) -> None:
-        self.name = username
-        self.providers = providers
-        self.email = self.providers[PROVIDER].get_user_email()
+    def __init__(self, name: str, email: str, roles: list, avatar: str) -> None:
+        self.name = name
+        self.email = email
+        self.roles = roles
+        self.avatar = avatar if avatar else avatar_url_func(self.email)
 
     @property
     def is_authenticated(self) -> bool:
@@ -28,27 +29,27 @@ class User(DictSerializableClassMixin, BaseUser):
         return self.name
 
     @cached_property
-    def roles(self) -> Dict[str, List[str]]:
-        return {provider_type: provider.get_user_roles() for provider_type, provider in self.providers.items()}
-
-    @timed_cache(seconds=300)
-    def is_admin(self, provider_type) -> bool:
-        # 对于不支持auth的provider，如果别的provider里有一个role是admin，就视为admin
-        if provider_type in AUTH_UNSUPPORT_PROVIDERS:
-            for role_list in self.roles.values():
-                for role in role_list:
-                    if role in ADMIN_ROLES:
-                        return True
-            return False
-        return any(role in ADMIN_ROLES for role in self.roles.get(provider_type, []))
+    def is_admin(self) -> bool:
+        return any(role in ADMIN_ROLES for role in self.roles)
 
     @cached_property
     def auth_credentials(self) -> List[str]:
         auths = ["authenticated"]
-        auths += ['admin'] if self.is_admin(PROVIDER) else []
+        auths += ['admin'] if self.is_admin else []
         auths += ['role:' + r for r in self.roles]
         return AuthCredentials(auths)
 
-    @property
-    def avatar_url(self) -> str:
-        return avatar_url_func(self.name)
+    def to_json(self) -> str:
+        return json.dumps(self.__dict__)
+
+    @classmethod
+    def from_json(cls, info: str) -> object:
+        _info = json.loads(info)
+        return cls(_info['name'], _info['email'], _info['roles'], _info['avatar'])
+
+    @classmethod
+    def validate_email(cls, email: str) -> bool:
+        for suffix in AUTHORIZED_EMAIL_DOMAINS:
+            if email.endswith(suffix):
+                return True
+        return False

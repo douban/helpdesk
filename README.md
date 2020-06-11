@@ -3,20 +3,26 @@
 ## Development
 
 ### backend
-```
+
+```shell
+
+python3.7 -m venv venv
+source venv/bin/activate
+
 # edit local_config.py
 cp local_config.py.example local_config.py
 
 vi local_config.py
 
 # init database
-make database
+python -c 'from helpdesk.libs.db import init_db; init_db()'
 
-make web
-make tail
+# export SSL_CERT_FILE='/etc/ssl/certs/ca-certificates.crt'
+uvicorn helpdesk:app --host 0.0.0.0 --port 8123 --log-level debug
 ```
+
 Visit <http://localhost:8123> on your browser.
-The default listening port of backend is 8123 , you can modify it in ``MakeFile``
+The default listening port of backend is 8123
 
 PS: The user interface in backend web pages will be replaced by new standalone frontend in next major release, please see ``Standalone frontend`` if you want to modify the ui.
 
@@ -39,16 +45,16 @@ pip install <package>
 # add to in-requirements.txt
 vi in-requirements.txt
 # generate new requirements.txt (lock)
-make freeze
+pip freeze > requirements.txt
 ```
 
 ## Deployment
 
 ### Kubernetes
 
-```
+```shell
 # build docker image
-make docker-build
+build -t helpdesk .
 
 # push this image to your docker registry
 docker tag helpdesk <target image>:<tag>
@@ -58,11 +64,12 @@ docker push <target image>:<tag>
 cp contrib/charts/helpdesk/values.yaml values.yaml
 vi values.yaml
 
-# make helm package
-make helm
-
 # install helm package
-make helm-install
+helm upgrade \
+    --install \
+    --name helpdesk contrib/charts/helpdesk \
+    --namespace=helpdesk \
+    -f values.yaml
 ```
 
 Get the url from your nginx ingress and visit it.

@@ -16,6 +16,7 @@ from helpdesk.config import (
     SMTP_SERVER_PORT,
     SMTP_SSL,
     SMTP_CREDENTIALS,
+    get_user_email,
 )
 
 logger = logging.getLogger(__name__)
@@ -36,8 +37,7 @@ NAME2RGB = {
 class Notification:
     method = None
 
-    def __init__(self, provider, phase, ticket):
-        self.provider = provider
+    def __init__(self, phase, ticket):
         self.phase = phase
         self.ticket = ticket
 
@@ -59,10 +59,10 @@ class MailNotification(Notification):
     method = 'mail'
 
     async def get_mail_addrs(self):
-        email_addrs = [ADMIN_EMAIL_ADDRS] + [self.provider.get_user_email(cc) for cc in self.ticket.ccs]
-        email_addrs += [self.provider.get_user_email(approver) for approver in await self.ticket.get_rule_actions('approver')]
+        email_addrs = [ADMIN_EMAIL_ADDRS] + [get_user_email(cc) for cc in self.ticket.ccs]
+        email_addrs += [get_user_email(approver) for approver in await self.ticket.get_rule_actions('approver')]
         if self.phase.value in ('approval', 'mark'):
-            email_addrs += [self.provider.get_user_email(self.ticket.submitter)]
+            email_addrs += [get_user_email(self.ticket.submitter)]
         email_addrs = ','.join(addr for addr in email_addrs if addr)
 
     async def send(self):

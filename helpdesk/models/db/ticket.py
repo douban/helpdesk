@@ -24,7 +24,6 @@ from helpdesk.config import (
 
 logger = logging.getLogger(__name__)
 
-
 TICKET_COLORS = {
     'approved': 'green',
     'rejected': 'red',
@@ -126,13 +125,12 @@ class Ticket(db.Model):
         return '; '.join(['%s: %s' % (k, v) for k, v in self.params.items() if k not in ('reason',)])
 
     async def can_view(self, user):
-        return user.is_admin(
-            self.provider_type
-        ) or user.name == self.submitter or user.name in self.ccs or user.name in await self.get_rule_actions(
-            'approver')
+        return (
+            user.is_admin or user.name == self.submitter or user.name in self.ccs or
+            user.name in await self.get_rule_actions('approver'))
 
     async def can_admin(self, user):
-        return user.is_admin(self.provider_type) or user.name in await self.get_rule_actions('approver')
+        return user.is_admin or user.name in await self.get_rule_actions('approver')
 
     @cached_property
     async def rules(self):
@@ -209,23 +207,13 @@ class Ticket(db.Model):
         self.confirmed_at = datetime.now()
         return True, 'Success'
 
-    def execute(self, provider=None, is_admin=False):
-        system_provider = get_provider(self.provider_type)
+    def execute(self):
+        provider = get_provider(self.provider_type)
 
         logger.info('run action %s, params: %s', self.provider_object, self.handle_extra_params())
         self.annotate(execution_submitted=True)
-        # admin use self provider, otherwise use system_provider
-        if is_admin:
-            if not provider:
-                token, msg = system_provider.authenticate(self.submitter)
-                logger.debug('get token: %s, msg: %s', token, msg)
-                token = token['token']
-                provider = get_provider(self.provider_type, token=token, user=self.submitter)
-            execution, msg = provider.run_action(self.provider_object, self.handle_extra_params())
-            annotate = provider.generate_annotation(execution)
-        else:
-            execution, msg = system_provider.run_action(self.provider_object, self.handle_extra_params())
-            annotate = system_provider.generate_annotation(execution)
+        execution, msg = provider.run_action(self.provider_object, self.handle_extra_params())
+        annotate = provider.generate_annotation(execution)
         if not execution:
             self.annotate(execution_creation_success=False, execution_creation_msg=msg)
             return execution, msg
@@ -236,17 +224,8 @@ class Ticket(db.Model):
         # we don't save the ticket here, we leave it outside
         return execution, 'Success. <a href="%s" target="_blank">result</a>' % (execution['web_url'],)
 
-    def get_result(self, provider=None, is_admin=False, execution_output_id=None):
-        system_provider = get_provider(self.provider_type)
-        # admin use self provider, otherwise use system_provider
-        if is_admin:
-            if not provider:
-                token, msg = system_provider.authenticate(self.submitter)
-                logger.debug('get token: %s, msg: %s', token, msg)
-                token = token['token']
-                provider = get_provider(self.provider_type, token=token, user=self.submitter)
-        else:
-            provider = system_provider
+    def get_result(self, execution_output_id=None):
+        provider = get_provider(self.provider_type)
         execution_id = self.annotation.get('execution', {}).get('id')
 
         if execution_output_id:
@@ -259,12 +238,11 @@ class Ticket(db.Model):
         logger.info('Ticket notify: %s: %s', phase, self)
         assert isinstance(phase, TicketPhase)
 
-        system_provider = get_provider(self.provider_type)
         for method in NOTIFICATION_METHODS:
             module, _class = method.split(':')
             try:
                 notify = getattr(importlib.import_module(module), _class)
-                await notify(system_provider, phase, self).send()
+                await notify(phase, self).send()
             except Exception as e:
                 report()
                 logger.warning('notify to %s failed: %s', method, e)

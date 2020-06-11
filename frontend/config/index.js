@@ -14,6 +14,13 @@ module.exports = {
       '/api': {
         target: 'http://localhost:8123', // Api server address
         secure: false,
+        xfwd: true,
+        changeOrigin: true
+      },
+      '/auth': {
+        target: 'http://localhost:8123', // Api server address
+        secure: false,
+        xfwd: true,
         changeOrigin: true
       }
     },

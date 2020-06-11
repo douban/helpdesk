@@ -11,7 +11,7 @@
       @input="$emit('input',$event.target.value)"
       :placeholder="placeholder"
       v-decorator="decorator"
-      autosize
+      autoSize
     />
   </a-form-item>
 </template>

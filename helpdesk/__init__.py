@@ -7,13 +7,16 @@ from sentry_asgi import SentryMiddleware
 
 from starlette.applications import Starlette
 from starlette.routing import Mount, Route, Router  # NOQA
+from starlette.middleware import Middleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.authentication import AuthenticationMiddleware
 
 from helpdesk.libs.auth import SessionAuthBackend
-from helpdesk.config import DEBUG, SESSION_SECRET_KEY, SESSION_TTL, SENTRY_DSN
+from helpdesk.libs.proxy import ProxyHeadersMiddleware
+from helpdesk.config import DEBUG, SESSION_SECRET_KEY, SESSION_TTL, SENTRY_DSN, TRUSTED_HOSTS
 from helpdesk.views.api import bp as api_bp
+from helpdesk.views.auth import bp as auth_bp
 
 
 def create_app():
@@ -24,15 +27,19 @@ def create_app():
     logging.getLogger('multipart').setLevel(logging.INFO)
     logging.getLogger('uvicorn').setLevel(logging.INFO)
 
-    app = Starlette(
-        debug=DEBUG, routes=[
-            Mount('/api', app=api_bp, name='api'),
-        ])
+    routes = routes = [
+        Mount('/api', app=api_bp, name='api'),
+        Mount('/auth', app=auth_bp, name='auth'),
+    ]
+    middleware = [
+        Middleware(ProxyHeadersMiddleware, trusted_hosts=TRUSTED_HOSTS),
+        Middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY, max_age=SESSION_TTL),
+        Middleware(AuthenticationMiddleware, backend=SessionAuthBackend()),
+        Middleware(GZipMiddleware),
+        Middleware(SentryMiddleware),
+    ]
 
-    app.add_middleware(AuthenticationMiddleware, backend=SessionAuthBackend())
-    app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY, max_age=SESSION_TTL)
-    app.add_middleware(GZipMiddleware)
-    app.add_middleware(SentryMiddleware)
+    app = Starlette(debug=DEBUG, routes=routes, middleware=middleware)
 
     return app
 

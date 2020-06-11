@@ -17,7 +17,7 @@
         <span slot="title">
             <span>{{ user.display_name }}</span>
             <a-avatar shape="square" icon="user"
-                      :src="user.avatar_url"
+                      :src="user.avatar"
             />
         </span>
         <a-menu-item key="3">
@@ -69,7 +69,7 @@ export default {
       }
     },
     logout () {
-      HRequest.post('/api/auth/logout').then(() => {
+      HRequest.post('/auth/logout').then(() => {
         document.cookie = 'session' + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;'
         this.$router.push({name: 'Login'})
       })

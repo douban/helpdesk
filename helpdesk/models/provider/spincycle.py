@@ -4,15 +4,15 @@ import logging
 import json
 import datetime
 
-from helpdesk.config import SPINCYCLE_RM_URL, SPINCYCLE_USERNAME, SPINCYCLE_PASSWORD, DEFAULT_EMAIL_DOMAIN
+from helpdesk.config import SPINCYCLE_RM_URL, SPINCYCLE_USERNAME, SPINCYCLE_PASSWORD
 from helpdesk.libs.spincycle import SpinCycleClient
-from helpdesk.models.provider import Provider
-from helpdesk.models.providers.ldap import LdapProviderMixin
+
+from .base import BaseProvider
 
 logger = logging.getLogger(__name__)
 
 
-class SpinCycleProvider(LdapProviderMixin, Provider):
+class SpinCycleProvider(BaseProvider):
     provider_type = 'spincycle'
     spin_req_status = {
         0: "UNKNOWN",
@@ -29,11 +29,9 @@ class SpinCycleProvider(LdapProviderMixin, Provider):
 
     status_to_emoji = {3: '✔️', 2: '🏃', 4: '❌', 6: '🛑', 5: '🔄', 7: '▶', 1: '👯', 0: '😿'}
 
-    def __init__(self, token=None, user=None):
-        super().__init__(token=token, user=user)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.spincycle_rm_url = SPINCYCLE_RM_URL
-        if token:
-            logger.warning("Spin cycle provider can not auth with token.")
         self.spin_client = SpinCycleClient(SPINCYCLE_USERNAME, SPINCYCLE_PASSWORD)
 
         # since spin cycle has no idea of pack so this is the only "pack" we have
@@ -41,10 +39,6 @@ class SpinCycleProvider(LdapProviderMixin, Provider):
 
     def get_default_pack(self):
         return "spincycle"
-
-    def get_user_email(self, user=None):
-        user = user or self.user
-        return self.get_user_email_from_ldap(user) or '%s@%s' % (user, DEFAULT_EMAIL_DOMAIN)
 
     @staticmethod
     def _spin_args_to_json_schema(spin_args):
@@ -231,16 +225,3 @@ class SpinCycleProvider(LdapProviderMixin, Provider):
         except Exception as e:
             logger.error(f'get spin cycle execution from {execution_id}, error: {str(e)}')
             return None, str(e)
-
-    def authenticate(self, user, password=None):
-        logger.warning("spin cycle token is not supported! This is a fake token")
-        return {'token': 'fake_token', 'user': user, 'expiry': ''}, 'gen token from spin cycle is not supported!'
-
-    def get_user_roles(self, user=None):
-        '''return a list of roles,
-            e.g. ["admin"]
-        '''
-        logger.warning(f"spincycle have no support with roles, all of the requests are made by {SPINCYCLE_USERNAME}")
-        # set spincycle roles to [] prevent none authorize op (sorry for SA admin
-        roles = []
-        return roles

@@ -8,20 +8,19 @@ from helpdesk.config import (
     AIRFLOW_USERNAME,
     AIRFLOW_PASSWORD,
     AIRFLOW_DEFAULT_DAG_TAG,
-    DEFAULT_EMAIL_DOMAIN,
 )
 from helpdesk.libs.airflow import AirflowClient
-from helpdesk.models.provider import Provider
-from helpdesk.models.providers.ldap import LdapProviderMixin
+
+from .base import BaseProvider
 
 logger = logging.getLogger(__name__)
 
 
-class AirflowProvider(LdapProviderMixin, Provider):
+class AirflowProvider(BaseProvider):
     provider_type = 'airflow'
 
-    def __init__(self, token=None, user=None):
-        super().__init__(token=token, user=user)
+    def __init__(self, token=None, **kwargs):
+        super().__init__(**kwargs)
         self.airflow_url = AIRFLOW_SERVER_URL
         if token:
             self.airflow_client = AirflowClient(refresh_token=token)
@@ -31,10 +30,6 @@ class AirflowProvider(LdapProviderMixin, Provider):
 
     def get_default_pack(self):
         return self.default_tag
-
-    def get_user_email(self, user=None):
-        user = user or self.user
-        return self.get_user_email_from_ldap(user) or '%s@%s' % (user, DEFAULT_EMAIL_DOMAIN)
 
     def _build_action_from_dag(self, dags, pack=None):
         """
@@ -214,32 +209,6 @@ class AirflowProvider(LdapProviderMixin, Provider):
         except Exception as e:
             logger.error(f'get execution from {execution_id}, error: {str(e)}')
             return None, str(e)
-
-    def authenticate(self, user, password=None):
-        try:
-            if password:
-                token = self.airflow_client.generate_token(user, password)
-            else:
-                token = self.airflow_client.generate_token(AIRFLOW_USERNAME, AIRFLOW_PASSWORD)
-            if token:
-                return {'token': token['refresh_token'], 'user': user, 'expiry': token['expire_time']}, ''
-            return None, ''
-        except Exception as e:
-            logger.error('auth with airflow error: {}'.format(str(e)))
-            return None, str(e)
-
-    def get_user_roles(self, user=None):
-        '''return a list of roles,
-            e.g. ["admin"]
-        '''
-        roles = []
-        try:
-            roles = self.airflow_client.get_user_roles(username=user or 'sysadmin')
-            logger.debug('Get user roles: %s.get_user_roles(): %s', self, roles)
-            return roles['role_from_jwt'] if not user else roles
-        except Exception as e:
-            logger.error('Get user role error: {}'.format(str(e)))
-        return roles
 
     def get_execution_output(self, execution_output_id):
         dag_id, execution_date, task_id, try_number = execution_output_id.split('|')
