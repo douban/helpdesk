@@ -29,7 +29,10 @@ async def oauth(request):
     # FIXME: url_for behind proxy
     url_path = request['router'].url_path_for('auth:callback', provider=provider)
     server = request["server"]
-    base_url = f"{request['scheme']}://{server[0]}:{server[1]}{request.get('app_root_path', '/')}"
+    if server[1] in (80, 443):
+        base_url = f"{request['scheme']}://{server[0]}{request.get('app_root_path', '/')}"
+    else:
+        base_url = f"{request['scheme']}://{server[0]}:{server[1]}{request.get('app_root_path', '/')}"
     redirect_uri = url_path.make_absolute_url(base_url=base_url)
 
     return await client.authorize_redirect(request, redirect_uri)
