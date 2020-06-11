@@ -11,6 +11,7 @@ TRUSTED_HOSTS = '127.0.0.1'
 
 avatar_url_func = lambda email: ''  # NOQA
 oauth_username_func = lambda id_token: id_token['name']  # NOQA
+get_user_email = lambda username: username + '@example.com'  # NOQA
 
 DATABASE_URL = 'sqlite:///tmp/helpdesk.db'
 # postgres://user:pass@localhost/dbname

@@ -238,12 +238,11 @@ class Ticket(db.Model):
         logger.info('Ticket notify: %s: %s', phase, self)
         assert isinstance(phase, TicketPhase)
 
-        provider = get_provider(self.provider_type)
         for method in NOTIFICATION_METHODS:
             module, _class = method.split(':')
             try:
                 notify = getattr(importlib.import_module(module), _class)
-                await notify(provider, phase, self).send()
+                await notify(phase, self).send()
             except Exception as e:
                 report()
                 logger.warning('notify to %s failed: %s', method, e)

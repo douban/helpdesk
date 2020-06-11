@@ -42,9 +42,8 @@ class ST2Provider(BaseProvider):
             ref = '.'.join([ST2_DEFAULT_PACK, ref])
         return ref
 
-    @staticmethod
-    def get_result_url(execution_id):
-        return ST2_EXECUTION_RESULT_URL_PATTERN.format(execution_id=execution_id)
+    def get_result_url(self, execution_id):
+        return ST2_EXECUTION_RESULT_URL_PATTERN.format(base_url=self.base_url, execution_id=execution_id)
 
     def generate_annotation(self, execution):
         if not execution:
