@@ -23,16 +23,6 @@ logger = logging.getLogger(__name__)
 
 _templates = Jinja2Templates(directory='templates/notification')
 
-NAME2RGB = {
-    'green': '#008000',
-    'orange': '#FFA500',
-    'yellow': '#FFFF00',
-    'red': '#FF0000',
-    'pink': '#FFC0CB',
-    'cyan': '#00FFFF',
-    'grey': '#CDCDCD',
-}
-
 
 class Notification:
     method = None
@@ -91,14 +81,11 @@ class WebhookNotification(Notification):
     method = 'webhook'
 
     def get_color(self):
-        if self.phase.value == 'request':
-            if self.ticket.is_approved:
-                color = 'cyan'
-            else:
-                color = 'yellow'
-        else:
-            color = self.ticket.color
-        return NAME2RGB[color]
+        if self.phase.value != 'request':
+            return self.ticket.color
+        if self.ticket.is_approved:
+            return '#17a2b8'
+        return '#ffc107'
 
     async def send(self):
         if not WEBHOOK_URL:

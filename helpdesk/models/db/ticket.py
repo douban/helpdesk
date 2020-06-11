@@ -25,17 +25,16 @@ from helpdesk.config import (
 logger = logging.getLogger(__name__)
 
 TICKET_COLORS = {
-    'approved': 'green',
-    'rejected': 'red',
-    'pending': 'orange',
-    'failed': 'red',
-    'COMPLETE': 'green',
-    'running': 'orange',
-    'RUNNING': 'orange',
-    'success': 'green',
-    'submitted': 'pink',
-    'submit_error': 'red',
-    'succeeded': 'green'
+    'approved': '#28a745',
+    'rejected': '#dc3545',
+    'pending': '#ffc107',
+    'failed': '#dc3545',
+    'complete': '#28a745',
+    'running': '#ffc107',
+    'success': '#28a745',
+    'submitted': '#007bff',
+    'submit_error': '#dc3545',
+    'succeeded': '#28a745'
 }
 
 
@@ -112,7 +111,7 @@ class Ticket(db.Model):
 
     @property
     def color(self):
-        return TICKET_COLORS.get(self.status, 'grey')
+        return TICKET_COLORS.get(self.status.lower(), '#6c757d')
 
     @property
     def ccs(self):
