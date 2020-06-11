@@ -120,4 +120,4 @@ class ST2Provider(BaseProvider):
         except requests.exceptions.HTTPError as e:
             logger.error('get st2 token error: %s', e)
             report()
-        return token.to_dict() if token else None
+        return token.token if token else None
