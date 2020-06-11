@@ -23,7 +23,7 @@
           {{text || ''}}
         </template>
       </span>
-      <span slot="reason" slot-scope="text, record"  v-bind:style="{'wordWrap':'break-word','wordBreak': 'break-all'}">
+      <span slot="reason" slot-scope="text"  v-bind:style="{'wordWrap':'break-word','wordBreak': 'break-all'}">
           {{text || ''}}
       </span>
       <a slot="result" slot-scope="text, record" :href="record.execution_result_url">link</a>

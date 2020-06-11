@@ -114,7 +114,7 @@ export default {
     }
   },
   watch: {
-    '$route' (to, from) {
+    '$route' () {
       // reload ActionDefinition when url changes
       this.clearStage()
     }

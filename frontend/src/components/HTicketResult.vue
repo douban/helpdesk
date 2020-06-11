@@ -47,12 +47,12 @@ export default {
     }
   },
   watch: {
-    isVisible: function (to, from) {
+    isVisible: function (to) {
       if (to === true) {
         this.loadResult()
       }
     },
-    executionId: function (to, from) {
+    executionId: function () {
       this.resetResult()
     }
   },
