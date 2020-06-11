@@ -3,20 +3,22 @@
 ## Development
 
 ### backend
-```
+
+```shell
 # edit local_config.py
 cp local_config.py.example local_config.py
 
 vi local_config.py
 
 # init database
-make database
+python -c 'from app.libs.db import init_db; init_db()'
 
-make web
-make tail
+# export SSL_CERT_FILE='/etc/ssl/certs/ca-certificates.crt'
+uvicorn helpdesk:app --host 0.0.0.0 --port 8123 --log-level debug
 ```
+
 Visit <http://localhost:8123> on your browser.
-The default listening port of backend is 8123 , you can modify it in ``MakeFile``
+The default listening port of backend is 8123
 
 PS: The user interface in backend web pages will be replaced by new standalone frontend in next major release, please see ``Standalone frontend`` if you want to modify the ui.
 
