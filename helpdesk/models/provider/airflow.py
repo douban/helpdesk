@@ -25,7 +25,6 @@ class AirflowProvider(BaseProvider):
         if token:
             self.airflow_client = AirflowClient(refresh_token=token)
         else:
-            logger.info("airflow: %s:%s", AIRFLOW_USERNAME, AIRFLOW_PASSWORD)
             self.airflow_client = AirflowClient(username=AIRFLOW_USERNAME, passwd=AIRFLOW_PASSWORD)
         self.default_tag = AIRFLOW_DEFAULT_DAG_TAG
 

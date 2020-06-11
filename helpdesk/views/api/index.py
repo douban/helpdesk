@@ -116,7 +116,7 @@ async def action(request):
     provider = get_provider(action.provider_type)
 
     if request.method == 'GET':
-        return action.to_dict(provider)
+        return action.to_dict(provider, request.user)
 
     if request.method == 'POST':
         form = await request.form()
