@@ -8,6 +8,7 @@
             type="primary"
             v-for="(provider, index) in openidProviders"
             v-bind:key="index"
+            v-bind:name="provider"
           >
             Signin with {{ provider }}
           </a-button>
@@ -41,8 +42,10 @@ export default {
       ).catch()
     },
     onLogin () {
-      const strWindowFeatures = 'toolbar=no, menubar=no, width=800, height=600, top=100, left=100'
-      const popup = window.open('/auth/oauth/keycloak', 'oauth', strWindowFeatures)
+      console.log()
+      let provider = event.target.name
+      let strWindowFeatures = 'toolbar=no, menubar=no, width=800, height=600, top=100, left=100'
+      const popup = window.open(`/auth/oauth/${provider}`, 'oauth', strWindowFeatures)
       if (!popup) return 'POPUP_FAILED'
       popup.focus()
       const app = this
