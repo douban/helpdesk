@@ -36,7 +36,11 @@ class ProxyHeadersMiddleware:
                     # Determine if the incoming request was http or https based on
                     # the X-Forwarded-Proto header.
                     x_forwarded_host = headers[b"x-forwarded-host"].decode("ascii")
-                    host, port = x_forwarded_host.split(":")
+                    if ":" in x_forwarded_host:
+                        host, port = x_forwarded_host.split(":")
+                    else:
+                        host = x_forwarded_host
+                        port = headers.get(b"x-forwarded-host", b"80").decode("ascii")
                     scope["server"] = (host.strip(), int(port.strip()))
 
                 if b"x-forwarded-for" in headers:
