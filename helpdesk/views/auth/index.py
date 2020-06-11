@@ -4,7 +4,7 @@ from starlette.responses import HTMLResponse
 from starlette.authentication import requires, has_required_scope  # NOQA
 from authlib.integrations.starlette_client import OAuth
 
-from helpdesk.config import OPENID_PRIVIDERS
+from helpdesk.config import OPENID_PRIVIDERS, oauth_username_func
 from helpdesk.models.user import User
 from helpdesk.libs.rest import jsonize
 
@@ -44,7 +44,7 @@ async def callback(request):
     id_token = await client.parse_id_token(request, token)
     logger.debug("auth succeed %s", id_token)
 
-    username = id_token['name']
+    username = oauth_username_func(id_token)
     email = id_token['email']
     if not User.validate_email(email):
         return HTMLResponse("invalid email", 403)

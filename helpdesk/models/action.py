@@ -32,7 +32,7 @@ class Action(DictSerializableClassMixin):
     def description(self, provider):
         return self.get_action(provider).get('description')
 
-    def parameters(self, provider):
+    def parameters(self, provider, user):
         parameters = self.get_action(provider).get('parameters', {})
         for k, v in parameters.items():
             if k in TICKET_CALLBACK_PARAMS:
@@ -40,21 +40,21 @@ class Action(DictSerializableClassMixin):
             if k in PARAM_FILLUP:
                 fill = PARAM_FILLUP[k]
                 if callable(fill):
-                    fill = fill(provider)
+                    fill = fill(user)
                 parameters[k].update(dict(default=fill, immutable=True))
         return parameters
 
-    def to_dict(self, provider=None, **kw):
+    def to_dict(self, provider=None, user=None, **kw):
         action_d = super(Action, self).to_dict(**kw)
-        if provider:
-            action_d['params'] = self.parameters(provider)
+        if provider and user:
+            action_d['params'] = self.parameters(provider, user)
         return action_d
 
-    async def run(self, provider, form, is_admin=False):
+    async def run(self, provider, form, user):
         # too many st2 details, make this as the standard
         params = {}
         extra_params = {}
-        for k, v in self.parameters(provider).items():
+        for k, v in self.parameters(provider, user).items():
             if k in TICKET_CALLBACK_PARAMS:
                 extra_params[k] = '-'
             if k in PARAM_FILLUP:
@@ -83,13 +83,12 @@ class Action(DictSerializableClassMixin):
             provider_object=self.target_object,
             params=params,
             extra_params=extra_params,
-            # TODO:(everpcpc)
-            submitter=None,
+            submitter=user.name,
             reason=params.get('reason'),
             created_at=datetime.now())
 
         # if auto pass
-        if (self.target_object in AUTO_APPROVAL_TARGET_OBJECTS or is_admin or
+        if (self.target_object in AUTO_APPROVAL_TARGET_OBJECTS or user.is_admin or
                 await ticket.get_rule_actions('is_auto_approval')):
             ret, msg = ticket.approve(auto=True)
             if not ret:
@@ -106,7 +105,7 @@ class Action(DictSerializableClassMixin):
             return ticket_added.to_dict(), 'Success. Your request has been submitted, please wait for approval.'
 
         # if this ticket is auto approved, execute it immediately
-        execution, _ = ticket_added.execute(provider=provider, is_admin=is_admin)
+        execution, _ = ticket_added.execute()
         if execution:
             await ticket_added.notify(TicketPhase.REQUEST)
         await ticket_added.save()

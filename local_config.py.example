@@ -18,7 +18,7 @@ ADMIN_ROLES = ['admin', 'system_admin']
 
 PARAM_FILLUP = {
     # 'reason': 'hehe',
-    'ldap_id': lambda provider: provider.user,
+    'ldap_id': lambda user: user.name,
 }
 
 # DATABASE_URL = 'sqlite:///tmp/helpdesk.db'
@@ -56,6 +56,11 @@ OPENID_PRIVIDERS = {
     }
 }
 AUTHORIZED_EMAIL_DOMAINS = ['@example.com']
+
+
+def oauth_username_func(id_token):
+    return id_token.get('preferred_username') or id_token['email'].split('@')[0]
+
 
 # base url will be used by notifications to show web links
 DEFAULT_BASE_URL = 'https://example.com'
