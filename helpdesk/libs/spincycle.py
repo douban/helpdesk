@@ -10,7 +10,6 @@ import requests
 
 from helpdesk.config import SPINCYCLE_RM_URL
 from helpdesk.libs.decorators import timed_cache
-from helpdesk.config import SPINCYCLE_RM_CERT_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -61,10 +60,6 @@ class SpinCycleClient:
         self._password = password
         self._auth = (self._username, self._password)
         self.spin_rm_url = spin_rm_url
-        if self.spin_rm_url.startswith('https'):
-            self.verify = SPINCYCLE_RM_CERT_PATH
-        else:
-            self.verify = False
         self.api_prefix = f"{self.spin_rm_url}/api/v1"
 
     def create_and_start_req(self, req_type, args):

@@ -25,14 +25,9 @@ PARAM_FILLUP = {
 #   postgres://user:pass@localhost/dbname
 #   mysql://user:pass@localhost/dbname
 
-PROVIDER = 'st2'
+ENABLED_PROVIDERS = ('st2')
 
 ST2_BASE_URL = 'https://st2.example.com'
-ST2_API_URL = 'https://st2.example.com/api'
-ST2_AUTH_URL = 'https://st2.example.com/auth'
-ST2_STREAM_URL = 'https://st2.example.com/stream'
-
-ST2_EXECUTION_RESULT_URL_PATTERN = ST2_BASE_URL + '/#/code/result/{execution_id}'
 
 ST2_API_KEY = None
 
@@ -42,7 +37,6 @@ ST2_DEFAULT_PACK = ''
 
 ST2_WORKFLOW_RUNNER_TYPES = ['action-chain', 'mistral-v2', 'orquesta']
 
-ST2_TOKEN_TTL = 24 * 3600
 
 OPENID_PRIVIDERS = {
     'keycloak': {

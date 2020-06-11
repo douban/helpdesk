@@ -10,20 +10,22 @@ from helpdesk.config import (
     AIRFLOW_DEFAULT_DAG_TAG,
 )
 from helpdesk.libs.airflow import AirflowClient
-from helpdesk.models.provider import Provider
+
+from .base import BaseProvider
 
 logger = logging.getLogger(__name__)
 
 
-class AirflowProvider(Provider):
+class AirflowProvider(BaseProvider):
     provider_type = 'airflow'
 
-    def __init__(self, token=None, user=None):
-        super().__init__(token=token, user=user)
+    def __init__(self, token=None, **kwargs):
+        super().__init__(**kwargs)
         self.airflow_url = AIRFLOW_SERVER_URL
         if token:
             self.airflow_client = AirflowClient(refresh_token=token)
         else:
+            logger.info("airflow: %s:%s", AIRFLOW_USERNAME, AIRFLOW_PASSWORD)
             self.airflow_client = AirflowClient(username=AIRFLOW_USERNAME, passwd=AIRFLOW_PASSWORD)
         self.default_tag = AIRFLOW_DEFAULT_DAG_TAG
 

@@ -15,16 +15,12 @@ DATABASE_URL = 'sqlite:///tmp/helpdesk.db'
 # postgres://user:pass@localhost/dbname
 # mysql://user:pass@localhost/dbname
 
-SYSTEM_USER = 'admin'
-SYSTEM_USER_PASSWORD = 'password'
-
 ADMIN_ROLES = ['admin', 'system_admin', 'Admin']
 
 PARAM_FILLUP = {}
 TICKET_CALLBACK_PARAMS = ('helpdesk_ticket_callback_url', 'helpdeskTicketCallbackUrl')
 
-PROVIDER = ''
-ENABLED_PROVIDERS = ('st2', 'airflow', 'spincycle')
+ENABLED_PROVIDERS = ()
 
 # base url will be used by notifications to show web links
 DEFAULT_BASE_URL = ''
@@ -49,15 +45,27 @@ TICKETS_PER_PAGE = 50
 
 ACTION_TREE_CONFIG = ['功能导航', []]
 
-AIRFLOW_SERVER_URL = os.getenv('HELPDESK_AIRFLOW_SERVER_URL', 'http://airflow.example.com')
-AIRFLOW_USERNAME = os.getenv('HELPDESK_AIRFLOW_USERNAME', 'sysadmin')
-AIRFLOW_PASSWORD = os.getenv('HELPDESK_AIRFLOW_PASSWORD')
+SYSTEM_USER = 'admin'
+SYSTEM_PASSWORD = 'password'
+
+ST2_BASE_URL = 'https://st2.example.com'
+ST2_API_URL = None
+ST2_AUTH_URL = None
+ST2_STREAM_URL = None
+ST2_USERNAME = ''
+ST2_PASSWORD = ''
+ST2_EXECUTION_RESULT_URL_PATTERN = '{base_url}/#/code/result/{execution_id}'
+ST2_TOKEN_TTL = 24 * 3600
+
+AIRFLOW_SERVER_URL = 'https://airflow.example.com'
+AIRFLOW_USERNAME = ''
+AIRFLOW_PASSWORD = ''
 AIRFLOW_DEFAULT_DAG_TAG = 'helpdesk'
 
-SPINCYCLE_RM_URL = os.getenv("HELPDESK_SPINCYCLE_SERVER_URL", "https://spincycle.example.com")
-SPINCYCLE_USERNAME = os.getenv('HELPDESK_SPINCYCLE_USERNAME', 'sysadmin')
-SPINCYCLE_PASSWORD = os.getenv('HELPDESK_SPINCYCLE_PASSWORD')
-SPINCYCLE_RM_CERT_PATH = os.getenv("HELPDESK_SPINCYCLE_RM_CERT_PATH")
+SPINCYCLE_RM_URL = "https://spincycle.example.com"
+SPINCYCLE_USERNAME = ''
+SPINCYCLE_PASSWORD = ''
+
 
 try:
     from local_config import *  # NOQA

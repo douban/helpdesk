@@ -9,7 +9,7 @@ from starlette.authentication import requires, has_required_scope  # NOQA
 from helpdesk import config
 from helpdesk.libs.rest import jsonize, check_parameter, json_validator
 from helpdesk.libs.db import extract_filter_from_query_params
-from helpdesk.models.provider import get_provider_by_action_auth
+from helpdesk.models.provider import get_provider
 from helpdesk.models.db.ticket import Ticket, TicketPhase
 from helpdesk.models.db.param_rule import ParamRule
 from helpdesk.models.action_tree import action_tree
@@ -104,6 +104,7 @@ async def action_tree_list(request):
 
 @bp.route('/action/{target_object}', methods=['GET', 'POST'])
 @jsonize
+@requires(['authenticated'])
 async def action(request):
     target_object = request.path_params.get('target_object', '').strip('/')
 
@@ -112,10 +113,7 @@ async def action(request):
     if not action:
         raise ApiError(ApiErrors.not_found)
 
-    # check provider permission
-    provider = get_provider_by_action_auth(request, action)
-    if not provider:
-        raise ApiError(ApiErrors.forbidden)
+    provider = get_provider(action.provider_type)
 
     if request.method == 'GET':
         return action.to_dict(provider)

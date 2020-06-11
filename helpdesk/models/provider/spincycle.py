@@ -6,12 +6,13 @@ import datetime
 
 from helpdesk.config import SPINCYCLE_RM_URL, SPINCYCLE_USERNAME, SPINCYCLE_PASSWORD
 from helpdesk.libs.spincycle import SpinCycleClient
-from helpdesk.models.provider import Provider
+
+from .base import BaseProvider
 
 logger = logging.getLogger(__name__)
 
 
-class SpinCycleProvider(Provider):
+class SpinCycleProvider(BaseProvider):
     provider_type = 'spincycle'
     spin_req_status = {
         0: "UNKNOWN",
@@ -28,11 +29,9 @@ class SpinCycleProvider(Provider):
 
     status_to_emoji = {3: '✔️', 2: '🏃', 4: '❌', 6: '🛑', 5: '🔄', 7: '▶', 1: '👯', 0: '😿'}
 
-    def __init__(self, token=None, user=None):
-        super().__init__(token=token, user=user)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.spincycle_rm_url = SPINCYCLE_RM_URL
-        if token:
-            logger.warning("Spin cycle provider can not auth with token.")
         self.spin_client = SpinCycleClient(SPINCYCLE_USERNAME, SPINCYCLE_PASSWORD)
 
         # since spin cycle has no idea of pack so this is the only "pack" we have

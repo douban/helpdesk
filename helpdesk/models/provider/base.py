@@ -2,17 +2,12 @@
 
 from datetime import datetime
 
-from starlette.authentication import has_required_scope
 
-from helpdesk.libs.decorators import timed_cache
-
-
-class Provider:
+class BaseProvider:
     provider_type = ''
 
-    def __init__(self, token=None, user=None, **kw):
-        self.token = token
-        self.user = user
+    def __init__(self, **kwargs):
+        pass
 
     def __str__(self):
         attrs = []
@@ -48,18 +43,3 @@ class Provider:
 
     def get_execution_output(self, execution_output_id):
         return self.get_execution(execution_output_id)
-
-
-@timed_cache(minutes=15)
-def get_provider(provider, **kw):
-    from helpdesk.models.providers.st2 import ST2Provider
-    from helpdesk.models.providers.airflow import AirflowProvider
-    from helpdesk.models.providers.spincycle import SpinCycleProvider
-
-    return {'st2': ST2Provider, 'airflow': AirflowProvider, 'spincycle': SpinCycleProvider}[provider](**kw)
-
-
-def get_provider_by_action_auth(request, action):
-    if not has_required_scope(request, ['authenticated']):
-        return None
-    return get_provider(action.provider_type)

@@ -83,7 +83,8 @@ class Action(DictSerializableClassMixin):
             provider_object=self.target_object,
             params=params,
             extra_params=extra_params,
-            submitter=provider.user,
+            # TODO:(everpcpc)
+            submitter=None,
             reason=params.get('reason'),
             created_at=datetime.now())
 
