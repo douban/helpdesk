@@ -48,15 +48,14 @@ export default {
       const popup = window.open(`/auth/oauth/${provider}`, 'oauth', strWindowFeatures)
       if (!popup) return 'POPUP_FAILED'
       popup.focus()
-      const app = this
-      var timer = setInterval(function () {
+      var timer = setInterval(() => {
         if (popup.closed) {
           clearInterval(timer)
-          let next = app.$route.query.next
+          let next = this.$route.query.next
           if (next) {
-            app.$router.push(next)
+            this.$router.push(next)
           } else {
-            app.$router.push({name: 'Home'})
+            this.$router.push({name: 'Home'})
           }
         }
       }, 500)
