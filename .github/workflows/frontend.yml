@@ -23,7 +23,7 @@ jobs:
       working-directory: frontend
     - run: npm run lint
       working-directory: frontend
-    - run: npm run unit --runInBand --maxWorkers=4
+    - run: npm run test:unit
       working-directory: frontend
     - run: npm run build
       working-directory: frontend
