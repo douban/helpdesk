@@ -39,16 +39,16 @@ pip install <package>
 # add to in-requirements.txt
 vi in-requirements.txt
 # generate new requirements.txt (lock)
-make freeze
+pip freeze > requirements.txt
 ```
 
 ## Deployment
 
 ### Kubernetes
 
-```
+```shell
 # build docker image
-make docker-build
+build -t helpdesk .
 
 # push this image to your docker registry
 docker tag helpdesk <target image>:<tag>
@@ -58,11 +58,12 @@ docker push <target image>:<tag>
 cp contrib/charts/helpdesk/values.yaml values.yaml
 vi values.yaml
 
-# make helm package
-make helm
-
 # install helm package
-make helm-install
+helm upgrade \
+    --install \
+    --name helpdesk contrib/charts/helpdesk \
+    --namespace=helpdesk \
+    -f values.yaml
 ```
 
 Get the url from your nginx ingress and visit it.
