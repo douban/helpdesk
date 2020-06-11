@@ -40,7 +40,7 @@ class ProxyHeadersMiddleware:
                         host, port = x_forwarded_host.split(":")
                     else:
                         host = x_forwarded_host
-                        port = headers.get(b"x-forwarded-host", b"80").decode("ascii")
+                        port = headers.get(b"x-forwarded-port", b"80").decode("ascii")
                     scope["server"] = (host.strip(), int(port.strip()))
 
                 if b"x-forwarded-for" in headers:
