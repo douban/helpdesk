@@ -5,13 +5,17 @@
 ### backend
 
 ```shell
+
+python3.7 -m venv venv
+source venv/bin/activate
+
 # edit local_config.py
 cp local_config.py.example local_config.py
 
 vi local_config.py
 
 # init database
-python -c 'from app.libs.db import init_db; init_db()'
+python -c 'from helpdesk.libs.db import init_db; init_db()'
 
 # export SSL_CERT_FILE='/etc/ssl/certs/ca-certificates.crt'
 uvicorn helpdesk:app --host 0.0.0.0 --port 8123 --log-level debug
