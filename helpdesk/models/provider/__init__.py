@@ -7,7 +7,7 @@ from .st2 import ST2Provider
 from .airflow import AirflowProvider
 from .spincycle import SpinCycleProvider
 
-PROVIDERS = {
+_providers = {
     'st2': ST2Provider,
     'airflow': AirflowProvider,
     'spincycle': SpinCycleProvider,
@@ -16,4 +16,4 @@ PROVIDERS = {
 
 @timed_cache(minutes=15)
 def get_provider(provider, **kw):
-    return PROVIDERS[provider](**kw)
+    return _providers[provider](**kw)
