@@ -94,6 +94,7 @@ export default {
     },
     // TODO: search menu
     onSearchChange (e) {
+      console.log(e)
     }
   },
   beforeMount () {

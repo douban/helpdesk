@@ -185,7 +185,7 @@ export default {
       }
     },
 
-    handleRowKey (record, index) {
+    handleRowKey (record) {
       return 'tickets-result-' + record.id
     }
   },
@@ -195,7 +195,7 @@ export default {
     }
   },
   watch: {
-    dataLoaded: function (to, from) {
+    dataLoaded: function () {
       this.loadResult()
     }
   }

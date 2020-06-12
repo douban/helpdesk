@@ -131,19 +131,21 @@ export default {
     },
     currentStatus () {
       if (this.ticketInfo.status) {
-        if (!this.statusToStepStatus.hasOwnProperty(this.ticketInfo.status)) {
+        if (!this.statusToStepStatus[this.ticketInfo.status]) {
           return this.statusToStepStatus['unknown'].status
         }
         return this.statusToStepStatus[this.ticketInfo.status].status
       }
+      return "finish"
     },
     currentStage () {
       if (this.ticketInfo.status) {
-        if (!this.statusToStepStatus.hasOwnProperty(this.ticketInfo.status)) {
+        if (!this.statusToStepStatus[this.ticketInfo.status]) {
           return this.statusToStepStatus['unknown'].stepKey
         }
         return this.statusToStepStatus[this.ticketInfo.status].stepKey
       }
+      return 0
     },
     ticketAnnotation () {
       if (this.ticketInfo.annotation) {
@@ -156,16 +158,18 @@ export default {
       if (this.ticketInfo.status === 'pending' && this.$store.getters.isAdmin) {
         return true
       }
+      return false
     },
     showResultButton () {
       if (this.ticketInfo.status) {
         let status = this.ticketInfo.status
-        if (!this.statusToStepStatus.hasOwnProperty(this.ticketInfo.status)) {
+        if (!this.statusToStepStatus[this.ticketInfo.status]) {
           status = 'unknown'
         }
         return (this.statusToStepStatus[status].stepKey >=
         this.statusToStepStatus['approved'].stepKey) && this.ticketInfo.status !== 'rejected'
       }
+      return false
     }
   },
   methods: {
@@ -233,7 +237,7 @@ export default {
     this.loadTickets()
   },
   watch: {
-    '$route' (to, from) {
+    '$route' () {
       this.loadTickets()
       this.resetResult()
     }

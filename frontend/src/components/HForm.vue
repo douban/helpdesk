@@ -163,7 +163,7 @@ export default {
     this.loadFormDefinition()
   },
   watch: {
-    '$route' (to, from) {
+    '$route' () {
       // reload form when route changes
       this.loadFormDefinition()
       this.clearSubmitResult()
