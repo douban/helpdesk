@@ -42,6 +42,17 @@ jobs:
     needs: frontend
     if: github.ref == 'refs/heads/master'
     steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+    - name: Download a Build Artifact
+      uses: actions/download-artifact@v2
+      with:
+        # Artifact name
+        name: frontend.zip # optional
+        # Destination path
+        path: frontend/frontend.zip # optional
+    - run: unzip frontend.zip
+      working-directory: frontend
     - uses: docker/build-push-action@v1
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
