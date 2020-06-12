@@ -6,8 +6,8 @@ from enum import Enum
 from datetime import datetime
 from urllib.parse import urlencode, quote_plus
 
+from authlib.jose import jwt
 from sqlalchemy.sql.expression import and_
-import jwt
 
 from helpdesk.libs.decorators import cached_property
 from helpdesk.libs.sentry import report

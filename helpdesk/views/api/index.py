@@ -1,8 +1,8 @@
 # coding: utf-8
 
 import logging
-import jwt
 
+from authlib.jose import jwt
 from starlette.responses import RedirectResponse  # NOQA
 from starlette.authentication import requires, has_required_scope  # NOQA
 
