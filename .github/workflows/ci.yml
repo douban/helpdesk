@@ -25,15 +25,13 @@ jobs:
       working-directory: frontend
     - run: npm run build
       working-directory: frontend
-    - run: zip -r frontend.zip dist
-      working-directory: frontend
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2
       with:
         # Artifact name
-        name: frontend.zip # optional
+        name: frontend # optional
         # A file, directory or wildcard pattern that describes what to upload
-        path: frontend/frontend.zip
+        path: frontend/dist
 
 
   docker:
@@ -48,11 +46,8 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         # Artifact name
-        name: frontend.zip # optional
-        # Destination path
-        path: frontend/frontend.zip # optional
-    - run: unzip frontend.zip
-      working-directory: frontend
+        name: frontend # optional
+        path: frontend/dist
     - uses: docker/build-push-action@v1
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
