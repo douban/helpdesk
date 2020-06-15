@@ -1,0 +1,25 @@
+name: test
+
+on: [push, pull_request]
+
+
+jobs:
+
+  frontend:
+    name: Build frontend
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '12'
+
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - run: npm install
+      working-directory: frontend
+    - run: npm run lint
+      working-directory: frontend
+    - run: npm run test:unit
+      working-directory: frontend
