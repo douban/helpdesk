@@ -49,8 +49,6 @@ async def callback(request):
 
     username = oauth_username_func(id_token)
     email = id_token['email']
-    if not User.validate_email(email):
-        return HTMLResponse("invalid email", 403)
 
     roles = []
     access = id_token.get('resource_access', {})
