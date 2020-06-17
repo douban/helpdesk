@@ -2,52 +2,77 @@
 
 import logging
 
+import requests
 from starlette.authentication import (
     AuthenticationBackend,
     AuthCredentials,
     UnauthenticatedUser,
 )
 from starlette.middleware.base import BaseHTTPMiddleware 
-
 from authlib.jose import jwt
 from authlib.jose.errors import JoseError, ExpiredTokenError
 
 from helpdesk.config import OPENID_PRIVIDERS, oauth_username_func
 from helpdesk.libs.sentry import report
+from helpdesk.models.user import User
 
 logger = logging.getLogger(__name__)
 
 
 # load auth providers
 class Validator:
-    def __init__(self, metadata_url=None, *args, **kwargs):
+    def __init__(self, metadata_url=None, client_id=None, *args, **kwargs):
         self.metadata_url = metadata_url
-        server_metadata_r = requests.get(self.metadata_url)
-        server_metadata_r.raise_for_status()
-        server_metadata = server_metadata_r.json()
-
-        # Fetch the public key for validating Bearer token
-        jwk_r = requests.get(server_metadata['jwks_uri'])
-        jwk_r.raise_for_status()
-        self.jwk = jwk_r.json()
+        self.client_id = client_id
+        if not self.client_id:
+            raise ValueError('Init validator failed, client_id not set')
+        self.client_kwargs = kwargs.get('client_kwargs')
+        self.fetch_jwk()
     
+    def fetch_jwk(self):
+        # Fetch the public key for validating Bearer token
+        server_metadata = self.get(self.metadata_url)
+        self.jwk = self.get(server_metadata['jwks_uri'])
+
+    def get(self, *args, **kwargs):
+        if self.client_kwargs:
+            r = requests.get(*args, **kwargs, **self.client_kwargs)
+        else:
+            r = requests.get(*args, **kwargs)
+        r.raise_for_status()
+        return r.json()
+
     def valide_token(self, token: str):
         """validate token string, return a parsed token if valid, return None if not valid
+        :return tuple (is_valid -> bool, id_token or None)
         """
-        token = jwt.decode(token, self.jwk)
         try:
-            token.validate()
-            return token
-        except ExpiredTokenError as e:
-            return None
-        except JoseError as e:
-            report()
-            return None
+            if "https://accounts.google.com" in self.metadata_url:
+                # google's certs would change from time to time, let's refetch it before every try
+                self.fetch_jwk()
+            token = jwt.decode(token, self.jwk)
+        except ValueError as e:
+            if str(e) == 'Invalid JWK kid':
+                logger.info('This token cannot be decoded with current provider, will try another provider if available.')
+                return None, None
+            else:
+                raise e
 
-registed_validator = []
+        try: 
+            token.validate()
+            return True,token
+        except ExpiredTokenError as e:
+            logger.info('Auth header expired, %s', e)
+            return True, None
+        except JoseError as e:
+            logger.debug('Jose error: %s', e)
+            report()
+            return None, None
+
+registed_validator = {}
 
 for provider, info in OPENID_PRIVIDERS.items():
-    client = Validator(**info)
+    client = Validator(metadata_url = info['server_metadata_url'], **info)
     registed_validator[provider] = client
 
 
@@ -73,7 +98,20 @@ class BearerAuthMiddleware(BaseHTTPMiddleware):
         if authheader and authheader.lower().startswith("bearer "):
             _, token_str = authheader.split(" ", 1)
             if token_str:
-                for validator in registed_validator:
+                for validator_name, validator in registed_validator.items():
+                    logger.info("Trying to validate token with %s", validator_name)
+                    valid, id_token = validator.valide_token(token_str)
+                    if not id_token and not valid:
+                        # not valid in this provider, try next
+                        continue
+                    if not id_token and valid:
+                        # valid in this provider, but expired, stop trying other provider
+                        break
+                    # check aud and iss
+                    aud = id_token.get('aud')
+                    if id_token.get('azp') != validator.client_id and (not aud or validator.client_id not in aud):
+                        logger.info('Token is valid, not expired, but not belonged to this client')
+                        break
                     username = oauth_username_func(id_token)
                     email = id_token.get('email', '')
                     roles = []
