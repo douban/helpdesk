@@ -2,7 +2,7 @@
 
 import logging
 
-from authlib.jose import jwt
+from authlib.jose import jwt, errors as jwterrors
 from starlette.responses import RedirectResponse  # NOQA
 from starlette.authentication import requires, has_required_scope  # NOQA
 
@@ -174,7 +174,7 @@ async def mark_ticket(request):
         payload = jwt.decode(token, config.SESSION_SECRET_KEY)
         logger.debug(f'recieved callback req: {payload}')
         assert payload['ticket_id'] == ticket_id
-    except (jwt.exceptions.InvalidSignatureError, AssertionError):
+    except (jwterrors.BadSignatureError, AssertionError):
         raise ApiError(ApiErrors.parameter_validation_failed, description="token error")
     ticket = await Ticket.get(ticket_id)
     if not ticket:
