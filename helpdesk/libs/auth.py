@@ -8,7 +8,7 @@ from starlette.authentication import (
     AuthCredentials,
     UnauthenticatedUser,
 )
-from starlette.middleware.base import BaseHTTPMiddleware 
+from starlette.middleware.base import BaseHTTPMiddleware
 from authlib.jose import jwt
 from authlib.jose.errors import JoseError, ExpiredTokenError
 
@@ -28,7 +28,7 @@ class Validator:
             raise ValueError('Init validator failed, client_id not set')
         self.client_kwargs = kwargs.get('client_kwargs')
         self.fetch_jwk()
-    
+
     def fetch_jwk(self):
         # Fetch the public key for validating Bearer token
         server_metadata = self.get(self.metadata_url)
@@ -53,14 +53,15 @@ class Validator:
             token = jwt.decode(token, self.jwk)
         except ValueError as e:
             if str(e) == 'Invalid JWK kid':
-                logger.info('This token cannot be decoded with current provider, will try another provider if available.')
+                logger.info(
+                    'This token cannot be decoded with current provider, will try another provider if available.')
                 return None, None
             else:
                 raise e
 
-        try: 
+        try:
             token.validate()
-            return True,token
+            return True, token
         except ExpiredTokenError as e:
             logger.info('Auth header expired, %s', e)
             return True, None
@@ -69,10 +70,11 @@ class Validator:
             report()
             return None, None
 
+
 registed_validator = {}
 
 for provider, info in OPENID_PRIVIDERS.items():
-    client = Validator(metadata_url = info['server_metadata_url'], **info)
+    client = Validator(metadata_url=info['server_metadata_url'], **info)
     registed_validator[provider] = client
 
 
@@ -122,6 +124,7 @@ class BearerAuthMiddleware(BaseHTTPMiddleware):
                     user = User(username, email, roles, id_token.get('picture', ''))
 
                     request.session['user'] = user.to_json()
+                    break
         response = await call_next(request)
         return response
 
