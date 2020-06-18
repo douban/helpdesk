@@ -254,7 +254,7 @@ class Ticket(db.Model):
         """
         # todo: replace hardcode with url_path current url_path not working somehow
         callback_url = f'api/ticket/mark/{self.id}'
-        jwt_token = jwt.encode({'ticket_id': self.id, 'op': 'mark'}, SESSION_SECRET_KEY)
+        jwt_token = jwt.encode({'alg': 'RS256'}, {'ticket_id': self.id, 'op': 'mark'}, SESSION_SECRET_KEY)
         callback_url_payload = {"token": jwt_token}
         return f"{DEFAULT_BASE_URL}/{callback_url}?{urlencode(callback_url_payload, quote_via=quote_plus)}"
 
