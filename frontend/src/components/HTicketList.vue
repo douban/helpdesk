@@ -32,6 +32,9 @@
       </span>
       <span slot="action" slot-scope="text, record">
         <span v-if="record.is_approved === undefined">
+          <a-modal v-model="rejectModalVisible" title="Reject reason" ok-text="confirm" cancel-text="cancel" @ok="onConfirm(record, 'rejected', record.reject_url)" @cancel="hideRejectModal">
+              <a-input placeholder="Reject reason" v-model="rejectReason" maxLength:=128 />
+          </a-modal>
           <a-popconfirm
             title="Sure to approve?"
             @confirm="() => onConfirm(record, 'approved', record.approve_url)"
@@ -41,14 +44,14 @@
           <a-divider type="vertical" />
           <a-popconfirm
             title="Sure to reject?"
-            @confirm="() => onConfirm(record, 'rejected', record.reject_url)"
+            @confirm="() => showRejectModal()"
           >
             <a :href="record.reject_url">reject</a>
           </a-popconfirm>
           <a-divider type="vertical" />
         </span>
 
-        <a :href="record.api_url">detail</a>
+        <a :href="record.url">detail</a>
         </span>
     </a-table>
     <a-modal
@@ -96,7 +99,9 @@ export default {
       pagination: {
         pageSize: 1
       },
-      params_in_modal: []
+      params_in_modal: [],
+      rejectModalVisible: false,
+      rejectReason: null,
     }
   },
   computed: {
@@ -190,6 +195,12 @@ export default {
     }
   },
   methods: {
+    showRejectModal () {
+      this.rejectModalVisible = true
+    },
+    hideRejectModal () {
+      this.rejectModalVisible = false
+    },
     showDrawer () {
       this.param_detail_visible = true
     },
@@ -256,13 +267,24 @@ export default {
       this.loadTickets(queryParams)
     },
     onConfirm (record, status, actionUrl) {
-      HRequest.post(actionUrl).then(
-        (response) => {
-          if (response.status === 200) {
-            this.$message.success(response.data)
-          } else this.$message.warning(response.data)
-        }
-      )
+      var postData = {}
+      if (status === "rejected") {
+        postData = {"reason": this.rejectReason}
+      } 
+      this.$message.loading('Action in progress..', 2.5)
+      HRequest.post(actionUrl, postData).then(() => {
+        this.$message.info('Ticket ' + status)
+        this.hideRejectModal()
+      }).catch((error) => {  
+        const rawMsg = error.response.data.data.description
+        const msg = rawMsg.length > 300 ? rawMsg.slice(0, 300) + '... ' : rawMsg
+        this.$notification.title = rawMsg
+        this.$notification.open({
+          message: "Ticket " + status + " failed",
+          description: msg + "\norigin url: " + actionUrl,
+          duration: 0
+        })
+      })
     }
   },
   mounted () {

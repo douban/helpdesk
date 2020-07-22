@@ -20,16 +20,18 @@ HRequest.interceptors.response.use((response) => {
     }
   } else if (error.response.status === 403) {
     // 403, insufficient privillege, Redirect to login page
-    vm.$message.warning('Insufficient privilege!' + error.response.status + ':' + error.response.data)
+    vm.$message.warning('Insufficient privilege!' + error.response.status + ':' + JSON.stringify(error.response.data))
     if (vm.$route.name !== 'Login') {
       vm.$router.push({name: 'Login', query: {next: currentPath}})
     }
   } else if (error.response.status >= 500) {
-    vm.$message.error('Internal error, please contact webadmin' + error.response.status + ':' + error.response.data)
+    vm.$message.error('Internal error, please contact webadmin' + error.response.status + ':' + JSON.stringify(error.response.data))
   } else {
     // > 500 internal error, notify only
     // > 404 notify only
-    vm.$message.warning('Request failed: ' + error.response.status + ':' + error.response.data)
+    const rawMsg = JSON.stringify(error.response.data)
+    const msg = rawMsg.length > 150 ? rawMsg.slice(0, 150) + '...' : rawMsg
+    vm.$message.warning('Request failed: ' + error.response.status + ':' + msg)
   }
   return Promise.reject(error)
 })

@@ -150,6 +150,9 @@ async def ticket_op(request):
         if not execution:
             raise ApiError(ApiErrors.unknown_exception, description=msg)
     elif op == 'reject':
+        data = await request.json()
+        if "reason" in data:
+            ticket.reason = data["reason"]
         ret, msg = ticket.reject(by_user=request.user.name)
         if not ret:
             raise ApiError(ApiErrors.unrepeatable_operation, description=msg)
@@ -183,7 +186,7 @@ async def mark_ticket(request):
     try:
         data = await request.json()
         assert 'execution_status' in data, "mark body fields error"
-        ticket.annotate(execution_status=data["execution_status"])
+        ticket.annotate(execution_status=data["execution_status"], final_exec_status=True)
         logger.debug(f"tocket annotaion: {ticket.annotation}")
         # add notification to ticket mark action
         await ticket.notify(TicketPhase.MARK)
@@ -278,9 +281,11 @@ async def ticket_result(request):
     # update ticket status by result
     if not output_execution_id:
         annotation_execution_status = ticket.annotation.get('execution_status')
+        final_exec_status = ticket.annotation.get('final_exec_status')
         try:
             exec_status = execution.get('status')
-            if exec_status and annotation_execution_status != exec_status:
+            if exec_status and annotation_execution_status != exec_status \
+                    and not final_exec_status:
                 ticket.annotate(execution_status=exec_status)
                 await ticket.save()
         except AttributeError as e:

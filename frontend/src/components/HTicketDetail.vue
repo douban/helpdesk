@@ -21,7 +21,8 @@
           <template slot="description">
             <span v-if="!ticketInfo.is_approved">
               by {{ticketInfo.confirmed_by}}<br/>
-              at {{UTCtoLcocalTime(ticketInfo.confirmed_at)}}
+              at {{UTCtoLcocalTime(ticketInfo.confirmed_at)}} <br/>
+              {{ ticketInfo.reason>150 ? ticketInfo.reason.slice(0, 150) + '...' : ticketInfo.reason }}
             </span>
           </template>
         </a-step>
@@ -78,7 +79,10 @@
       </a-card>
       <a-row :style="{ marginTop: '16px' }">
         <a-button-group v-show="showActionButtons">
-          <a-button @click="onReject">Reject</a-button>
+          <a-modal v-model="rejectModalVisible" title="Reject reason" ok-text="confirm" cancel-text="cancel" @ok="onReject" @cancel="hideRejectModal">
+              <a-input placeholder="Reject reason" v-model="rejectReason" maxLength:=128 />
+          </a-modal>
+          <a-button @click="showRejectModal">Reject</a-button>
           <a-button @click="onApprove" type="primary">Approve</a-button>
         </a-button-group>
         <a-button v-show="showResultButton" :style="{ marginLeft: '16px' }" @click="toggleResult">{{resultButtonText}}</a-button>
@@ -110,6 +114,7 @@ export default {
       params_in_modal: [],
       resultButtonText: 'Show results',
       resultVisible: false,
+      rejectModalVisible: false,
       statusToStepStatus: {
         'created': {'status': 'finish', 'stepKey': 0},
         'approved': {'status': 'finish', 'stepKey': 2},
@@ -122,7 +127,8 @@ export default {
         'success': {'status': 'finish', 'stepKey': 5},
         'failed': {'status': 'error', 'stepKey': 4},
         'unknown': {'status': 'process', 'stepKey': 4}
-      }
+      },
+      rejectReason: null,
     }
   },
   computed: {
@@ -195,15 +201,6 @@ export default {
     handleTicketList (response) {
       this.table_data = response.data.data.tickets
     },
-    onConfirm (record, status, actionUrl) {
-      HRequest.post(actionUrl).then(
-        (response) => {
-          if (response.status === 200) {
-            this.$message.success(response.data)
-          } else this.$message.warning(response.data)
-        }
-      )
-    },
     UTCtoLcocalTime,
     toggleResult () {
       this.resultVisible = !this.resultVisible
@@ -216,20 +213,43 @@ export default {
     resetResult () {
       this.resultVisible = false
     },
+    errorAsNotification (title, rawMsg) {
+      const msg = rawMsg.length > 300 ? rawMsg.slice(0, 300) + '... ' : rawMsg
+      this.$notification.title = rawMsg
+      this.$notification.open({
+        message: title,
+        description: msg,
+        duration: 0
+      })
+    },
+    showRejectModal () {
+      this.rejectModalVisible = true
+    },
+    hideRejectModal () {
+      this.rejectModalVisible = false
+    },
     onReject () {
-      HRequest.post(this.ticketInfo.reject_url).then(() => {
+      HRequest.post(this.ticketInfo.reject_url, {"reason": this.rejectReason}).then(() => {
+        this.$message.loading('Action in progress..', 2.5)
         this.loadTickets()
         this.$message.info('Ticket rejected.')
+        this.hideRejectModal()
       }).catch((error) => {
-        this.$message.error('Ticket reject failed: ' + error.response.data.message)
+        this.errorAsNotification(
+          "Ticket reject failed", 
+          error.response.data.data.description
+        )
       })
     },
     onApprove () {
       HRequest.post(this.ticketInfo.approve_url).then(() => {
         this.loadTickets()
         this.$message.info('Ticket approved.')
-      }).catch((error) => {
-        this.$message.error('Ticket approved failed: ' + error.response.data.message)
+      }).catch((error) => {  
+        this.errorAsNotification(
+          "Ticket approve failed", 
+          error.response.data.data.description
+        )
       })
     }
   },

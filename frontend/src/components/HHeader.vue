@@ -15,7 +15,7 @@
       </a-menu-item>
       <a-sub-menu :style="{ float: 'right' }">
         <span slot="title">
-            <span>{{ user.display_name }}</span>
+            <span :style="{margin: '10px'}">{{ user.display_name }}</span>
             <a-avatar shape="square" icon="user"
                       :src="user.avatar"
             />
