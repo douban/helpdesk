@@ -73,7 +73,7 @@ class Action(DictSerializableClassMixin):
                 return None, msg
             if live_value is not None:
                 if v.get('type') == 'boolean':
-                    if live_value in ["true", "True", "TRUE", True]:
+                    if live_value in ("true", "True", "TRUE", True):
                         live_value = True
                     else:
                         live_value = False
