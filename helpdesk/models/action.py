@@ -73,7 +73,10 @@ class Action(DictSerializableClassMixin):
                 return None, msg
             if live_value is not None:
                 if v.get('type') == 'boolean':
-                    live_value = True
+                    if live_value in ("true", "True", "TRUE", True):
+                        live_value = True
+                    else:
+                        live_value = False
                 params[k] = live_value
 
         # create ticket
