@@ -54,6 +54,7 @@ class MailNotification(Notification):
         if self.phase.value in ('approval', 'mark'):
             email_addrs += [get_user_email(self.ticket.submitter)]
         email_addrs = ','.join(addr for addr in email_addrs if addr)
+        return email_addrs
 
     async def send(self):
         addrs = await self.get_mail_addrs()
