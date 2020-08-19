@@ -12,7 +12,6 @@
       :clearable="true"
       :searchable="true"
       :filterable="true"
-      :taggable="true"
       :select-on-tab="true"
       @input="handleInput"
       @keypress.enter.native.prevent=""

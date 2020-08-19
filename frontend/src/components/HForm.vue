@@ -140,6 +140,9 @@ export default {
           }).finally(() => {
             this.canSubmit = true
           })
+        } else {
+          // validate failed, make the form submittable again
+          this.canSubmit = true
         }
       })
     },
