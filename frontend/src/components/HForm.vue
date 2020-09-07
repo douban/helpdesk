@@ -34,7 +34,7 @@
               @ok="gotoTicketDetail"
               @cancel="showSubmitOK = false"
             >
-              <p>Ticket: {{this.submitReponse.ticket.title}}, id: {{this.submitReponse.ticket.id}}</p>
+              <p>Ticket: {{this.submitResponse.ticket.title}}, id: {{this.submitResponse.ticket.id}}</p>
               <p>You can stay here to submit another one</p>
               <p>Or check the ticket result now.</p>
             </a-modal>
@@ -65,7 +65,10 @@ export default {
       form: this.$form.createForm(this),
       resultVisible: false,
       canSubmit: true,
-      submitReponse: {},
+      submitResponse: {
+        'ticket': 'dummy ticket',
+        'id': 0
+      },
       submitResult: '',
       resultType: 'success',
       actionDefinition: '',
@@ -163,7 +166,7 @@ export default {
     },
     handleSubmitResult (response) {
       this.resultVisible = true
-      this.submitReponse = response.data.data
+      this.submitResponse = response.data.data
       this.submitResult = response.data.data.msg
       this.resultType = response.data.data.msg_level
     },
@@ -177,7 +180,7 @@ export default {
       this.formData = data
     },
     gotoTicketDetail () {
-      this.$router.push({ name: 'HTicketDetail', params: { id: this.submitReponse.ticket.id }})
+      this.$router.push({ name: 'HTicketDetail', params: { id: this.submitResponse.ticket.id }})
     }
   },
 
