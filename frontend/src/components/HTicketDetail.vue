@@ -188,7 +188,7 @@ export default {
               this.onApprove()
               break
             case 'reject':
-              this.onReject()
+              this.showRejectModal()
               break
             case undefined:
               break
@@ -229,25 +229,35 @@ export default {
       this.rejectModalVisible = false
     },
     onReject () {
+      if (this.ticketInfo.status !== "pending") {
+        this.$message.info('Ticket has is not pending, cannot be rejected.')
+        this.$router.push({ name: 'HTicketDetail', params: { id: this.$route.params.id }})
+        this.hideRejectModal()
+        return
+      }
       HRequest.post(this.ticketInfo.reject_url, {"reason": this.rejectReason}).then(() => {
-        this.$message.loading('Action in progress..', 2.5)
-        this.loadTickets()
         this.$message.info('Ticket rejected.')
+        this.$router.push({ name: 'HTicketDetail', params: { id: this.$route.params.id }})
         this.hideRejectModal()
       }).catch((error) => {
         this.errorAsNotification(
-          "Ticket reject failed", 
+          "Ticket reject failed",
           error.response.data.data.description
         )
       })
     },
     onApprove () {
+      if (this.ticketInfo.status !== "pending") {
+        this.$message.info('Ticket has is not pending, cannot be approved.')
+        this.$router.push({ name: 'HTicketDetail', params: { id: this.$route.params.id }})
+        return
+      }
       HRequest.post(this.ticketInfo.approve_url).then(() => {
-        this.loadTickets()
         this.$message.info('Ticket approved.')
-      }).catch((error) => {  
+        this.$router.push({ name: 'HTicketDetail', params: { id: this.$route.params.id }})
+      }).catch((error) => {
         this.errorAsNotification(
-          "Ticket approve failed", 
+          "Ticket approve failed",
           error.response.data.data.description
         )
       })
