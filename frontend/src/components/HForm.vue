@@ -26,6 +26,18 @@
             :wrapper-col="{ span: 12, offset: 5 }"
           >
             <a-button type="primary" @click="handleSubmit" :disabled="!canSubmit">Submit</a-button>
+            <a-modal
+              v-model="showSubmitOK"
+              title="Submit success!"
+              ok-text="Go detail"
+              cancel-text="Submit another"
+              @ok="gotoTicketDetail"
+              @cancel="showSubmitOK = false"
+            >
+              <p>Ticket: {{this.submitResponse.ticket.title}}, id: {{this.submitResponse.ticket.id}}</p>
+              <p>You can stay here to submit another one</p>
+              <p>Or check the ticket result now.</p>
+            </a-modal>
           </a-form-item>
         </a-form>
       </a-col>
@@ -53,11 +65,16 @@ export default {
       form: this.$form.createForm(this),
       resultVisible: false,
       canSubmit: true,
+      submitResponse: {
+        'ticket': 'dummy ticket',
+        'id': 0
+      },
       submitResult: '',
       resultType: 'success',
       actionDefinition: '',
       spinning: false,
-      delayTime: 500
+      delayTime: 500,
+      showSubmitOK: false
     }
   },
   computed: {
@@ -137,6 +154,7 @@ export default {
             url: submitURL}
           HRequest(options).then((response) => {
             this.handleSubmitResult(response)
+            this.showSubmitOK = true
           }).finally(() => {
             this.canSubmit = true
           })
@@ -148,6 +166,7 @@ export default {
     },
     handleSubmitResult (response) {
       this.resultVisible = true
+      this.submitResponse = response.data.data
       this.submitResult = response.data.data.msg
       this.resultType = response.data.data.msg_level
     },
@@ -159,6 +178,9 @@ export default {
     handleInput (data) {
       this.form.setFieldsValue(data)
       this.formData = data
+    },
+    gotoTicketDetail () {
+      this.$router.push({ name: 'HTicketDetail', params: { id: this.submitResponse.ticket.id }})
     }
   },
 
