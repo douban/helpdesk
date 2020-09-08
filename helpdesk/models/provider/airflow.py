@@ -2,6 +2,7 @@
 
 import logging
 import json
+import traceback
 
 from helpdesk.config import (
     AIRFLOW_SERVER_URL,
@@ -27,6 +28,7 @@ class AirflowProvider(BaseProvider):
         else:
             self.airflow_client = AirflowClient(username=AIRFLOW_USERNAME, passwd=AIRFLOW_PASSWORD)
         self.default_tag = AIRFLOW_DEFAULT_DAG_TAG
+        self.filter_status = ('skipped',)
 
     def get_default_pack(self):
         return self.default_tag
@@ -42,6 +44,7 @@ class AirflowProvider(BaseProvider):
         for dag_info in dags_schema:
             schema = dag_info['schema']
             details = dag_info['details']
+            json_schema = schema.get('params_json_schema')
             dags_list.append({
                 'name': schema['name'],
                 'parameters': schema.get('params'),
@@ -51,11 +54,13 @@ class AirflowProvider(BaseProvider):
                 'entry_point': schema.get('entry_point'),
                 'metadata_file': details['filepath'],
                 'output_schema': schema.get('output_schema'),
+                'params_json_schema': json_schema,
                 'uid': schema['dag_id'],
                 'pack': pack or self.default_tag,
                 'ref': schema['dag_id'],
                 'id': schema['dag_id'],
-                'runner_type': schema.get('runner_type')
+                'runner_type': schema.get('runner_type'),
+                'highlight_queries': schema.get('highlight_queries') or [r'\[.+_operator.py.+}} ']
             })
         return tuple(dags_list)
 
@@ -67,7 +72,6 @@ class AirflowProvider(BaseProvider):
         to dict
         """
         dags = self.airflow_client.get_dags(tags=(self.default_tag if not pack else pack,))
-
         return self._build_action_from_dag(dags, pack=pack)
 
     def get_action(self, ref):
@@ -137,8 +141,62 @@ class AirflowProvider(BaseProvider):
         else:
             return status_to_emoji[status]
 
+    @staticmethod
+    def _status_to_color(status):
+        status_to_color = {
+            'success': 'green',
+            'running': '#00ff00',
+            'failed': '#ff0000',
+            'skipped': '#fecfd7',
+            'upstream_failed': '#feba3f',
+            'up_for_reschedule': '#6fe7db',
+            'up_for_retry': '#fee03f',
+            'queued': '#808080',
+            'no_status': '#fafafa'
+        }
+        if status not in status_to_color:
+            return status_to_color['no_status']
+        else:
+            return status_to_color[status]
+
+    def _dag_graph_to_gojs_flow(self, dag_id, execution):
+        airflow_graph = self.airflow_client.get_dag_graph(dag_id)
+        result = {
+            'class': 'GraphLinksModel',
+            'nodeDataArray': [],
+            'linkDataArray': []
+        }
+        if airflow_graph:
+            for node in airflow_graph['nodes']:
+                ti = execution['task_instances'].get(node['id'])
+                state = ti['state']
+                if state in self.filter_status:
+                    continue
+                result['nodeDataArray'].append({
+                    'key': node['id'],
+                    'text': f'{self._format_exec_status(state)} {node["value"]["label"]}',
+                    'color': node['value']['style'][5:-1],
+                    'stroke': self._status_to_color(state)
+                })
+
+            for edge in airflow_graph['edges']:
+                ti_v = execution['task_instances'].get(edge['v'])
+                ti_u = execution['task_instances'].get(edge['u'])
+                if any((ti_u['state'] in self.filter_status, ti_v['state'] in self.filter_status)):
+                    continue
+                result['linkDataArray'].append({
+                    'to': edge['v'],
+                    'from': edge['u']
+                })
+        return result
+
+    def _get_result_highlight_queries(self, dag_id):
+        schema = self.get_action(dag_id)
+        return schema['highlight_queries']
+
     def _build_result_from_dag_exec(self, execution, execution_id, filter_status=None):
         dag_id, execution_date = execution_id.split('|')
+        highlight_queries = self._get_result_highlight_queries(dag_id)
         result = {
             'status': execution['status'],
             'start_timestamp': execution_date,
@@ -148,6 +206,7 @@ class AirflowProvider(BaseProvider):
                 'dag_id': dag_id
             },  # frontend only render subtab when len(result) == 2
             'id': execution_id,
+            'graph': self._dag_graph_to_gojs_flow(dag_id, execution),
         }
 
         for task_id in execution['dag_info']['details']['task_ids']:
@@ -186,7 +245,8 @@ class AirflowProvider(BaseProvider):
                         'stderr': msg if not is_success_try else '',
                         'return_code': int(not is_success_try),
                         'succeeded': is_success_try,
-                        'stdout': msg if is_success_try else ''
+                        'stdout': msg if is_success_try else '',
+                        'highlight_queries': highlight_queries,
                     }
 
             result['result']['tasks'].append({
@@ -205,9 +265,9 @@ class AirflowProvider(BaseProvider):
         try:
             execution = self.airflow_client.get_dag_result(dag_id, execution_date)
             return self._build_result_from_dag_exec(
-                execution, execution_id, filter_status=('skipped',)) if execution else None, ''
+                execution, execution_id, filter_status=self.filter_status) if execution else None, ''
         except Exception as e:
-            logger.error(f'get execution from {execution_id}, error: {str(e)}')
+            logger.error(f'get execution from {execution_id}, error: {traceback.format_exc()}')
             return None, str(e)
 
     def get_execution_output(self, execution_output_id):

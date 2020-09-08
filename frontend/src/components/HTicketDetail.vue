@@ -182,7 +182,7 @@ export default {
     loadTickets () {
       HRequest.get('/api/ticket/' + this.$route.params.id).then(
         (response) => {
-          this.handleTicketList(response)
+          this.table_data = response.data.data.tickets
           switch (this.$route.params.action) {
             case 'approve':
               this.onApprove()
@@ -195,11 +195,13 @@ export default {
             default:
               this.$message.warning('Action ' + this.$route.params.action + 'for this ticket is invalid.')
           }
-        }
-      )
+        })
     },
-    handleTicketList (response) {
-      this.table_data = response.data.data.tickets
+    updateTicket () {
+      HRequest.get('/api/ticket/' + this.$route.params.id).then(
+        (response) => {
+          this.table_data = response.data.data.tickets
+        })
     },
     UTCtoLcocalTime,
     toggleResult () {
@@ -236,6 +238,7 @@ export default {
         return
       }
       HRequest.post(this.ticketInfo.reject_url, {"reason": this.rejectReason}).then(() => {
+        this.updateTicket()
         this.$message.info('Ticket rejected.')
         this.$router.push({ name: 'HTicketDetail', params: { id: this.$route.params.id }})
         this.hideRejectModal()
@@ -253,6 +256,7 @@ export default {
         return
       }
       HRequest.post(this.ticketInfo.approve_url).then(() => {
+        this.updateTicket()
         this.$message.info('Ticket approved.')
         this.$router.push({ name: 'HTicketDetail', params: { id: this.$route.params.id }})
       }).catch((error) => {

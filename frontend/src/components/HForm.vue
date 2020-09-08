@@ -52,6 +52,7 @@ import DynamicForm from './DynamicForm'
 import {HRequest} from '../utils/HRequests'
 import AFormItem from 'ant-design-vue/es/form/FormItem'
 import HDrawer from '@/components/HDrawer'
+import Ajv from 'ajv'
 export default {
   name: 'HForm',
   components: {
@@ -74,7 +75,8 @@ export default {
       actionDefinition: '',
       spinning: false,
       delayTime: 500,
-      showSubmitOK: false
+      showSubmitOK: false,
+      formAjv: new Ajv()
     }
   },
   computed: {
@@ -147,6 +149,38 @@ export default {
           // validate success, let us proceed.
           let submitURL = '/api/action/' + this.actionName
           const qs = require('qs')
+          
+          // airflow json schema verify
+          if (this.actionDefinition.provider_type==='airflow' && this.actionDefinition.params_json_schema) {
+            let validate = this.formAjv.compile(this.actionDefinition.params_json_schema)
+            let jsonFormData = {}
+            for (let [name, data] of Object.entries(this.formData)) {
+              if (!data) {
+                continue
+              }
+              // trans hacked form data to json schema data and validate them
+              let fieldType = this.actionDefinition.params_json_schema.properties[name].type
+              if (fieldType === 'array') {
+                jsonFormData[name] = data.split(',')
+              } else if (fieldType === "integer") {
+                jsonFormData[name] = parseInt(data)
+              } else if (fieldType === "number") {
+                jsonFormData[name] = Number(data)
+              } else {
+                jsonFormData[name] = data
+              }
+            }
+            let isvalidate = validate(jsonFormData)
+           
+            if (!isvalidate) {
+              this.submitResult = this.formAjv.errorsText(validate.errors)
+              this.resultType = 'error'
+              this.resultVisible = true
+              this.canSubmit = true
+              return
+            }
+          }
+
           const options = {
             method: 'POST',
             headers: { 'content-type': 'application/x-www-form-urlencoded' },

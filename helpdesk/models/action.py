@@ -32,6 +32,9 @@ class Action(DictSerializableClassMixin):
     def description(self, provider):
         return self.get_action(provider).get('description')
 
+    def params_json_schema(self, provider):
+        return self.get_action(provider).get('params_json_schema')
+
     def parameters(self, provider, user):
         parameters = self.get_action(provider).get('parameters', {})
         for k, v in parameters.items():
@@ -48,6 +51,8 @@ class Action(DictSerializableClassMixin):
         action_d = super(Action, self).to_dict(**kw)
         if provider and user:
             action_d['params'] = self.parameters(provider, user)
+            action = self.get_action(provider)
+            action_d['params_json_schema'] = action.get('params_json_schema')
         return action_d
 
     async def run(self, provider, form, user):

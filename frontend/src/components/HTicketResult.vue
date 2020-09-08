@@ -1,7 +1,15 @@
 <template>
   <a-spin :spinning="spinning" v-show="isVisible">
+    <a-card v-show="isDagAvaliable">
+      <component :is="dagComponent" v-bind:model-data="diagramData"
+      v-on:changed-selection="changedSelection" ref="diag" v-bind:selectedNode='selectedNode'></component>
+    </a-card>
+    
     <a-card v-show="isVisible">
-      <component :is="currentComponent" v-bind:resultData="ticketResult" v-bind:dataLoaded="dataLoaded" :ticketId="ticketId" :ticketProvider="ticketProvider"></component>
+      <component :is="currentComponent" v-bind:resultData="ticketResult" 
+      v-bind:dataLoaded="dataLoaded" :ticketId="ticketId" 
+      :ticketProvider="ticketProvider" v-bind:resultActiveKey='activeKey'
+      v-on:tabClicked='tabClickHandler'></component>
       <a-back-top />
     </a-card>
   </a-spin>
@@ -11,17 +19,28 @@
 import {HRequest} from '../utils/HRequests'
 import ResultHostTable from './ResultHostTable'
 import SubTab from './SubTab'
+import SubTabNoRecursive from './SubTabNoRecursive'
+import Hdag from './Hdag'
+import go from 'gojs'
 
 export default {
   name: 'HTicketResult',
-  components: {ResultHostTable, SubTab},
+  components: {ResultHostTable, SubTab, Hdag, SubTabNoRecursive},
   props: ['isVisible', 'ticketId', 'ticketProvider'],
   data () {
     return {
       ticketResult: {},
       dataLoaded: false,
       currentComponent: 'ResultHostTable',
-      spinning: true
+      dagComponent: 'Hdag',
+      spinning: true,
+      isDagAvaliable: false,
+      diagramData: { 
+        nodeDataArray: [],
+        linkDataArray: []
+      },
+      activeKey: "",
+      selectedNode: "",
     }
   },
   methods: {
@@ -41,10 +60,44 @@ export default {
       this.ticketResult = data.result
       this.dataLoaded = true
       this.spinning = false
-      if (Object.keys(this.ticketResult).length === 2 && Object.keys(this.ticketResult).includes('tasks')) {
+
+      if (!data.graph) {
+        this.isDagAvaliable = false
+      } else {
+        this.isDagAvaliable = true
+        this.dagComponent = 'Hdag'
+        this.diagramData = go.Model.fromJson(JSON.stringify(data.graph))
+      }
+
+      // 如果有dag属性的直接使用dag+tab展示
+      if (this.isDagAvaliable) {
+        this.currentComponent = 'SubTabNoRecursive'
+        if (data.result.tasks) {
+          this.activeKey = data.result.tasks[0].id
+        }
+      } else if (Object.keys(this.ticketResult).length === 2 && Object.keys(this.ticketResult).includes('tasks')) {
         this.currentComponent = 'SubTab'
-      } else this.currentComponent = 'ResultHostTable'
+      } else {
+        this.currentComponent = 'ResultHostTable'
+      }
+    },
+    changedSelection: function(e) {
+      var node = e.diagram.selection.first();
+      this.activeKey = node.data.key
+    },
+    // get access to the GoJS Model of the GoJS Diagram
+    model: function() { return this.$refs.diag.model(); },
+
+    // tell the GoJS Diagram to update based on the arbitrarily modified model data
+    updateDiagramFromData: function() { this.$refs.diag.updateDiagramFromData(); },
+
+    tabClickHandler (key) {
+      // update gojs diagram node selection status
+      this.selectedNode = key
+      // update subtab selected tab
+      this.activeKey = key
     }
+
   },
   watch: {
     isVisible: function (to) {
