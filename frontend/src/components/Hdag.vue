@@ -50,8 +50,7 @@ export default {
     },
     watch: {
         modelData: function(val) { this.updateModel(val); },
-        selectedNode: function(newV, oldV) {
-            console.log('old v: ' + oldV)
+        selectedNode: function(newV) {
             var node = this.diagram.findNodeForKey(newV)
             this.diagram.select(node)
 
