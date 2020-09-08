@@ -10,6 +10,8 @@ SESSION_SECRET_KEY = 'NVzLYJSMyw'
 SESSION_TTL = 24 * 3600
 
 TRUSTED_HOSTS = '127.0.0.1,10.0.0.1'
+ALLOW_ORIGINS = ['https://example.org', 'https://www.example.org']  # use ['*'] to allow any origin.
+ALLOW_ORIGINS_REG = r"https://.*\.example\.org"  # See https://www.starlette.io/middleware/#corsmiddleware for ref
 
 SYSTEM_USER = 'admin'
 SYSTEM_USER_PASSWORD = 'admin'

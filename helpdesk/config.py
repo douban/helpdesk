@@ -9,6 +9,9 @@ APP_BASE = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 TRUSTED_HOSTS = '127.0.0.1'
 
+ALLOW_ORIGINS = []  # use ['*'] to allow any origin.
+ALLOW_ORIGINS_REG = None
+
 avatar_url_func = lambda email: ''  # NOQA
 oauth_username_func = lambda id_token: id_token['name']  # NOQA
 get_user_email = lambda username: username + '@example.com'  # NOQA
