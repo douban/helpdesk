@@ -5,7 +5,7 @@
         {{ value.name.length > 30 ? value.name.slice(0, 30) + '...': value.name }}
       </template>
       <result-host-table v-bind:data-loaded="dataLoaded" v-bind:resultData="value.result" 
-      :ticketId="ticketId" v-bind:highlightQueries="resultData.highlight_queries"></result-host-table>
+      :ticketId="ticketId"></result-host-table>
     </a-tab-pane>
   </a-tabs>
 </template>
@@ -13,7 +13,7 @@
 import ResultHostTable from './ResultHostTable'
 export default {
   components: {ResultHostTable},
-  props: ['resultData', 'dataLoaded', 'ticketId', 'ticketProvider', 'resultActiveKey', 'highlightQueries'],
+  props: ['resultData', 'dataLoaded', 'ticketId', 'ticketProvider', 'resultActiveKey'],
   methods: {
       tabClickHandler (key) {
           this.$emit('tabClicked', key)
