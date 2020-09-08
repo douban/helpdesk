@@ -187,7 +187,7 @@ async def mark_ticket(request):
         data = await request.json()
         assert 'execution_status' in data, "mark body fields error"
         ticket.annotate(execution_status=data["execution_status"], final_exec_status=True)
-        logger.debug(f"tocket annotaion: {ticket.annotation}")
+        logger.debug(f"ticket annotation: {ticket.annotation}")
         # add notification to ticket mark action
         await ticket.notify(TicketPhase.MARK)
         await ticket.save()

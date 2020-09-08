@@ -209,6 +209,26 @@ class AirflowClient:
             all_task_result[task_id] = {'message': [str(e)], 'metadata': {'end_of_log': True}, 'success': 1}
         return {'dag_id': dag_id, 'execution_date': execution_date, 'task_id': task_id, 'result': all_task_result}
 
+    @auto_refresh_token
+    def get_dag_graph(self, dag_id):
+        api_headers = {
+            'Authorization': 'Bearer {}'.format(self._access_token),
+            'Cache-Control': 'no-cache',
+            'Content-Type': 'application/json'
+        }
+
+        task_result = requests.get(
+            url=f'{self.server_url}/admin/helpdesk/api/dags/{dag_id}/graph',
+            headers=api_headers
+        )
+        try:
+            result = self._check_resp(
+                task_result, AirflowClientTaskResultException, 'Get dag graph error: {}'.format(dag_id))
+            return result
+        except AirflowClientTaskResultException as e:
+            logger.error(f'Get {dag_id} graph error: {str(e)}')
+            return {}
+
     @timed_cache(minutes=15)
     @auto_refresh_token
     def get_user_roles(self, username):

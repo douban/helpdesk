@@ -71,7 +71,7 @@ class SpinCycleClient:
                 "args": args
             }),
             headers={'Content-Type': 'application/json'},
-            verify=self.verify)
+    )
         return self._check_resp(result, SpinClientCreateReqException, msg='create and start request error: {}')
 
     @staticmethod
@@ -84,15 +84,15 @@ class SpinCycleClient:
             raise exception(msg.format(resp.text))
 
     def get_req(self, req_id):
-        result = requests.get(url=f"{self.api_prefix}/requests/{req_id}", auth=self._auth, verify=self.verify)
+        result = requests.get(url=f"{self.api_prefix}/requests/{req_id}", auth=self._auth)
         return self._check_resp(result, SpinClientGetReqException)
 
     def stop_req(self, req_id):
-        result = requests.put(url=f"{self.api_prefix}/requests/{req_id}/stop", auth=self._auth, verify=self.verify)
+        result = requests.put(url=f"{self.api_prefix}/requests/{req_id}/stop", auth=self._auth)
         return self._check_resp(result, SpinClientException)
 
     def get_all_job_logs_by_req(self, req_id):
-        result = requests.get(url=f"{self.api_prefix}/requests/{req_id}/log", auth=self._auth, verify=self.verify)
+        result = requests.get(url=f"{self.api_prefix}/requests/{req_id}/log", auth=self._auth)
         return self._check_resp(result, SpinClientGetJobLogsException)
 
     def get_req_result_url(self, req_id):
@@ -100,21 +100,21 @@ class SpinCycleClient:
 
     def get_job_log_by_req(self, req_id, job_id):
         result = requests.get(
-            url=f"{self.api_prefix}/requests/{req_id}/log/{job_id}", auth=self._auth, verify=self.verify)
+            url=f"{self.api_prefix}/requests/{req_id}/log/{job_id}", auth=self._auth)
         return self._check_resp(result, SpinClientGetJobLogFromReqException)
 
     def get_running_jobs_and_req(self):
-        result = requests.get(url=f"{self.api_prefix}/status/running", auth=self._auth, verify=self.verify)
+        result = requests.get(url=f"{self.api_prefix}/status/running", auth=self._auth)
         return self._check_resp(result, SpinClientGetRunningException)
 
     def get_req_by_filter(self, filter_dict):
         result = requests.get(
-            url=f"{self.api_prefix}/requests", params=filter_dict, auth=self._auth, verify=self.verify)
+            url=f"{self.api_prefix}/requests", params=filter_dict, auth=self._auth)
         return self._check_resp(result, SpinClientFindReqException)
 
     @timed_cache(minutes=10)
     def get_req_list(self):
-        result = requests.get(url=f"{self.api_prefix}/request-list", auth=self._auth, verify=self.verify)
+        result = requests.get(url=f"{self.api_prefix}/request-list", auth=self._auth)
         return self._check_resp(result, SpinClientGetReqListException)
 
     def get_req_by_type(self, type):
@@ -126,7 +126,7 @@ class SpinCycleClient:
             raise SpinClientFindReqException("can not find req by type: {}".format(type))
 
     def get_job_chain_by_req_id(self, req_id):
-        result = requests.get(url=f"{self.api_prefix}/requests/{req_id}/job-chain", auth=self._auth, verify=self.verify)
+        result = requests.get(url=f"{self.api_prefix}/requests/{req_id}/job-chain", auth=self._auth)
         return self._check_resp(result, SpinClientException)
 
     def get_ascii_graph_of_req(self, req_id, state_number_to_note=None):

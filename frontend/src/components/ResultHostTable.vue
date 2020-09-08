@@ -40,7 +40,11 @@
           </span>
           <span>
             <h3>stderr: </h3>
-            <pre class="text-wrapper">{{typeof(record.stderr) === 'string' ? record.stderr : ''}}</pre>
+            <pre class="text-wrapper">
+              <text-highlight :queries='highlightQueries' :highlightStyle='highlightStyle'>
+                {{typeof(record.stderr) === 'string' ? record.stderr : ''}}
+              </text-highlight>
+            </pre>
           </span>
           <span>
             <h3>stdout: </h3>
@@ -57,14 +61,18 @@
 </template>
 
 <script>
+import TextHighlight from 'vue-text-highlight';
 import {HRequest} from '../utils/HRequests'
 
 export default {
   name: 'ResultHostTable',
+  components: {TextHighlight},
   props: ['resultData', 'dataLoaded', 'ticketId'],
   data () {
     return {
       spinning: false,
+      highlightQueries: [],
+      highlightStyle: {color: 'green', 'background': 'yellow'},
       results: [{}],
       filtered: {},
       successCount: 0,
@@ -125,6 +133,7 @@ export default {
       let count = 0
       let successCount = 0
       let failedCount = 0
+      this.highlightQueries = []
       for (let property in data) {
         let el = data[property]
         count += 1
@@ -142,6 +151,15 @@ export default {
           el.status = 'Failed'
         }
         listData.push(el)
+        
+        if (el.highlight_queries) {
+          for (let r of el.highlight_queries) {
+            var re = new RegExp(r)
+            if (this.highlightQueries.indexOf(re) === -1) {
+              this.highlightQueries.push(re)
+            }
+          } 
+        }
       }
       this.successCount = successCount
       this.failedCount = failedCount
