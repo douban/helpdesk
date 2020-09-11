@@ -122,6 +122,7 @@ class BearerAuthMiddleware(BaseHTTPMiddleware):
                     if id_token.get('azp') != validator.client_id and (not aud or validator.client_id not in aud):
                         logger.info('Token is valid, not expired, but not belonged to this client')
                         break
+                    logger.info("Validate token with %s success", validator_name)
                     username = oauth_username_func(id_token)
                     email = id_token.get('email', '')
                     roles = []
