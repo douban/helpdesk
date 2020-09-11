@@ -10,7 +10,7 @@ from starlette.authentication import (
 )
 from starlette.middleware.base import BaseHTTPMiddleware
 from authlib.jose import jwt
-from authlib.jose.errors import JoseError, ExpiredTokenError
+from authlib.jose.errors import JoseError, ExpiredTokenError, DecodeError
 
 from helpdesk.config import OPENID_PRIVIDERS, oauth_username_func
 from helpdesk.libs.sentry import report
@@ -44,7 +44,12 @@ class Validator:
 
     def valide_token(self, token: str):
         """validate token string, return a parsed token if valid, return None if not valid
-        :return tuple (is_valid -> bool, id_token or None)
+        :return tuple (is_token -> bool, id_token or None)
+        The BearerAuthMiddleware would use this to decide if we should validate the token in the next provider.
+        If is_token == True, but id_token is None, that means the token is some kind of valid
+        but not accepted by the current provider, so the middleware will try anther one.
+        If is_token != True, that means the token is expired, not valid or something occurs during decoding.
+        The middleware would give up trying other providers
         """
         try:
             if "https://accounts.google.com" in self.metadata_url:
@@ -55,20 +60,24 @@ class Validator:
             if str(e) == 'Invalid JWK kid':
                 logger.info(
                     'This token cannot be decoded with current provider, will try another provider if available.')
-                return None, None
+                return True, None
             else:
-                raise e
+                report()
+                return False, None
+        except DecodeError as e:
+            logger.info("Token decode failed: %s", str(e))
+            return False, None
 
         try:
             token.validate()
             return True, token
         except ExpiredTokenError as e:
             logger.info('Auth header expired, %s', e)
-            return True, None
+            return False, None
         except JoseError as e:
             logger.debug('Jose error: %s', e)
             report()
-            return None, None
+            return False, None
 
 
 registed_validator = {}
@@ -102,18 +111,18 @@ class BearerAuthMiddleware(BaseHTTPMiddleware):
             if token_str:
                 for validator_name, validator in registed_validator.items():
                     logger.info("Trying to validate token with %s", validator_name)
-                    valid, id_token = validator.valide_token(token_str)
-                    if not id_token and not valid:
+                    is_token, id_token = validator.valide_token(token_str)
+                    if not is_token:
+                        break
+                    if is_token and not id_token:
                         # not valid in this provider, try next
                         continue
-                    if not id_token and valid:
-                        # valid in this provider, but expired, stop trying other provider
-                        break
                     # check aud and iss
                     aud = id_token.get('aud')
                     if id_token.get('azp') != validator.client_id and (not aud or validator.client_id not in aud):
                         logger.info('Token is valid, not expired, but not belonged to this client')
                         break
+                    logger.info("Validate token with %s success", validator_name)
                     username = oauth_username_func(id_token)
                     email = id_token.get('email', '')
                     roles = []
