@@ -125,10 +125,8 @@ class BearerAuthMiddleware(BaseHTTPMiddleware):
                     logger.info("Validate token with %s success", validator_name)
                     username = oauth_username_func(id_token)
                     email = id_token.get('email', '')
-                    roles = []
                     access = id_token.get('resource_access', {})
-                    for rs in access.values():
-                        roles.extend(rs.get('roles', []))
+                    roles = access.get(validator.client_id, {}).get('roles', [])
 
                     user = User(username, email, roles, id_token.get('picture', ''))
 
