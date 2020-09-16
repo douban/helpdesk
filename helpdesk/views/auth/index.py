@@ -50,10 +50,8 @@ async def callback(request):
     username = oauth_username_func(id_token)
     email = id_token['email']
 
-    roles = []
     access = id_token.get('resource_access', {})
-    for rs in access.values():
-        roles.extend(rs.get('roles', []))
+    roles = access.get(client.client_id, {}).get('roles', [])
 
     user = User(username, email, roles, id_token.get('picture', ''))
 
