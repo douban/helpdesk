@@ -158,8 +158,16 @@ export default {
               if (!data) {
                 continue
               }
+              
+              // prevent json schema not covered this field
+              var fieldType
+              if (this.actionDefinition.params_json_schema.properties[name]) {
+                fieldType = this.actionDefinition.params_json_schema.properties[name].type
+              } else {
+                fieldType = null
+              }
+              
               // trans hacked form data to json schema data and validate them
-              let fieldType = this.actionDefinition.params_json_schema.properties[name].type
               if (fieldType === 'array') {
                 jsonFormData[name] = data.split(',')
               } else if (fieldType === "integer") {
