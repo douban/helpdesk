@@ -176,6 +176,17 @@ export default {
       this.searchText = ''
     },
 
+    handleFormattedLog(prettyLog) {
+      switch (prettyLog.formatter) {
+      case 'ASYNC_SSH_OPERATOR_FORMATTER':
+        // show async op formatter model
+        this.$emit('showPrettyLog', prettyLog)
+        break
+      default:
+        console.error("pretty log formatter" + prettyLog.formatter + "have no frontend suppport!")
+      }
+    },
+
     handleRowExpand (expanded, record) {
       if (expanded && (record.stdout.output_load || record.stderr.output_load)) {
         let std = {
@@ -189,7 +200,16 @@ export default {
             let queryString = io === 'stdout' ? record.stdout.query_string : record.stderr.query_string
             HRequest.get('/api/ticket/' + this.ticketId + '/result' + queryString).then(
               (response) => {
-                let output = response.data.data[0]
+                // if pretty log then show model
+                if (response.data.data.pretty_log) {
+                  let prettyLog = response.data.data.pretty_log[0]
+                  if (prettyLog) {
+                    this.handleFormattedLog(prettyLog)
+                    record.prettyLog = prettyLog
+                  }
+                }
+
+                let output = response.data.data[0] ? response.data.data[0] : response.data.data.message[0]
                 if (io === 'stdout') {
                   record.stdout = output
                 } else {
@@ -200,6 +220,10 @@ export default {
             )
           }
         }
+      }
+
+      if (expanded && record.prettyLog) {
+        this.handleFormattedLog(record.prettyLog)
       }
     },
 

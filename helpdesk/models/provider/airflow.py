@@ -60,7 +60,8 @@ class AirflowProvider(BaseProvider):
                 'ref': schema['dag_id'],
                 'id': schema['dag_id'],
                 'runner_type': schema.get('runner_type'),
-                'highlight_queries': schema.get('highlight_queries') or [r'\[.+_operator.py.+}} ']
+                'highlight_queries': schema.get('highlight_queries') or [r'\[.+_operator.py.+}} '],
+                'pretty_log_formatter': schema.get('pretty_task_log_formatter', {})
             })
         return tuple(dags_list)
 
@@ -278,4 +279,5 @@ class AirflowProvider(BaseProvider):
             msg = std_out['result'][task_id].get('message') or (json.dumps(std_out),)
             return msg, 'get execution output error'
         else:
-            return std_out['result'][task_id]['message'], ''
+            return {'message': std_out['result'][task_id]['message'],
+                    'pretty_log': std_out['result'][task_id].get('pretty_log', {})}, ''
