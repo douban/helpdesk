@@ -1,9 +1,8 @@
-setuptools<50.0.0
 aiofiles
 Jinja2>=2.10.1
 starlette>=0.11.4
 gunicorn>=20.0
-uvicorn>=0.6.1
+uvicorn[standard]
 python-multipart>=0.0.5
 itsdangerous>=1.1.0
 sentry-asgi>=0.1.5
@@ -15,4 +14,3 @@ st2client
 rule
 authlib
 httpx
-uvloop
