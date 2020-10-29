@@ -204,6 +204,7 @@ class AirflowClient:
                 task_result, AirflowClientTaskResultException, 'Get task result {} error: {{}}'.format(task_id))
             if try_number:
                 all_task_result[task_id]['message'] = [all_task_result[task_id]['message']]
+                all_task_result[task_id]['pretty_log'] = [all_task_result[task_id]['pretty_log']]
         except AirflowClientTaskResultException as e:
             logger.error(f'Get {task_id} @ {execution_date} of {dag_id} error: {str(e)}')
             all_task_result[task_id] = {'message': [str(e)], 'metadata': {'end_of_log': True}, 'success': 1}
