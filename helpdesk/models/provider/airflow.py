@@ -28,7 +28,7 @@ class AirflowProvider(BaseProvider):
         else:
             self.airflow_client = AirflowClient(username=AIRFLOW_USERNAME, passwd=AIRFLOW_PASSWORD)
         self.default_tag = AIRFLOW_DEFAULT_DAG_TAG
-        self.filter_status = ('skipped',)
+        self.default_status_filter = ('skipped',)
 
     def get_default_pack(self):
         return self.default_tag
@@ -61,7 +61,8 @@ class AirflowProvider(BaseProvider):
                 'id': schema['dag_id'],
                 'runner_type': schema.get('runner_type'),
                 'highlight_queries': schema.get('highlight_queries') or [r'\[.+_operator.py.+}} '],
-                'pretty_log_formatter': schema.get('pretty_task_log_formatter', {})
+                'pretty_log_formatter': schema.get('pretty_task_log_formatter', {}),
+                'status_filter': schema.get('status_filter', self.default_status_filter)
             })
         return tuple(dags_list)
 
@@ -162,6 +163,8 @@ class AirflowProvider(BaseProvider):
 
     def _dag_graph_to_gojs_flow(self, dag_id, execution):
         airflow_graph = self.airflow_client.get_dag_graph(dag_id)
+        schema = self.get_action(dag_id)
+        status_filter = schema['status_filter']
         result = {
             'class': 'GraphLinksModel',
             'nodeDataArray': [],
@@ -171,7 +174,7 @@ class AirflowProvider(BaseProvider):
             for node in airflow_graph['nodes']:
                 ti = execution['task_instances'].get(node['id'])
                 state = ti['state']
-                if state in self.filter_status:
+                if state in status_filter:
                     continue
                 result['nodeDataArray'].append({
                     'key': node['id'],
@@ -183,7 +186,7 @@ class AirflowProvider(BaseProvider):
             for edge in airflow_graph['edges']:
                 ti_v = execution['task_instances'].get(edge['v'])
                 ti_u = execution['task_instances'].get(edge['u'])
-                if any((ti_u['state'] in self.filter_status, ti_v['state'] in self.filter_status)):
+                if any((ti_u['state'] in status_filter, ti_v['state'] in status_filter)):
                     continue
                 result['linkDataArray'].append({
                     'to': edge['v'],
@@ -195,9 +198,11 @@ class AirflowProvider(BaseProvider):
         schema = self.get_action(dag_id)
         return schema['highlight_queries']
 
-    def _build_result_from_dag_exec(self, execution, execution_id, filter_status=None):
+    def _build_result_from_dag_exec(self, execution, execution_id):
         dag_id, execution_date = execution_id.split('|')
-        highlight_queries = self._get_result_highlight_queries(dag_id)
+        schema = self.get_action(dag_id)
+        highlight_queries = schema['highlight_queries']
+        status_filter = schema['status_filter']
         result = {
             'status': execution['status'],
             'start_timestamp': execution_date,
@@ -216,7 +221,8 @@ class AirflowProvider(BaseProvider):
                 # if new dag def update node in the dag, old result will not contain this node
                 logger.warning(f"task_id {task_id} can not be found in task_instance")
                 continue
-            if filter_status and task_instance['state'] in filter_status:
+            # do not show specific status node
+            if status_filter and task_instance['state'] in status_filter:
                 continue
             is_task_success = task_instance['state'] == 'success'
             tasks_result = {}
@@ -266,7 +272,7 @@ class AirflowProvider(BaseProvider):
         try:
             execution = self.airflow_client.get_dag_result(dag_id, execution_date)
             return self._build_result_from_dag_exec(
-                execution, execution_id, filter_status=self.filter_status) if execution else None, ''
+                execution, execution_id) if execution else None, ''
         except Exception as e:
             logger.error(f'get execution from {execution_id}, error: {traceback.format_exc()}')
             return None, str(e)
