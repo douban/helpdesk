@@ -17,6 +17,21 @@ from .base import BaseProvider
 logger = logging.getLogger(__name__)
 
 
+class FakeTaskInstance:
+    """ Fake task instance for
+    if new dag def update node in the dag, old result will not contain this node
+    """
+    def __init__(self):
+        self.state = 'no_status'
+        self.try_number = 0
+
+    def __getitem__(self, item):
+        return getattr(self, item, None)
+
+
+AIRFLOW_FAKE_TI = FakeTaskInstance()
+
+
 class AirflowProvider(BaseProvider):
     provider_type = 'airflow'
 
@@ -173,9 +188,14 @@ class AirflowProvider(BaseProvider):
         if airflow_graph:
             for node in airflow_graph['nodes']:
                 ti = execution['task_instances'].get(node['id'])
-                state = ti['state']
-                if state in status_filter:
-                    continue
+                if not ti:
+                    # if new dag def update node in the dag, old result will not contain this node
+                    logger.warning(f"task_id {node['id']} can not be found in task_instance")
+                    state = 'no_status'
+                else:
+                    state = ti['state']
+                    if state in status_filter:
+                        continue
                 result['nodeDataArray'].append({
                     'key': node['id'],
                     'text': f'{self._format_exec_status(state)} {node["value"]["label"]}',
@@ -186,8 +206,12 @@ class AirflowProvider(BaseProvider):
             for edge in airflow_graph['edges']:
                 ti_v = execution['task_instances'].get(edge['v'])
                 ti_u = execution['task_instances'].get(edge['u'])
-                if any((ti_u['state'] in status_filter, ti_v['state'] in status_filter)):
-                    continue
+                if not ti_v or not ti_u:
+                    # if new dag def update node in the dag, old result will not contain this node
+                    logger.warning(f"task instance can not be found in task_instance")
+                else:
+                    if any((ti_u['state'] in status_filter, ti_v['state'] in status_filter)):
+                        continue
                 result['linkDataArray'].append({
                     'to': edge['v'],
                     'from': edge['u']
@@ -220,7 +244,8 @@ class AirflowProvider(BaseProvider):
             if not task_instance:
                 # if new dag def update node in the dag, old result will not contain this node
                 logger.warning(f"task_id {task_id} can not be found in task_instance")
-                continue
+                # fake task instance
+                task_instance = AIRFLOW_FAKE_TI
             # do not show specific status node
             if status_filter and task_instance['state'] in status_filter:
                 continue

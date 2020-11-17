@@ -86,8 +86,10 @@
           <a-button @click="onApprove" type="primary">Approve</a-button>
         </a-button-group>
         <a-button v-show="showResultButton" :style="{ marginLeft: '16px' }" @click="toggleResult">{{resultButtonText}}</a-button>
+        <a-button v-show="resultVisible" :style="{ marginLeft: '5px' }" @click="loadTResult">Refresh</a-button>
+        <a-button v-show="resultVisible" :style="{ marginLeft: '5px' }" @click="autoLoadTResult">{{ autoRefreshBtnText }}</a-button>
       </a-row>
-      <h-ticket-result :style="{ marginTop: '16px' }" :is-visible="resultVisible" :ticket-id="ticketInfo.id" :ticketProvider="ticketInfo.provider_type"></h-ticket-result>
+      <h-ticket-result :style="{ marginTop: '16px' }" :is-visible="resultVisible" :ticket-id="ticketInfo.id" ref="ticketResult" :ticketProvider="ticketInfo.provider_type"></h-ticket-result>
     </a-card>
   </h-base>
 </template>
@@ -129,6 +131,10 @@ export default {
         'unknown': {'status': 'process', 'stepKey': 4}
       },
       rejectReason: null,
+      loadingIntervalId: null,
+      autoRefreshBtnText: 'Auto Refresh',
+      autoRefreshBtnUpdateTimer: null,
+      isRefreshing: false,
     }
   },
   computed: {
@@ -265,6 +271,37 @@ export default {
           error.response.data.data.description
         )
       })
+    },
+    loadTResult (callback) {
+      this.$refs.ticketResult.loadResult(callback)
+    },
+    autoLoadTResult () {
+      if (this.autoRefreshBtnText === "Auto Refresh") {
+        const interval = 20000
+        let passedTime = 0
+        this.loadingIntervalId = setInterval(() => {
+          // is refreshing 
+          if (this.isRefreshing) {
+            this.autoRefreshBtnText = 'Refreshing ...'
+            return
+          }
+
+          if (passedTime <= interval) {
+            this.autoRefreshBtnText = "Refresh after " + (interval - passedTime) / 1000 + " s ..."
+            passedTime += 1000
+          } else {
+            this.isRefreshing = true
+            this.loadTResult((isRefreshGoing) => {
+              this.isRefreshing = isRefreshGoing
+            } )
+            passedTime = 0
+          }
+        }, 1000)
+      } else {
+        clearInterval(this.loadingIntervalId)
+        this.autoRefreshBtnText = "Auto Refresh"
+      }
+       
     }
   },
   mounted () {

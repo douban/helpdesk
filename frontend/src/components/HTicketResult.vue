@@ -33,7 +33,7 @@ export default {
       dataLoaded: false,
       currentComponent: 'ResultHostTable',
       dagComponent: 'Hdag',
-      spinning: true,
+      spinning: false,
       isDagAvaliable: false,
       diagramData: { 
         nodeDataArray: [],
@@ -44,15 +44,23 @@ export default {
     }
   },
   methods: {
-    loadResult () {
+    loadResult (callback) {
+      if (this.spinning) {
+        console.warn("Data is loading already, please wait a moment and retry!")
+        return
+      }
       this.spinning = true
       this.dataLoaded = false
       HRequest.get('/api/ticket/' + this.ticketId + '/result').then(
         (response) => {
           this.handleResult(response.data.data)
+          if (callback) {
+            callback(this.spinning)
+          }
         }
       ).catch((error) => {
         this.$message.error('Get result error: ' + error.response.data.data.description, 10)
+        this.spinning = false
       })
       // this.handleResult({'sa': {'failed': true, 'succeeded': false, 'description': 'farly long description'}})
     },
