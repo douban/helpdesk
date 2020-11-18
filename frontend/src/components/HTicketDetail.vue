@@ -283,7 +283,7 @@ export default {
         )
       })
     },
-    loadTResult (callback) {
+    loadTResult (e, callback) {
       this.loadTickets()
       this.$refs.ticketResult.loadResult(callback)
     },
@@ -305,7 +305,7 @@ export default {
         this.autoRefreshOn = true
         this.autoRefreshBtnText = "Auto Refresh On"
         const interval = 10000
-        const maxAutoRefreshTry = 1  // 1 hour
+        const maxAutoRefreshTry = 360  // 1 hour
         let tried = 0
         let passedTime = 0
         this.loadingIntervalId = setInterval(() => {
@@ -322,7 +322,7 @@ export default {
           } else {
             this.isRefreshing = true
             tried += 1
-            this.loadTResult((isRefreshGoing, resp, isError) => {
+            this.loadTResult(null, (isRefreshGoing, resp, isError) => {
               this.isRefreshing = isRefreshGoing
               if (isError || this.isTicketEndStatus() || tried > maxAutoRefreshTry) {
                 clearInterval(this.loadingIntervalId)
