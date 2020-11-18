@@ -86,8 +86,18 @@
           <a-button @click="onApprove" type="primary">Approve</a-button>
         </a-button-group>
         <a-button v-show="showResultButton" :style="{ marginLeft: '16px' }" @click="toggleResult">{{resultButtonText}}</a-button>
+        <a-button v-show="resultVisible" :style="{ marginLeft: '5px' }" @click="loadTResult">Refresh</a-button>
+        
+        <a-switch v-show="resultVisible" :style="{ marginLeft: '5px' }" 
+          :checked-children="autoRefreshBtnText" 
+          :un-checked-children="autoRefreshBtnText"
+          :loading="isRefreshing"
+          :checked="autoRefreshOn"
+          :disabled="autoRefreshDisabled"
+          @click="toggleAutoRefresh"
+        />
       </a-row>
-      <h-ticket-result :style="{ marginTop: '16px' }" :is-visible="resultVisible" :ticket-id="ticketInfo.id" :ticketProvider="ticketInfo.provider_type"></h-ticket-result>
+      <h-ticket-result :style="{ marginTop: '16px' }" :is-visible="resultVisible" :ticket-id="ticketInfo.id" ref="ticketResult" :ticketProvider="ticketInfo.provider_type"></h-ticket-result>
     </a-card>
   </h-base>
 </template>
@@ -128,7 +138,14 @@ export default {
         'failed': {'status': 'error', 'stepKey': 4},
         'unknown': {'status': 'process', 'stepKey': 4}
       },
+      ticketEndStatus: ['rejected', 'submit_error', 'succeed', 'success', 'failed', 'unknown'],
       rejectReason: null,
+      loadingIntervalId: null,
+      autoRefreshOn: false,
+      autoRefreshDisabled: false,
+      autoRefreshBtnText: 'Auto Refresh OFF',
+      autoRefreshBtnUpdateTimer: null,
+      isRefreshing: false,
     }
   },
   computed: {
@@ -265,6 +282,77 @@ export default {
           error.response.data.data.description
         )
       })
+    },
+    loadTResult (e, callback) {
+      this.loadTickets()
+      this.$refs.ticketResult.loadResult(callback)
+    },
+    isTicketEndStatus() {
+      const ticketStatus = this.ticketInfo.status
+      return (ticketStatus 
+          && this.statusToStepStatus[ticketStatus] 
+          && this.ticketEndStatus.includes(ticketStatus))
+    },
+    notifyFinishedTicket() {
+      this.$notification.open({
+        message: 'This ticket is in final status',
+        description: 'Ticket has been marked as final status, refresh is invailed.',
+        duration: 0
+      })
+    },
+    toggleAutoRefresh (checked) {
+      if (checked && !this.autoRefreshOn) {
+        this.autoRefreshOn = true
+        this.autoRefreshBtnText = "Auto Refresh On"
+        const interval = 10000
+        const maxAutoRefreshTry = 360  // 1 hour
+        let tried = 0
+        let passedTime = 0
+        this.loadingIntervalId = setInterval(() => {
+          // prevent muiltiple refresh 
+          if (this.isRefreshing) {
+            this.autoRefreshBtnText = 'Refreshing ...'
+            return
+          }
+
+          // update clockdown in switch
+          if (passedTime <= interval) {
+            this.autoRefreshBtnText = "Refresh after " + (interval - passedTime) / 1000 + " s ..."
+            passedTime += 1000
+          } else {
+            this.isRefreshing = true
+            tried += 1
+            this.loadTResult(null, (isRefreshGoing, resp, isError) => {
+              this.isRefreshing = isRefreshGoing
+              if (isError || this.isTicketEndStatus() || tried > maxAutoRefreshTry) {
+                clearInterval(this.loadingIntervalId)
+                const finished = this.isTicketEndStatus()
+                const isMaxRefreshExceeded = tried > maxAutoRefreshTry
+                this.autoRefreshBtnText = finished ? "Finished" : (isMaxRefreshExceeded ? "Max Refresh Try Exceeded" : "Error")
+                
+                if (finished) {
+                  this.notifyFinishedTicket()
+                } else {
+                  this.$notification.open({
+                    message: isMaxRefreshExceeded ? 'Auto Refresh tried exceeded ' + maxAutoRefreshTry + ' times' : 'Ticket result load error',
+                    description: isMaxRefreshExceeded ? '' : resp.description,
+                    duration: 0
+                  })
+                }
+                this.autoRefreshOn = false
+                this.autoRefreshDisabled = isMaxRefreshExceeded ? false : true
+                this.isRefreshing = false
+              }
+            } )
+            passedTime = 0
+          }
+        }, 1000)
+      } else {
+        clearInterval(this.loadingIntervalId)
+        this.autoRefreshBtnText = "Auto Refresh OFF"
+        this.autoRefreshOn = false
+      }
+       
     }
   },
   mounted () {
