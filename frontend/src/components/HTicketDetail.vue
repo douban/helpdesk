@@ -136,9 +136,10 @@ export default {
         'succeed': {'status': 'finish', 'stepKey': 5},
         'success': {'status': 'finish', 'stepKey': 5},
         'failed': {'status': 'error', 'stepKey': 4},
-        'unknown': {'status': 'process', 'stepKey': 4}
+        'unknown': {'status': 'process', 'stepKey': 4},
+        'succeeded': {'status': 'finish', 'stepKey': 5}
       },
-      ticketEndStatus: ['rejected', 'submit_error', 'succeed', 'success', 'failed', 'unknown'],
+      ticketEndStatus: ['rejected', 'submit_error', 'succeed', 'success', 'succeeded', 'failed', 'unknown'],
       rejectReason: null,
       loadingIntervalId: null,
       autoRefreshOn: false,
