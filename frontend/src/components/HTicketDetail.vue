@@ -137,7 +137,7 @@ export default {
         'success': {'status': 'finish', 'stepKey': 5},
         'failed': {'status': 'error', 'stepKey': 4},
         'unknown': {'status': 'process', 'stepKey': 4},
-        'succeeded': {'status': 'finish', 'stepKey': 4}
+        'succeeded': {'status': 'finish', 'stepKey': 5}
       },
       ticketEndStatus: ['rejected', 'submit_error', 'succeed', 'success', 'succeeded', 'failed', 'unknown'],
       rejectReason: null,
