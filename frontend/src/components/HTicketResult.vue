@@ -55,12 +55,15 @@ export default {
         (response) => {
           this.handleResult(response.data.data)
           if (callback) {
-            callback(this.spinning)
+            callback(this.spinning, response.data.data, false)
           }
         }
       ).catch((error) => {
         this.$message.error('Get result error: ' + error.response.data.data.description, 10)
         this.spinning = false
+        if (callback) {
+            callback(this.spinning, error.response.data.data, true)
+        }
       })
       // this.handleResult({'sa': {'failed': true, 'succeeded': false, 'description': 'farly long description'}})
     },
