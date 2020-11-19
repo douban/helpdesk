@@ -297,7 +297,7 @@ export default {
     notifyFinishedTicket() {
       this.$notification.open({
         message: 'This ticket is in final status',
-        description: 'Ticket has been marked as final status, refresh is invailed.',
+        description: 'Ticket has been marked as final status, refresh is invalid.',
         duration: 0
       })
     },
