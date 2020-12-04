@@ -26,9 +26,10 @@ logger = logging.getLogger(__name__)
 
 def timeLocalize(value):
     tz = timezone(TIME_ZONE)
+    utc = timezone('Etc/UTC')
     dt = value
-    local_dt = tz.localize(dt)
-    return local_dt.strftime(TIME_FORMAT)
+    dt_with_timezone = utc.localize(dt)
+    return dt_with_timezone.astimezone(tz).strftime(TIME_FORMAT)
 
 _templates = Jinja2Templates(directory='templates/notification')
 _templates.env.filters['timeLocalize'] = timeLocalize
