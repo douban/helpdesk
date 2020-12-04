@@ -49,7 +49,6 @@ class Notification:
 
         message = _templates.get_template(f'{self.method}/{self.phase.value}.j2').render(dict(ticket=self.ticket))
         logger.debug('render_notification: message: %s', message)
-        print(message)
         tree = ET.fromstring(message.strip())
         title = ''.join(piece.text for piece in tree.findall('title'))
         content = ''.join(piece.text for piece in tree.findall('content'))
