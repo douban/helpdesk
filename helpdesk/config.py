@@ -9,6 +9,9 @@ APP_BASE = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 TRUSTED_HOSTS = '127.0.0.1'
 
+TIME_ZONE = 'Asia/Shanghai'
+TIME_FORMAT = '%Y-%m-%d %H:%M:%S %z %a'
+
 ALLOW_ORIGINS = []  # use ['*'] to allow any origin.
 ALLOW_ORIGINS_REG = None
 
