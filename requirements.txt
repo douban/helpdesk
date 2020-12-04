@@ -31,7 +31,6 @@ prettytable==1.0.1
 prompt-toolkit==1.0.15
 psycopg2==2.8.6
 pycparser==2.20
-PyMySQL==0.10.1
 pyOpenSSL==19.1.0
 python-dateutil==2.8.0
 python-dotenv==0.15.0
