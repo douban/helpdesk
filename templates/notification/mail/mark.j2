@@ -10,10 +10,10 @@ Parameters:
     - {{ k }}: {{ v -}}
     {% endif -%}
 {% endfor %}
-Request time: {{ ticket.created_at }}
+Request time: {{ ticket.created_at | timeLocalize }}
 Reason: {{ ticket.reason }}
 Status: {{ ticket.status }}
-{{ 'Approval' if ticket.is_approved else 'Reject' }} time: {{ ticket.confirmed_at }}
+{{ 'Approval' if ticket.is_approved else 'Reject' }} time: {{ ticket.confirmed_at | timeLocalize }}
 {% if ticket.is_approved %}
 Execution result:
 {{ ticket.execution_result_url }}

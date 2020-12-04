@@ -5,6 +5,7 @@ import smtplib
 from email.message import EmailMessage
 
 import requests
+from pytz import timezone
 from starlette.templating import Jinja2Templates
 
 from helpdesk.config import (
@@ -17,11 +18,20 @@ from helpdesk.config import (
     SMTP_SSL,
     SMTP_CREDENTIALS,
     get_user_email,
+    TIME_ZONE,
+    TIME_FORMAT
 )
 
 logger = logging.getLogger(__name__)
 
+def timeLocalize(value):
+    tz = timezone(TIME_ZONE)
+    dt = value
+    local_dt = tz.localize(dt)
+    return local_dt.strftime(TIME_FORMAT)
+
 _templates = Jinja2Templates(directory='templates/notification')
+_templates.env.filters['timeLocalize'] = timeLocalize
 
 
 class Notification:
@@ -39,6 +49,7 @@ class Notification:
 
         message = _templates.get_template(f'{self.method}/{self.phase.value}.j2').render(dict(ticket=self.ticket))
         logger.debug('render_notification: message: %s', message)
+        print(message)
         tree = ET.fromstring(message.strip())
         title = ''.join(piece.text for piece in tree.findall('title'))
         content = ''.join(piece.text for piece in tree.findall('content'))
