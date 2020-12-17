@@ -6,6 +6,8 @@ from helpdesk.libs.decorators import cached_property_with_ttl
 from helpdesk.models.action import Action
 from helpdesk.models.provider import get_provider
 from helpdesk.config import ACTION_TREE_CONFIG
+from helpdesk.models.provider.errors import ResolvePackageError, InitProviderError
+from helpdesk.libs.sentry import report
 
 logger = logging.getLogger(__name__)
 
@@ -42,17 +44,6 @@ class ActionTree:
         else:
             # leaf
             provider_object = config[-1]
-
-            # # dedup
-            # system_provider = get_provider(PROVIDER)
-            # default_pack = system_provider.get_default_pack() + '.'
-            # if not provider_object.endswith('.'):
-            #     if provider_object.startswith(default_pack):
-            #         provider_object = provider_object[len(default_pack):]
-            # if provider_object in objs:
-            #     return
-            # objs[provider_object] = True
-
             if provider_object.endswith('.'):
                 # pack
                 pack_sub_tree_config = self.resolve_pack(*config)
@@ -69,8 +60,18 @@ class ActionTree:
         pack = provider_object[:-1]
 
         sub_actions = []
-        system_provider = get_provider(provider_type)
-        actions = system_provider.get_actions(pack=pack)
+        actions = []
+
+        try:
+            system_provider = get_provider(provider_type)
+            actions = system_provider.get_actions(pack=pack)
+        except (InitProviderError, ResolvePackageError) as e:
+            logger.error(f"Resolve pack {name} error:\n{e.tb}")
+            # insert a empty children to failed action tree
+            # so we can tolerant provider partially failed
+            # and frontend can check children empty to notify user
+            report()
+
         for a in actions:
             obj = '.'.join([a.get('pack'), a.get('name')])
             desc = a.get('description')

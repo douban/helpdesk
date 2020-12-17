@@ -2,6 +2,7 @@
 
 import logging
 import requests
+import traceback
 
 from helpdesk.config import (
     ST2_DEFAULT_PACK,
@@ -14,6 +15,7 @@ from helpdesk.config import (
 )
 from helpdesk.libs.sentry import report
 from helpdesk.libs.st2 import get_client, get_api_client, Execution, Token
+from helpdesk.models.provider.errors import ResolvePackageError
 
 from .base import BaseProvider
 
@@ -61,7 +63,10 @@ class ST2Provider(BaseProvider):
         to dict
         '''
         if pack:
-            actions = self.st2.actions.query(pack=pack)
+            try:
+                actions = self.st2.actions.query(pack=pack)
+            except Exception as e:
+                raise ResolvePackageError(e, traceback.format_exc(), f"Resolve pack {pack} error")
         else:
             actions = self.st2.actions.get_all()
         return [action.to_dict() for action in actions]

@@ -11,6 +11,7 @@ from helpdesk.config import (
     AIRFLOW_DEFAULT_DAG_TAG,
 )
 from helpdesk.libs.airflow import AirflowClient
+from helpdesk.models.provider.errors import ResolvePackageError
 
 from .base import BaseProvider
 
@@ -88,8 +89,13 @@ class AirflowProvider(BaseProvider):
         <Action name=view_organizations,pack=trello,enabled=True,runner_type=python-script>
         to dict
         """
-        dags = self.airflow_client.get_dags(tags=(self.default_tag if not pack else pack,))
-        return self._build_action_from_dag(dags, pack=pack)
+        try:
+            dags = self.airflow_client.get_dags(tags=(self.default_tag if not pack else pack,))
+            return self._build_action_from_dag(dags, pack=pack)
+        except Exception as e:
+            if pack:
+                raise ResolvePackageError(e, traceback.format_exc(), f"Resolve pack {pack} error")
+            raise e
 
     def get_action(self, ref):
         """
