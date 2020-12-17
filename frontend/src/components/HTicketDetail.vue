@@ -86,6 +86,7 @@
           <a-button @click="onApprove" type="primary">Approve</a-button>
         </a-button-group>
         <a-button v-show="showResultButton" :style="{ marginLeft: '16px' }" @click="toggleResult">{{resultButtonText}}</a-button>
+        <a-button v-show="showResultButton" :style="{ marginLeft: '5px' }" @click="rerunTicket">Rerun</a-button>
         <a-button v-show="resultVisible" :style="{ marginLeft: '5px' }" @click="loadTResult">Refresh</a-button>
         
         <a-switch v-show="resultVisible" :style="{ marginLeft: '5px' }" 
@@ -287,6 +288,9 @@ export default {
     loadTResult (e, callback) {
       this.loadTickets()
       this.$refs.ticketResult.loadResult(callback)
+    },
+    rerunTicket () {
+      this.$router.push({ name: 'FormView', params: { name: this.ticketInfo.provider_object }, query: { backfill: this.ticketInfo.id }})
     },
     isTicketEndStatus() {
       const ticketStatus = this.ticketInfo.status

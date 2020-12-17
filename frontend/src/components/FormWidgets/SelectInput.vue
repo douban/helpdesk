@@ -34,6 +34,13 @@ export default {
       selectedValues: []
     }
   },
+  watch: {
+    value: function () {
+      if (this.selectedValues.join(',') != this.value) {
+        this.selectedValues = this.value.split(',')
+      }
+    }
+  },
   methods: {
     handleInput (event) {
       let realValue = event.join()

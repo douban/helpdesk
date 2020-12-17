@@ -52,6 +52,8 @@
         </span>
 
         <a :href="record.url">detail</a>
+        <a-divider type="vertical" />
+        <router-link :to="{ name: 'FormView', params: { name: record.provider_object }, query: { backfill: record.id }}">rerun</router-link>
         </span>
     </a-table>
     <a-modal

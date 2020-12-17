@@ -20,6 +20,7 @@
         @submit="handleSubmit">
           <dynamic-form
             :schema="schema"
+            :value="formData"
             @input="handleInput">
           </dynamic-form>
           <a-form-item
@@ -131,6 +132,38 @@ export default {
       HRequest.get('/api/action/' + this.actionName).then(
         (response) => this.formDefinitionHandler(response)
       )
+
+      const queryParams = this.$route.query
+      if (queryParams.backfill && Number(queryParams.backfill) > 0) {
+        const notificationTitle = "Rerun ticket " + queryParams.backfill + " error"
+        HRequest.get('/api/ticket/' + queryParams.backfill).then(
+          (response) => {
+            const ticketsLen = response.data.data.tickets.length
+            if (ticketsLen == 1) {
+              const isTheSameAction = this.$route.path.endsWith(response.data.data.tickets[0].provider_object)
+              const ticket = response.data.data.tickets[0]
+              if (isTheSameAction) {
+                this.handleInput(ticket.params)
+              } else {
+                this.errorAsNotification(
+                  notificationTitle,
+                  "The backfill ticket should be the same action ticket, but ticket " + queryParams.backfill + "'s action was: " + ticket.provider_object
+                )
+              }
+            } else {
+              this.errorAsNotification(
+                "Rerun ticket " + queryParams.backfill + " error",
+                "Expect exactly 1 ticket info but got " + ticketsLen + "item(s)"
+              )
+            }
+          }
+        ).catch((error) => {
+          this.errorAsNotification(
+            notificationTitle,
+            error.response.data.data.description
+          )
+        })
+      }
     },
     resetForm () {
       this.form.resetFields()
@@ -223,7 +256,16 @@ export default {
     },
     gotoTicketDetail () {
       this.$router.push({ name: 'HTicketDetail', params: { id: this.submitResponse.ticket.id }})
-    }
+    },
+    errorAsNotification (title, rawMsg) {
+      const msg = rawMsg.length > 300 ? rawMsg.slice(0, 300) + '... ' : rawMsg
+      this.$notification.title = rawMsg
+      this.$notification.open({
+        message: title,
+        description: msg,
+        duration: 0
+      })
+    },
   },
 
   mounted () {
