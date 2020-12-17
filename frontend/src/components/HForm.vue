@@ -135,11 +135,21 @@ export default {
 
       const queryParams = this.$route.query
       if (queryParams.backfill && Number(queryParams.backfill) > 0) {
+        const notificationTitle = "Rerun ticket " + queryParams.backfill + " error"
         HRequest.get('/api/ticket/' + queryParams.backfill).then(
           (response) => {
             const ticketsLen = response.data.data.tickets.length
             if (ticketsLen == 1) {
-              this.handleInput(response.data.data.tickets[0].params)
+              const isTheSameAction = this.$route.path.endsWith(response.data.data.tickets[0].provider_object)
+              const ticket = response.data.data.tickets[0]
+              if (isTheSameAction) {
+                this.handleInput(ticket.params)
+              } else {
+                this.errorAsNotification(
+                  notificationTitle,
+                  "The backfill ticket should be the same action ticket, but ticket " + queryParams.backfill + "'s action was: " + ticket.provider_object
+                )
+              }
             } else {
               this.errorAsNotification(
                 "Rerun ticket " + queryParams.backfill + " error",
@@ -149,7 +159,7 @@ export default {
           }
         ).catch((error) => {
           this.errorAsNotification(
-            "Rerun ticket " + queryParams.backfill + " error",
+            notificationTitle,
             error.response.data.data.description
           )
         })
