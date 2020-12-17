@@ -44,7 +44,8 @@ export default {
       openKeys: [],
       SelectedKeys: [],
       rootSubmenuKeys: [],
-      searchText: ''
+      searchText: '',
+      actionLoadNotifyKey: 'actionTreeLoadErrorNofify'
     }
   },
   computed: {
@@ -69,6 +70,7 @@ export default {
           for (let i = 0; i < definition.length; i++) {
             this.rootSubmenuKeys.push(definition[i].key)
           }
+          this.checkActionTreeError(definition)
           this.$store.dispatch('updateActionTree', definition)
           let actionName = this.$route.params.name
           // looking for selected item with actionName
@@ -83,6 +85,25 @@ export default {
           }
         }
       )
+    },
+    checkActionTreeError(definition) {
+      // check action 
+      var loadErrorAction = []  
+      for (let i = 0; i < definition.length; i++) {
+        if (definition[i].children && definition[i].children.length == 0) {
+          loadErrorAction.push(definition[i].name)
+        }
+      }
+
+      if (loadErrorAction.length > 0) {
+        this.$notification.open({
+          message: "Action tree load error",
+          description: loadErrorAction.join(",") + " pack load error",
+          duration: 0,
+          icon: <a-icon type="warning" style="color: red" />,
+          key: this.actionLoadNotifyKey
+        })
+      }
     },
     onOpenChange (openKeys) {
       const latestOpenKey = openKeys.find(key => this.openKeys.indexOf(key) === -1)
