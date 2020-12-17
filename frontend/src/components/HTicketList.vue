@@ -52,6 +52,8 @@
         </span>
 
         <a :href="record.url">detail</a>
+        <a-divider type="vertical" />
+        <a :href="'/' + record.provider_object + '?backfill=' + record.id"> rerun</a>
         </span>
     </a-table>
     <a-modal

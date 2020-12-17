@@ -22,13 +22,16 @@ export default {
   components: {AFormItem, NumberInput, TextInput, SelectInput, CheckBoxInput},
   props: ['schema', 'value'],
   data () {
-    return {
-      formData: this.value || {}
+    return {}
+  },
+  computed: {
+    formData: function () {
+      return this.value || {}
     }
   },
   methods: {
-    updateForm (fieldName, value) {
-      this.$set(this.formData, fieldName, value)
+    updateForm (fieldName, v) {
+      this.$set(this.formData, fieldName, v)
       this.$emit('input', this.formData)
     }
   }
