@@ -129,14 +129,16 @@ export default {
     loadFormDefinition () {
       this.spinning = true
       this.resetForm()
-      HRequest.get('/api/action/' + this.actionName).then(
-        (response) => this.formDefinitionHandler(response)
+      HRequest.get('/api/action/' + this.actionName).then((response) => {
+          this.formDefinitionHandler(response)
+          this.handelBackfill(this.$route.query.backfill)
+        }
       )
-
-      const queryParams = this.$route.query
-      if (queryParams.backfill && Number(queryParams.backfill) > 0) {
-        const notificationTitle = "Rerun ticket " + queryParams.backfill + " error"
-        HRequest.get('/api/ticket/' + queryParams.backfill).then(
+    },
+    handelBackfill (backfillNum) {
+      if (backfillNum && Number(backfillNum) > 0) {
+        const notificationTitle = "Rerun ticket " + backfillNum + " error"
+        HRequest.get('/api/ticket/' + backfillNum).then(
           (response) => {
             const ticketsLen = response.data.data.tickets.length
             if (ticketsLen == 1) {
@@ -147,12 +149,12 @@ export default {
               } else {
                 this.errorAsNotification(
                   notificationTitle,
-                  "The backfill ticket should be the same action ticket, but ticket " + queryParams.backfill + "'s action was: " + ticket.provider_object
+                  "The backfill ticket should be the same action ticket, but ticket " + backfillNum + "'s action was: " + ticket.provider_object
                 )
               }
             } else {
               this.errorAsNotification(
-                "Rerun ticket " + queryParams.backfill + " error",
+                "Rerun ticket " + backfillNum + " error",
                 "Expect exactly 1 ticket info but got " + ticketsLen + "item(s)"
               )
             }
