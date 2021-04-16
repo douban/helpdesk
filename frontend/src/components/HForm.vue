@@ -50,7 +50,7 @@
 
 <script>
 import DynamicForm from './DynamicForm'
-import {HRequest} from '../utils/HRequests'
+import {HRequest} from '@/utils/HRequests'
 import AFormItem from 'ant-design-vue/es/form/FormItem'
 import HDrawer from '@/components/HDrawer'
 import Ajv from 'ajv'
@@ -141,7 +141,7 @@ export default {
         HRequest.get('/api/ticket/' + backfillNum).then(
           (response) => {
             const ticketsLen = response.data.data.tickets.length
-            if (ticketsLen == 1) {
+            if (ticketsLen === 1) {
               const isTheSameAction = this.$route.path.endsWith(response.data.data.tickets[0].provider_object)
               const ticket = response.data.data.tickets[0]
               if (isTheSameAction) {
@@ -169,11 +169,21 @@ export default {
     },
     resetForm () {
       this.form.resetFields()
-      this.formData = {}
+      let formData = {}
+      this.schema.forEach((e) => {
+        if (e.default === undefined || e.default === null) {
+          //
+        } else {
+          formData[e.name] = e.default
+        }
+      })
+      this.$nextTick(() => {
+        this.handleInput(formData)
+      })
     },
     formDefinitionHandler (response) {
-      this.resetForm()
       this.actionDefinition = response.data.data
+      this.resetForm()
       this.spinning = false
     },
     handleSubmit (e) {
