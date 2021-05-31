@@ -32,7 +32,7 @@
       </span>
       <span slot="action" slot-scope="text, record">
         <span v-if="record.is_approved === undefined">
-          <a-modal v-model="rejectModalVisible" title="Reject reason" ok-text="confirm" cancel-text="cancel" @ok="onConfirm(record, 'rejected', record.reject_url)" @cancel="hideRejectModal">
+          <a-modal v-model="rejectModalVisible" title="Reject reason" ok-text="confirm" cancel-text="cancel" @ok="onConfirm(record, 'rejected', reasonModalRecord.reject_url)" @cancel="hideRejectModal">
               <a-input placeholder="Reject reason" v-model="rejectReason" maxLength:=128 />
           </a-modal>
           <a-popconfirm
@@ -44,7 +44,7 @@
           <a-divider type="vertical" />
           <a-popconfirm
             title="Sure to reject?"
-            @confirm="() => showRejectModal()"
+            @confirm="() => showRejectModal(record)"
           >
             <a :href="record.reject_url">reject</a>
           </a-popconfirm>
@@ -104,6 +104,7 @@ export default {
       params_in_modal: [],
       rejectModalVisible: false,
       rejectReason: null,
+      reasonModalRecord: null,
     }
   },
   computed: {
@@ -197,8 +198,10 @@ export default {
     }
   },
   methods: {
-    showRejectModal () {
+    showRejectModal (record) {
       this.rejectModalVisible = true
+      this.reasonModalRecord = record
+      this.rejectReason = null
     },
     hideRejectModal () {
       this.rejectModalVisible = false
@@ -272,12 +275,12 @@ export default {
       var postData = {}
       if (status === "rejected") {
         postData = {"reason": this.rejectReason}
-      } 
+      }
       this.$message.loading('Action in progress..', 2.5)
       HRequest.post(actionUrl, postData).then(() => {
         this.$message.info('Ticket ' + status)
         this.hideRejectModal()
-      }).catch((error) => {  
+      }).catch((error) => {
         const rawMsg = error.response.data.data.description
         const msg = rawMsg.length > 300 ? rawMsg.slice(0, 300) + '... ' : rawMsg
         this.$notification.title = rawMsg
