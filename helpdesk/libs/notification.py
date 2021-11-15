@@ -21,8 +21,10 @@ from helpdesk.config import (
     TIME_ZONE,
     TIME_FORMAT
 )
+from helpdesk.libs.sentry import report
 
 logger = logging.getLogger(__name__)
+
 
 def timeLocalize(value):
     tz = timezone(TIME_ZONE)
@@ -31,8 +33,9 @@ def timeLocalize(value):
     dt_with_timezone = utc.localize(dt)
     return dt_with_timezone.astimezone(tz).strftime(TIME_FORMAT)
 
-_templates = Jinja2Templates(directory='templates/notification')
-_templates.env.filters['timeLocalize'] = timeLocalize
+
+ _templates = Jinja2Templates(directory='templates/notification')
+ _templates.env.filters['timeLocalize'] = timeLocalize
 
 
 class Notification:
@@ -151,5 +154,8 @@ class LarkWebhookNotification(Notification):
                 }
             }
         }
-        r = requests.post(WEBHOOK_URL, json=msg)
-        r.raise_for_status()
+        r = requests.post(WEBHOOK_URL, json={"msg_type": "interactive", "card": msg})
+        if r.status_code == 200 and r.json()["StatusCode"] == 0:
+            return
+        else:
+            report()
