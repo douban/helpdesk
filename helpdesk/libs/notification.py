@@ -125,3 +125,31 @@ class WebhookNotification(Notification):
         }
         r = requests.post(WEBHOOK_URL, json=msg, timeout=3)
         r.raise_for_status()
+
+
+class LarkWebhookNotification(Notification):
+    method = 'webhook'
+
+    async def send(self):
+        if not WEBHOOK_URL:
+            return
+        title, content = self.render()
+        msg = {
+            "config": {
+                "wide_screen_mode": True
+            },
+            "elements": [
+                {
+                    "tag": "markdown",
+                    "content": content
+                }
+            ],
+            "header": {
+                "title": {
+                    "content": "helpdesk",
+                    "tag": "plain_text"
+                }
+            }
+        }
+        r = requests.post(WEBHOOK_URL, json=msg)
+        r.raise_for_status()
