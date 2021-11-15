@@ -34,8 +34,8 @@ def timeLocalize(value):
     return dt_with_timezone.astimezone(tz).strftime(TIME_FORMAT)
 
 
- _templates = Jinja2Templates(directory='templates/notification')
- _templates.env.filters['timeLocalize'] = timeLocalize
+_templates = Jinja2Templates(directory='templates/notification')
+_templates.env.filters['timeLocalize'] = timeLocalize
 
 
 class Notification:
