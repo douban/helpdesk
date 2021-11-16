@@ -18,19 +18,24 @@ from helpdesk.config import SENTRY_DSN
 
 logger = logging.getLogger(__name__)
 
-_client = Client(
-    dsn=SENTRY_DSN,
-    default_integrations=False,
-    integrations=[
-        ExcepthookIntegration(),
-        DedupeIntegration(),
-        StdlibIntegration(),
-        ModulesIntegration(),
-        ArgvIntegration(),
-    ],
-    max_breadcrumbs=5,
-    attach_stacktrace=True,
-)
+try:
+    _client = Client(
+        dsn=SENTRY_DSN,
+        default_integrations=False,
+        integrations=[
+            ExcepthookIntegration(),
+            DedupeIntegration(),
+            StdlibIntegration(),
+            ModulesIntegration(),
+            ArgvIntegration(),
+        ],
+        max_breadcrumbs=5,
+        attach_stacktrace=True,
+    )
+except Exception as e:
+    _client = None
+    logger.warning(f"Sentry integration failed: {e}")
+
 _hub = Hub(_client)
 
 

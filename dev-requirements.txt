@@ -10,7 +10,8 @@ databases[postgresql,mysql,sqlite]
 SQLAlchemy-Utils>=0.33.11
 mysqlclient>=1.4.2
 cached-property>=1.5.1
-st2client
+st2client==3.3.0
 rule
 authlib
 httpx
+fastapi

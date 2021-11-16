@@ -9,6 +9,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@dsb-norge/vue-keycloak-js": "^2.1.1-beta",
     "ajv": "^6.12.4",
     "ant-design-vue": "^1.2.4",
     "axios": "^0.21.1",

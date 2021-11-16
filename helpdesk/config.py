@@ -76,6 +76,11 @@ SPINCYCLE_RM_URL = "https://spincycle.example.com"
 SPINCYCLE_USERNAME = ''
 SPINCYCLE_PASSWORD = ''
 
+OPENID_PROVIDER = {
+    'server_metadata_url': "https://fakekeycloak/auth/realms/apps/.well-known/openid-configuration",
+    'client_id': 'fakeid'
+}
+
 
 try:
     from local_config import *  # NOQA

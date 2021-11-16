@@ -4,11 +4,12 @@ from starlette.responses import HTMLResponse
 from starlette.authentication import requires, has_required_scope  # NOQA
 from authlib.integrations.starlette_client import OAuth
 
+from fastapi import Request
+
 from helpdesk.config import OPENID_PRIVIDERS, oauth_username_func
 from helpdesk.models.user import User
-from helpdesk.libs.rest import jsonize
 
-from . import bp
+from . import router
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +22,18 @@ for provider, info in OPENID_PRIVIDERS.items():
     oauth_clients[provider] = client
 
 
-@bp.route('/oauth/{provider}')
+@router.get("/oidc-configs.json")
+async def oidc_configs():
+    return {
+        "url": "https://keycloak.svc.douban/auth",
+        "realm": "apps",
+        "clientId": "helpdesk"
+    }
+
+
+@router.get('/oauth/{provider}')
 async def oauth(request):
+
     provider = request.path_params.get('provider', '')
     client = oauth_clients[provider]
 
@@ -38,7 +49,7 @@ async def oauth(request):
     return await client.authorize_redirect(request, redirect_uri)
 
 
-@bp.route('/callback/{provider}')
+@router.get('/callback/{provider}')
 async def callback(request):
     provider = request.path_params.get('provider', '')
     client = oauth_clients[provider]
@@ -57,12 +68,10 @@ async def callback(request):
 
     request.session['user'] = user.to_json()
 
-    return HTMLResponse("<script>window.close()</script>", 200)
+    return HTMLResponse("OK, you can close this window now", 200)
 
 
-@bp.route('/logout', methods=['POST'])
-@requires(['authenticated'])
-@jsonize
-async def logout(request):
+@router.post('/logout')
+async def logout(request: Request):
     request.session.pop('user', None)
     return {'success': True, 'msg': ''}

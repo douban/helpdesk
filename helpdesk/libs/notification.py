@@ -137,7 +137,6 @@ class LarkWebhookNotification(Notification):
     async def send(self):
         if not LARK_WEBHOOK_URL:
             return
-        title, content = self.render()
         msg = {
             "config": {
                 "wide_screen_mode": True
@@ -145,12 +144,12 @@ class LarkWebhookNotification(Notification):
             "elements": [
                 {
                     "tag": "markdown",
-                    "content": content
+                    "content": "atest"
                 }
             ],
             "header": {
                 "title": {
-                    "content": "helpdesk",
+                    "content": f"[helpdesk]{self.ticket.submitter}  requested to {self.ticket.title}",
                     "tag": "plain_text"
                 }
             }

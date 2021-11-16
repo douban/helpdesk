@@ -1,10 +1,8 @@
 # coding: utf-8
 
-from starlette.applications import Starlette
+from fastapi import APIRouter
 
-
-bp = Starlette()
-bp.debug = True
+router = APIRouter()
 
 
 from . import index, auth # NOQA

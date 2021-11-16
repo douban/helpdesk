@@ -2,15 +2,13 @@
 
 import logging
 
-from helpdesk.libs.rest import jsonize
 from helpdesk.config import OPENID_PRIVIDERS
 
-from . import bp
+from . import router
 
 logger = logging.getLogger(__name__)
 
 
-@bp.route('/auth/providers')
-@jsonize
-async def index(request):
+@router.get('/auth/providers')
+async def index():
     return list(OPENID_PRIVIDERS.keys())
