@@ -132,7 +132,7 @@ class WebhookNotification(Notification):
 
 
 class LarkWebhookNotification(Notification):
-    method = 'lark-webhook'
+    method = 'webhook'
 
     async def send(self):
         if not LARK_WEBHOOK_URL:
