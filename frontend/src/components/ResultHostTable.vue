@@ -151,14 +151,14 @@ export default {
           el.status = 'Failed'
         }
         listData.push(el)
-        
+
         if (el.highlight_queries) {
           for (let r of el.highlight_queries) {
             var re = new RegExp(r)
             if (this.highlightQueries.indexOf(re) === -1) {
               this.highlightQueries.push(re)
             }
-          } 
+          }
         }
       }
       this.successCount = successCount
@@ -201,15 +201,15 @@ export default {
             HRequest.get('/api/ticket/' + this.ticketId + '/result' + queryString).then(
               (response) => {
                 // if pretty log then show model
-                if (response.data.data.pretty_log) {
-                  let prettyLog = response.data.data.pretty_log[0]
+                if (response.data.pretty_log) {
+                  let prettyLog = response.data.pretty_log[0]
                   if (prettyLog) {
                     this.handleFormattedLog(prettyLog)
                     record.prettyLog = prettyLog
                   }
                 }
 
-                let output = response.data.data[0] ? response.data.data[0] : response.data.data.message[0]
+                let output = response.data[0] ? response.data[0] : response.data.message[0]
                 if (io === 'stdout') {
                   record.stdout = output
                 } else {

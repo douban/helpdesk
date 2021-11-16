@@ -232,13 +232,13 @@ export default {
       )
     },
     handleTicketList (response) {
-      this.pagination.total = response.data.data.total
-      this.pagination.current = response.data.data.page
-      this.pagination.pageSize = response.data.data.page_size
+      this.pagination.total = response.data.total
+      this.pagination.current = response.data.page
+      this.pagination.pageSize = response.data.page_size
       // pagination.pageSize  and pagination.current are decorated by ```.sync``
       // the following line is vital. dont know why, just do it.
       this.pagination = {...this.pagination}
-      this.tableData = response.data.data.tickets
+      this.tableData = response.data.tickets
       this.loading = false
     },
     handleTableChange (pagination, filters, sorter) {
@@ -281,7 +281,7 @@ export default {
         this.$message.info('Ticket ' + status)
         this.hideRejectModal()
       }).catch((error) => {
-        const rawMsg = error.response.data.data.description
+        const rawMsg = error.response.data.description
         const msg = rawMsg.length > 300 ? rawMsg.slice(0, 300) + '... ' : rawMsg
         this.$notification.title = rawMsg
         this.$notification.open({

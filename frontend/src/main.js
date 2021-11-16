@@ -6,8 +6,8 @@ import router from './router'
 import store from './store'
 import './assets/vue-select.min.css'
 import './plugins/ant-design-vue.js'
-
-Vue.config.productionTip = false
+import {tokenInterceptor, HRequest} from "./utils/HRequests";
+import VueKeyCloak from '@dsb-norge/vue-keycloak-js'
 
 /* eslint-disable no-new */
 let vm = new Vue({
@@ -15,5 +15,17 @@ let vm = new Vue({
   store,
   render: h => h(App)
 })
-vm.$mount('#app')
+
+Vue.config.productionTip = false
+Vue.use(VueKeyCloak, {
+  init: {
+    onLoad: 'login-required'
+  },
+  config: "/auth/oidc-configs.json",
+  onReady: () => {
+    tokenInterceptor(HRequest)
+    vm.$mount('#app')
+  }
+})
+
 export {vm}

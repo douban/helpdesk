@@ -136,9 +136,9 @@ export default {
       this.paramRules = [{}]
       HRequest.get(this.url_param_rule).then(
         (response) => {
-          if (response.status === 200 && response.data.data) {
-            if (response.data.data !== []) {
-              this.paramRules = response.data.data
+          if (response.status === 200 && response.data) {
+            if (response.data !== []) {
+              this.paramRules = response.data
             }
           }
           this.paramRules.push({})

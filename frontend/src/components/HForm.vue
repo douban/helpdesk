@@ -140,10 +140,10 @@ export default {
         const notificationTitle = "Rerun ticket " + backfillNum + " error"
         HRequest.get('/api/ticket/' + backfillNum).then(
           (response) => {
-            const ticketsLen = response.data.data.tickets.length
+            const ticketsLen = response.data.tickets.length
             if (ticketsLen === 1) {
-              const isTheSameAction = this.$route.path.endsWith(response.data.data.tickets[0].provider_object)
-              const ticket = response.data.data.tickets[0]
+              const isTheSameAction = this.$route.path.endsWith(response.data.tickets[0].provider_object)
+              const ticket = response.data.tickets[0]
               if (isTheSameAction) {
                 this.handleInput(ticket.params)
               } else {
@@ -162,7 +162,7 @@ export default {
         ).catch((error) => {
           this.errorAsNotification(
             notificationTitle,
-            error.response.data.data.description
+            error.response.data.description
           )
         })
       }
@@ -182,7 +182,7 @@ export default {
       })
     },
     formDefinitionHandler (response) {
-      this.actionDefinition = response.data.data
+      this.actionDefinition = response.data
       this.resetForm()
       this.spinning = false
     },
@@ -194,7 +194,7 @@ export default {
           // validate success, let us proceed.
           let submitURL = '/api/action/' + this.actionName
           const qs = require('qs')
-          
+
           // airflow json schema verify
           if (this.actionDefinition.provider_type==='airflow' && this.actionDefinition.params_json_schema) {
             let validate = this.formAjv.compile(this.actionDefinition.params_json_schema)
@@ -203,7 +203,7 @@ export default {
               if (!data) {
                 continue
               }
-              
+
               // prevent json schema not covered this field
               var fieldType
               if (this.actionDefinition.params_json_schema.properties[name]) {
@@ -211,7 +211,7 @@ export default {
               } else {
                 fieldType = null
               }
-              
+
               // trans hacked form data to json schema data and validate them
               if (fieldType === 'array') {
                 jsonFormData[name] = data.split(',')
@@ -224,7 +224,7 @@ export default {
               }
             }
             let isvalidate = validate(jsonFormData)
-           
+
             if (!isvalidate) {
               this.submitResult = this.formAjv.errorsText(validate.errors)
               this.resultType = 'error'
@@ -253,9 +253,9 @@ export default {
     },
     handleSubmitResult (response) {
       this.resultVisible = true
-      this.submitResponse = response.data.data
-      this.submitResult = response.data.data.msg
-      this.resultType = response.data.data.msg_level
+      this.submitResponse = response.data
+      this.submitResult = response.data.msg
+      this.resultType = response.data.msg_level
     },
     clearSubmitResult () {
       this.resultVisible = false

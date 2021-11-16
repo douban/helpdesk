@@ -63,8 +63,8 @@ export default {
     loadActionTree () {
       HRequest.get('/api/action_tree').then(
         (response) => {
-          let definition = [{name: response.data.data[0].name}]
-          definition.push.apply(definition, response.data.data[0].children)
+          let definition = [{name: response.data[0].name}]
+          definition.push.apply(definition, response.data[0].children)
           // add key for each element in tree
           definition = addKeyForEachElement(definition)
           for (let i = 0; i < definition.length; i++) {
@@ -87,8 +87,8 @@ export default {
       )
     },
     checkActionTreeError(definition) {
-      // check action 
-      var loadErrorAction = []  
+      // check action
+      var loadErrorAction = []
       for (let i = 0; i < definition.length; i++) {
         if (definition[i].children && definition[i].children.length == 0) {
           loadErrorAction.push(definition[i].name)

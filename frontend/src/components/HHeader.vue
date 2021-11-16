@@ -59,11 +59,7 @@ export default {
       if (!this.$store.getters.isAuthenticated) {
         HRequest.get('/api/user/me').then(
           (response) => {
-            if (response.data.data.is_authenticated === true) {
-              this.$store.dispatch('updateUserProfile', response.data.data)
-            } else {
-              this.$router.push({name: 'Login'})
-            }
+            this.$store.dispatch('updateUserProfile', response.data)
           }
         ).catch()
       }

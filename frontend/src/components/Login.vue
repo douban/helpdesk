@@ -37,7 +37,7 @@ export default {
     getProviders () {
       HRequest.get('/api/auth/providers').then(
         (response) => {
-          this.openidProviders = response.data.data
+          this.openidProviders = response.data
         }
       ).catch()
     },

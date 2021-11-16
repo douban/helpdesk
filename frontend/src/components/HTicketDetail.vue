@@ -88,9 +88,9 @@
         <a-button v-show="showResultButton" :style="{ marginLeft: '16px' }" @click="toggleResult">{{resultButtonText}}</a-button>
         <a-button v-show="showResultButton" :style="{ marginLeft: '5px' }" @click="rerunTicket">Rerun</a-button>
         <a-button v-show="resultVisible" :style="{ marginLeft: '5px' }" @click="loadTResult">Refresh</a-button>
-        
-        <a-switch v-show="resultVisible" :style="{ marginLeft: '5px' }" 
-          :checked-children="autoRefreshBtnText" 
+
+        <a-switch v-show="resultVisible" :style="{ marginLeft: '5px' }"
+          :checked-children="autoRefreshBtnText"
           :un-checked-children="autoRefreshBtnText"
           :loading="isRefreshing"
           :checked="autoRefreshOn"
@@ -201,7 +201,7 @@ export default {
     loadTickets () {
       HRequest.get('/api/ticket/' + this.$route.params.id).then(
         (response) => {
-          this.table_data = response.data.data.tickets
+          this.table_data = response.data.tickets
           switch (this.$route.params.action) {
             case 'approve':
               this.onApprove()
@@ -219,7 +219,7 @@ export default {
     updateTicket () {
       HRequest.get('/api/ticket/' + this.$route.params.id).then(
         (response) => {
-          this.table_data = response.data.data.tickets
+          this.table_data = response.data.tickets
         })
     },
     UTCtoLcocalTime,
@@ -264,7 +264,7 @@ export default {
       }).catch((error) => {
         this.errorAsNotification(
           "Ticket reject failed",
-          error.response.data.data.description
+          error.response.data.description
         )
       })
     },
@@ -281,7 +281,7 @@ export default {
       }).catch((error) => {
         this.errorAsNotification(
           "Ticket approve failed",
-          error.response.data.data.description
+          error.response.data.description
         )
       })
     },
@@ -294,8 +294,8 @@ export default {
     },
     isTicketEndStatus() {
       const ticketStatus = this.ticketInfo.status
-      return (ticketStatus 
-          && this.statusToStepStatus[ticketStatus] 
+      return (ticketStatus
+          && this.statusToStepStatus[ticketStatus]
           && this.ticketEndStatus.includes(ticketStatus))
     },
     notifyFinishedTicket() {
@@ -314,7 +314,7 @@ export default {
         let tried = 0
         let passedTime = 0
         this.loadingIntervalId = setInterval(() => {
-          // prevent muiltiple refresh 
+          // prevent muiltiple refresh
           if (this.isRefreshing) {
             this.autoRefreshBtnText = 'Refreshing ...'
             return
@@ -334,7 +334,7 @@ export default {
                 const finished = this.isTicketEndStatus()
                 const isMaxRefreshExceeded = tried > maxAutoRefreshTry
                 this.autoRefreshBtnText = finished ? "Finished" : (isMaxRefreshExceeded ? "Max Refresh Try Exceeded" : "Error")
-                
+
                 if (finished) {
                   this.notifyFinishedTicket()
                 } else {
@@ -357,7 +357,7 @@ export default {
         this.autoRefreshBtnText = "Auto Refresh OFF"
         this.autoRefreshOn = false
       }
-       
+
     }
   },
   mounted () {
