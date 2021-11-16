@@ -11,6 +11,7 @@ from starlette.templating import Jinja2Templates
 from helpdesk.config import (
     NOTIFICATION_TITLE_PREFIX,
     WEBHOOK_URL,
+    LARK_WEBHOOK_URL,
     ADMIN_EMAIL_ADDRS,
     FROM_EMAIL_ADDR,
     SMTP_SERVER,
@@ -134,7 +135,7 @@ class LarkWebhookNotification(Notification):
     method = 'webhook'
 
     async def send(self):
-        if not WEBHOOK_URL:
+        if not LARK_WEBHOOK_URL:
             return
         title, content = self.render()
         msg = {
@@ -154,7 +155,7 @@ class LarkWebhookNotification(Notification):
                 }
             }
         }
-        r = requests.post(WEBHOOK_URL, json={"msg_type": "interactive", "card": msg})
+        r = requests.post(LARK_WEBHOOK_URL, json={"msg_type": "interactive", "card": msg})
         if r.status_code == 200 and r.json()["StatusCode"] == 0:
             return
         else:
