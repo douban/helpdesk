@@ -30,6 +30,8 @@ class User(BaseModel):
 
     @validator('email')
     def validate_email(cls, v):
+        if not v:
+            return v
         for suffix in AUTHORIZED_EMAIL_DOMAINS:
             if v.endswith(suffix):
                 return v
@@ -37,6 +39,6 @@ class User(BaseModel):
 
     @validator('avatar')
     def set_defaults_avatar(cls, v, values):
-        if not v:
+        if not v and values.get('email'）:
             return avatar_url_func(values['email'])
         return v
