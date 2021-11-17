@@ -157,8 +157,7 @@ async def ticket_op(ticket_id: int, op: str,
 
 
 @router.post('/helpdesk_ticket/mark/{ticket_id}')
-async def mark_ticket(ticket_id: int, mark: MarkTickets, token: Optional[str] = None,
-                      _: User = Depends(get_current_user)):
+async def mark_ticket(ticket_id: int, mark: MarkTickets, token: Optional[str] = None):
     """call helpdesk_ticket op to handle this handler only make authenticate disappear for provider"""
     # verify jwt for callback url
     try:
@@ -193,11 +192,11 @@ def extra_dict(d):
 
 
 @router.get('/ticket')
-async def list_ticket(page: Optional[str] = None, page_size: Optional[str] = None,
+async def list_ticket(page: Optional[str] = None, pagesize: Optional[str] = None,
                       order_by: Optional[str] = None, desc: bool = False, current_user: User = Depends(get_current_user)):
     filter_ = extract_filter_from_query_params(query_params={
         'page': page,
-        'page_size': page_size,
+        'page_size': pagesize,
         'order_by': order_by,
         'desc': desc
     }, model=Ticket)
@@ -205,16 +204,16 @@ async def list_ticket(page: Optional[str] = None, page_size: Optional[str] = Non
         page = max(1, int(page))
     else:
         page = 1
-    if page_size and page_size.isdigit():
-        page_size = max(1, int(page_size))
-        page_size = min(page_size, config.TICKETS_PER_PAGE)
+    if pagesize and pagesize.isdigit():
+        pagesize = max(1, int(pagesize))
+        pagesize = min(pagesize, config.TICKETS_PER_PAGE)
     else:
-        page_size = config.TICKETS_PER_PAGE
+        pagesize = config.TICKETS_PER_PAGE
     if desc and str(desc).lower() == 'false':
         desc = False
     else:
         desc = True
-    kw = dict(filter_=filter_, order_by=order_by, desc=desc, limit=page_size, offset=(page - 1) * page_size)
+    kw = dict(filter_=filter_, order_by=order_by, desc=desc, limit=pagesize, offset=(page - 1) * pagesize)
 
     if current_user.is_admin:
         tickets = await Ticket.get_all(**kw)
@@ -227,7 +226,7 @@ async def list_ticket(page: Optional[str] = None, page_size: Optional[str] = Non
     return dict(
         tickets=[extra_dict(t.to_dict(show=True)) for t in tickets],
         page=page,
-        page_size=page_size,
+        page_size=pagesize,
         total=total,
     )
 

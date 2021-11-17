@@ -40,7 +40,12 @@ export default new Vuex.Store({
   },
   getters: {
     isAdmin: (state) => {
-      return state.userProfile.roles.includes("admin")
+      try {
+        return state.userProfile.roles.includes("admin")
+      } catch {
+        return false
+      }
+
     },
     isAuthenticated: (state) => {
       if (state.userProfile) {
