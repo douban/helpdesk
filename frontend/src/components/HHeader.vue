@@ -15,7 +15,7 @@
       </a-menu-item>
       <a-sub-menu :style="{ float: 'right' }">
         <span slot="title">
-            <span :style="{margin: '10px'}">{{ user.display_name }}</span>
+            <span :style="{margin: '10px'}">{{ user.name }}</span>
             <a-avatar shape="square" icon="user"
                       :src="user.avatar"
             />
@@ -65,10 +65,7 @@ export default {
       }
     },
     logout () {
-      HRequest.post('/auth/logout').then(() => {
-        document.cookie = 'session' + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;'
-        this.$router.push({name: 'Login'})
-      })
+      this.$keycloak.logoutFn()
     }
   }
 }

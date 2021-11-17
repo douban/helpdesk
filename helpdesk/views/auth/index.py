@@ -6,7 +6,7 @@ from authlib.integrations.starlette_client import OAuth
 
 from fastapi import Request
 
-from helpdesk.config import OPENID_PRIVIDERS, oauth_username_func
+from helpdesk.config import OPENID_PRIVIDERS, oauth_username_func, KEYCLOAK_SETTINGS
 from helpdesk.models.user import User
 
 from . import router
@@ -23,12 +23,8 @@ for provider, info in OPENID_PRIVIDERS.items():
 
 
 @router.get("/oidc-configs.json")
-async def oidc_configs():
-    return {
-        "url": "https://keycloak.svc.douban/auth",
-        "realm": "apps",
-        "clientId": "helpdesk"
-    }
+async def oidc_configs() -> dict:
+    return KEYCLOAK_SETTINGS
 
 
 @router.get('/oauth/{provider}')
