@@ -245,6 +245,7 @@ async def get_ticket(ticket_id: int, current_user: User = Depends(get_current_us
         total=total,
     )
 
+
 @router.get('/ticket/{ticket_id}/result')
 async def ticket_result(ticket_id: int, exec_output_id: Optional[int] = None, _: User = Depends(get_current_user)):
     ticket = await Ticket.get(ticket_id)
