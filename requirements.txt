@@ -56,4 +56,4 @@ watchgod==0.6
 wcwidth==0.2.5
 websockets==8.1
 zipp==1.0.0
-fastapi
+fastapi==0.70.*
