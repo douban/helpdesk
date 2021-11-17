@@ -39,6 +39,6 @@ class User(BaseModel):
 
     @validator('avatar')
     def set_defaults_avatar(cls, v, values):
-        if not v and values.get('email'）:
+        if not v and values.get('email'):
             return avatar_url_func(values['email'])
         return v
