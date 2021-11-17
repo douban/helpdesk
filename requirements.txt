@@ -54,6 +54,6 @@ uvicorn==0.12.2
 uvloop==0.14.0
 watchgod==0.6
 wcwidth==0.2.5
-websockets==8.1
+websockets==9.1
 zipp==1.0.0
 fastapi==0.70.*
