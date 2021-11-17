@@ -121,6 +121,31 @@ async def action(target_object: str, request: Request, current_user: User = Depe
         return dict(ticket=ticket, msg=msg, msg_level=msg_level, debug=config.DEBUG)
 
 
+@router.post('/ticket/mark/{ticket_id}')
+async def mark_ticket(ticket_id: int, mark: MarkTickets, token: Optional[str] = None):
+    """call helpdesk_ticket op to handle this handler only make authenticate disappear for provider"""
+    # verify jwt for callback url
+    try:
+        payload = jwt.decode(token, config.SESSION_SECRET_KEY)
+        logger.debug(f'received callback req: {payload}')
+        assert payload['ticket_id'] == ticket_id
+    except (jwterrors.BadSignatureError, AssertionError):
+        raise HTTPException(status_code=403, detail='Invalid token')
+    helpdesk_ticket = await Ticket.get(ticket_id)
+    if not helpdesk_ticket:
+        raise HTTPException(status_code=404, detail='Ticket not found')
+
+    try:
+        helpdesk_ticket.annotate(execution_status=mark.execution_status, final_exec_status=True)
+        logger.debug(f"helpdesk_ticket annotation: {helpdesk_ticket.annotation}")
+        # add notification to helpdesk_ticket mark action
+        await helpdesk_ticket.notify(TicketPhase.MARK)
+        await helpdesk_ticket.save()
+    except (RuntimeError, AssertionError) as e:
+        raise HTTPException(status_code=400, detail=f'decode mark body error: {str(e)}')
+    return dict(msg='Success')
+
+
 @router.post('/ticket/{ticket_id}/{op}')
 async def ticket_op(ticket_id: int, op: str,
                     operate_data: OperateTicket, current_user: User = Depends(get_current_user)):
@@ -153,31 +178,6 @@ async def ticket_op(ticket_id: int, op: str,
         msg = 'ticket executed but failed to save state' if op == 'approve' else 'Failed to save ticket state'
         raise HTTPException(status_code=500, detail=msg)
     await ticket.notify(TicketPhase.APPROVAL)
-    return dict(msg='Success')
-
-
-@router.post('/ticket/mark/{ticket_id}')
-async def mark_ticket(ticket_id: int, mark: MarkTickets, token: Optional[str] = None):
-    """call helpdesk_ticket op to handle this handler only make authenticate disappear for provider"""
-    # verify jwt for callback url
-    try:
-        payload = jwt.decode(token, config.SESSION_SECRET_KEY)
-        logger.debug(f'received callback req: {payload}')
-        assert payload['ticket_id'] == ticket_id
-    except (jwterrors.BadSignatureError, AssertionError):
-        raise HTTPException(status_code=403, detail='Invalid token')
-    helpdesk_ticket = await Ticket.get(ticket_id)
-    if not helpdesk_ticket:
-        raise HTTPException(status_code=404, detail='Ticket not found')
-
-    try:
-        helpdesk_ticket.annotate(execution_status=mark.execution_status, final_exec_status=True)
-        logger.debug(f"helpdesk_ticket annotation: {helpdesk_ticket.annotation}")
-        # add notification to helpdesk_ticket mark action
-        await helpdesk_ticket.notify(TicketPhase.MARK)
-        await helpdesk_ticket.save()
-    except (RuntimeError, AssertionError) as e:
-        raise HTTPException(status_code=400, detail=f'decode mark body error: {str(e)}')
     return dict(msg='Success')
 
 
