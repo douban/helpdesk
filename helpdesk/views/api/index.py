@@ -181,6 +181,7 @@ async def mark_ticket(ticket_id: int, mark: MarkTickets, token: Optional[str] = 
         raise HTTPException(status_code=400, detail=f'decode mark body error: {str(e)}')
     return dict(msg='Success')
 
+
 def extra_dict(d):
     id_ = d['id']
     return dict(
@@ -189,6 +190,7 @@ def extra_dict(d):
         reject_url=f"/api/ticket/{id_}/reject",
         api_url=f"/api/ticket/{id_}",
         **d)
+
 
 @router.get('/ticket')
 async def list_ticket(page: Optional[str] = None, page_size: Optional[str] = None,
@@ -247,7 +249,7 @@ async def get_ticket(ticket_id: int, current_user: User = Depends(get_current_us
 
 
 @router.get('/ticket/{ticket_id}/result')
-async def ticket_result(ticket_id: int, exec_output_id: Optional[int] = None, _: User = Depends(get_current_user)):
+async def ticket_result(ticket_id: int, exec_output_id: Optional[str] = None, _: User = Depends(get_current_user)):
     ticket = await Ticket.get(ticket_id)
     if not ticket:
         raise HTTPException(status_code=404, detail="ticket not found")

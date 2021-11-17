@@ -155,53 +155,25 @@ export default {
     },
     onSubmit (e, index) {
       e.preventDefault()
-
-      let this_ = this
-      let message = this.$message
-
-      let xhr = new XMLHttpRequest()
-      xhr.responseType = 'json'
-      xhr.onreadystatechange = function () {
-        if (this.readyState === 4) {
-          var jsonResponse = xhr.response
-          if (this.status === 200) {
-            var paramRuleAdded = jsonResponse.data
-            message.success(JSON.stringify(paramRuleAdded))
-            this_.paramRules.splice(index, 1, paramRuleAdded)
-            // new empty obj if last
-            if (this_.paramRules.length - 1 === index) {
-              this_.paramRules.push({})
-            }
-          } else {
-            message.warning(JSON.stringify(jsonResponse))
-          }
+      HRequest.post(this.url_param_rule_add, this.paramRules[index]).then((response) => {
+        if (response.data && response.data.id) {
+          this.paramRules[index].id = response.data.id
         }
-      }
-      xhr.open('POST', this.url_param_rule_add, true)
-      xhr.setRequestHeader('Content-type', 'application/json')
-      xhr.send(JSON.stringify(this.paramRules[index]))
+        this.$message.success(JSON.stringify(response.data))
+        if (this.paramRules.length - 1 === index) {
+          this.paramRules.push({})
+        }
+      }).catch((e) => {
+        this.$message.warning(JSON.stringify(e))
+      })
     },
     onDelete (e, index) {
-      let this_ = this
-      let message = this.$message
-
-      let xhr = new XMLHttpRequest()
-      xhr.responseType = 'json'
-      xhr.onreadystatechange = function () {
-        if (this.readyState === 4) {
-          var jsonResponse = xhr.response
-          if (this.status === 200) {
-            var paramRuleAdded = jsonResponse.data
-            message.success(JSON.stringify(paramRuleAdded))
-            this_.paramRules.splice(index, 1)
-          } else {
-            message.warning(JSON.stringify(jsonResponse))
-          }
-        }
-      }
-      xhr.open('POST', this.url_param_rule_del, true)
-      xhr.setRequestHeader('Content-type', 'application/json')
-      xhr.send(JSON.stringify(this.paramRules[index]))
+      e.preventDefault()
+      HRequest.post(this.url_param_rule_del, this.paramRules[index]).then((response) => {
+        this.$message.success(JSON.stringify(response.data))
+        // delete in js
+        this.paramRules.splice(index, 1)
+      })
     }
 
   }
