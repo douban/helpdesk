@@ -12,7 +12,7 @@
     "@dsb-norge/vue-keycloak-js": "^2.1.1-beta",
     "ajv": "^6.12.4",
     "ant-design-vue": "^1.2.4",
-    "axios": "^0.21.1",
+    "axios": "^0.21.2",
     "core-js": "^3.6.5",
     "gojs": "^2.1.23",
     "qs": "^6.9.4",
