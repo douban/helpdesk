@@ -156,7 +156,7 @@ async def ticket_op(ticket_id: int, op: str,
     return dict(msg='Success')
 
 
-@router.post('/helpdesk_ticket/mark/{ticket_id}')
+@router.post('/ticket/mark/{ticket_id}')
 async def mark_ticket(ticket_id: int, mark: MarkTickets, token: Optional[str] = None):
     """call helpdesk_ticket op to handle this handler only make authenticate disappear for provider"""
     # verify jwt for callback url
