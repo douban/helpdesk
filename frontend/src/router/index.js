@@ -2,7 +2,6 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import HActionView from '@/components/HActionView'
 import HTicketList from '@/components/HTicketList'
-import Login from '@/components/Login'
 import HHome from '../components/HHome'
 import HTicketDetail from '../components/HTicketDetail'
 
@@ -30,11 +29,6 @@ let router = new Router({
       path: '/ticket/:id/:action',
       name: 'HTicketQuickPass',
       component: HTicketDetail
-    },
-    {
-      path: '/login',
-      name: 'Login',
-      component: Login
     },
     {
       // Make sure this route is the last, as it can match all route

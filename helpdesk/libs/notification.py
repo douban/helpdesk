@@ -3,6 +3,7 @@
 import logging
 import smtplib
 from email.message import EmailMessage
+from typing import Tuple
 
 import requests
 from pytz import timezone
@@ -23,6 +24,7 @@ from helpdesk.config import (
     TIME_FORMAT
 )
 from helpdesk.libs.sentry import report
+from helpdesk.models.db.ticket import TicketPhase
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +136,34 @@ class WebhookNotification(Notification):
 class LarkWebhookNotification(Notification):
     method = 'webhook'
 
+    def render(self) -> Tuple[str, str]:
+        content = f"[Ticket url]({self.ticket.web_url})\n"
+        content += "Parameters:\n"
+        for name, value in self.ticket.params.items():
+            content += f"  {name}: {value}\n"
+        content += f"Request time: {self.ticket.created_at}\n"
+        if self.phase == TicketPhase.REQUEST:
+            title = f"[helpdesk]{self.ticket.submitter}  requested to {self.ticket.title}"
+            content += f"Reason: {self.ticket.reason}\n"
+            if self.ticket.is_auto_approved:
+                content += f"auto approved\n"
+        elif self.phase == TicketPhase.APPROVAL:
+            if self.ticket.is_approved:
+                title = f"[helpdesk approved]{self.ticket.submitter}'s request to {self.ticket.title} was approved " \
+                        f"by {self.ticket.confirmed_by}"
+                content += f"Reason: {self.ticket.reason}\n"
+            else:
+                title = f"[helpdesk approved]{self.ticket.submitter}'s request to {self.ticket.title} was rejected " \
+                        f"by {self.ticket.confirmed_by}"
+                if self.ticket.reason != self.ticket.annotation.get("reason"):
+                    content += f"Reject reason: {self.ticket.reason}"
+        elif self.phase == TicketPhase.MARK:
+            title = f"[helpdesk approved]{self.ticket.submitter}'s request to {self.ticket.title} was marked " \
+                    f"{self.ticket.status}"
+        else:
+            title = f"[helpdesk]{self.ticket.submitter}  {self.phase.value}ed {self.ticket.title}"
+        return title, content
+
     async def send(self):
         if not LARK_WEBHOOK_URL:
             return
@@ -146,15 +176,39 @@ class LarkWebhookNotification(Notification):
                 {
                     "tag": "markdown",
                     "content": content
-                }
+                },
             ],
             "header": {
                 "title": {
-                    "content": "helpdesk",
+                    "content": title,
                     "tag": "plain_text"
                 }
             }
         }
+        if self.phase == TicketPhase.REQUEST and not self.ticket.is_auto_approved:
+            msg["elements"].append({
+                "tag": "action",
+                "actions": [
+                    {
+                        "tag": "button",
+                        "text": {
+                            "tag": "plain_text",
+                            "content": "Approve"
+                        },
+                        "type": "primary",
+                        "url": f"{self.ticket.web_url}/approve"
+                    },
+                    {
+                        "tag": "button",
+                        "text": {
+                            "tag": "plain_text",
+                            "content": "Reject"
+                        },
+                        "type": "danger",
+                        "url": f"{self.ticket.web_url}/reject"
+                    },
+                ]
+            })
         r = requests.post(LARK_WEBHOOK_URL, json={"msg_type": "interactive", "card": msg})
         if r.status_code == 200 and r.json()["StatusCode"] == 0:
             return

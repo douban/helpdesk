@@ -4,10 +4,10 @@
       <component :is="dagComponent" v-bind:model-data="diagramData"
       v-on:changed-selection="changedSelection" ref="diag" v-bind:selectedNode='selectedNode'></component>
     </a-card>
-    
+
     <a-card v-show="isVisible">
-      <component :is="currentComponent" v-bind:resultData="ticketResult" 
-      v-bind:dataLoaded="dataLoaded" :ticketId="ticketId" 
+      <component :is="currentComponent" v-bind:resultData="ticketResult"
+      v-bind:dataLoaded="dataLoaded" :ticketId="ticketId"
       :ticketProvider="ticketProvider" v-bind:resultActiveKey='activeKey'
       v-on:tabClicked='tabClickHandler'></component>
       <a-back-top />
@@ -35,7 +35,7 @@ export default {
       dagComponent: 'Hdag',
       spinning: false,
       isDagAvaliable: false,
-      diagramData: { 
+      diagramData: {
         nodeDataArray: [],
         linkDataArray: []
       },
@@ -53,16 +53,16 @@ export default {
       this.dataLoaded = false
       HRequest.get('/api/ticket/' + this.ticketId + '/result').then(
         (response) => {
-          this.handleResult(response.data.data)
+          this.handleResult(response.data)
           if (callback) {
-            callback(this.spinning, response.data.data, false)
+            callback(this.spinning, response.data, false)
           }
         }
       ).catch((error) => {
-        this.$message.error('Get result error: ' + error.response.data.data.description, 10)
+        this.$message.error('Get result error: ' + error.response.data.description, 10)
         this.spinning = false
         if (callback) {
-          callback(this.spinning, error.response.data.data, true)
+          callback(this.spinning, error.response.data, true)
         }
       })
       // this.handleResult({'sa': {'failed': true, 'succeeded': false, 'description': 'farly long description'}})
