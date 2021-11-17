@@ -23,3 +23,14 @@ jobs:
       working-directory: frontend
     - run: npm run test:unit
       working-directory: frontend
+  backend:
+    name: Build backend
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/setup-node@v1
+      with: 
+        python-version: '3.9'
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - run: pip install -r requirements.txt

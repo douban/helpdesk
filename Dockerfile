@@ -6,7 +6,6 @@ COPY requirements.txt /app
 RUN set -ex && apt-get update && \
     apt-get install -y --no-install-recommends default-libmysqlclient-dev git gcc && \
     rm -rf /var/lib/apt/lists/* && \
-    pip install "setuptools<50.0.0" && \
     pip install --no-cache-dir -r requirements.txt
 
 # COPY codes
