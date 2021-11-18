@@ -274,7 +274,7 @@ export default {
         this.$router.push({ name: 'HTicketDetail', params: { id: this.$route.params.id }})
         return
       }
-      HRequest.post(this.ticketInfo.approve_url).then(() => {
+      HRequest.post(this.ticketInfo.approve_url, {}).then(() => {
         this.updateTicket()
         this.$message.info('Ticket approved.')
         this.$router.push({ name: 'HTicketDetail', params: { id: this.$route.params.id }})
