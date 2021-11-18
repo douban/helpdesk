@@ -168,7 +168,7 @@ async def ticket_op(ticket_id: int, op: str,
             raise HTTPException(status_code=400, detail=msg)
     elif op == 'reject':
         if operate_data.reason:
-            ticket.reason = operate_data
+            ticket.reason = operate_data.reason
         ret, msg = ticket.reject(by_user=current_user.name)
         if not ret:
             raise HTTPException(status_code=400, detail=msg)
