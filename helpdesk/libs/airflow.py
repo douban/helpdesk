@@ -113,64 +113,54 @@ class AirflowClient:
         raise exception(msg.format(resp_json))
 
     @auto_refresh_token
+    def _build_headers(self):
+        return {
+            'Authorization': 'Bearer {}'.format(self._access_token),
+            'Cache-Control': 'no-cache',
+            'Content-Type': 'application/json'
+        }
+
     def get_dags(self, tags=('helpdesk',)):
         resp = requests.get(
             url=f'{self.server_url}/admin/helpdesk/api/tags/schemas',
             params={'tag': tags},
-            headers={
-                'Authorization': 'Bearer {}'.format(self._access_token),
-                'Cache-Control': 'no-cache',
-                'Content-Type': 'application/json'
-            })
+            headers=self._build_headers())
         return self._check_resp(resp, AirflowClientDagsException, msg='Get dags schema by tag error: {}')
 
-    @auto_refresh_token
     def get_schema_by_dag_id(self, dag_id):
         resp = requests.get(
             url=f'{self.server_url}/admin/helpdesk/api/dags/{dag_id}/schema',
-            headers={
-                'Authorization': 'Bearer {}'.format(self._access_token),
-                'Cache-Control': 'no-cache',
-                'Content-Type': 'application/json'
-            })
+            headers=self._build_headers())
         return self._check_resp(
             resp, AirflowClientDagSchemaException, msg='Get dag schema by dag id [{}] error: {{}}'.format(dag_id))
 
-    @auto_refresh_token
     def trigger_dag(self, dag_id, conf=None, run_id=None, execution_date=None):
         data = {}
         if conf:
             data['conf'] = conf
         if run_id:
             data['run_id'] = run_id
-        else:
-            data['run_id'] = f'helpdesk_{dag_id}_{str(uuid.uuid4())}'
         if execution_date:
             data['execution_date'] = execution_date
 
         resp = requests.post(
-            url=f'{self.server_url}/api/experimental/dags/{dag_id}/dag_runs',
-            headers={
-                'Authorization': 'Bearer {}'.format(self._access_token),
-                'Cache-Control': 'no-cache',
-                'Content-Type': 'application/json'
-            },
+            url=f'{self.server_url}/api/v1/dags/{dag_id}/dagRuns',
+            headers=self._build_headers(),
             data=json.dumps(data) if data else None)
         return self._check_resp(resp, AirflowClientTriggerDagException, msg=f'Trigger dag {dag_id} error: {{}}')
 
-    @auto_refresh_token
-    def get_dag_result(self, dag_id, execution_date, state=None):
-        api_headers = {
-            'Authorization': 'Bearer {}'.format(self._access_token),
-            'Cache-Control': 'no-cache',
-            'Content-Type': 'application/json'
-        }
+    def get_dag_result(self, dag_id, execution_date, state=None, dag_run_id=None):
+        api_headers = self._build_headers()
         # get dags info
         dag_info = self.get_schema_by_dag_id(dag_id)
 
-        # get dag run result
-        dag_run = requests.get(
-            url=f'{self.server_url}/api/experimental/dags/{dag_id}/dag_runs/{execution_date}', headers=api_headers)
+        if dag_run_id is None:
+            # get dag run result by experimental api
+            dag_run = requests.get(
+                url=f'{self.server_url}/api/experimental/dags/{dag_id}/dag_runs/{execution_date}', headers=api_headers)
+        else:
+            dag_run = requests.get(
+                url=f'{self.server_url}/api/v1/dags/{dag_id}/dagRuns/{dag_run_id}', headers=api_headers)
         dag_run = self._check_resp(
             dag_run, AirflowClientDagResultException, f'Get dag {dag_id}-{execution_date} result error: {{}}')
 
@@ -187,13 +177,8 @@ class AirflowClient:
             task_instances, AirflowClientException, f'Get dag {dag_id}-{execution_date} result error: {{}}')
         return {'dag_info': dag_info, 'status': dag_run['state'], 'task_instances': task_instances['task_instances']}
 
-    @auto_refresh_token
     def get_task_result(self, dag_id, execution_date, task_id, try_number=None):
-        api_headers = {
-            'Authorization': 'Bearer {}'.format(self._access_token),
-            'Cache-Control': 'no-cache',
-            'Content-Type': 'application/json'
-        }
+        api_headers = self._build_headers()
         all_task_result = {}
         task_result = requests.get(
             url=f'{self.server_url}/admin/helpdesk/api/dags/{dag_id}/dag_runs/{execution_date}/tasks/{task_id}',
@@ -212,12 +197,7 @@ class AirflowClient:
 
     @auto_refresh_token
     def get_dag_graph(self, dag_id):
-        api_headers = {
-            'Authorization': 'Bearer {}'.format(self._access_token),
-            'Cache-Control': 'no-cache',
-            'Content-Type': 'application/json'
-        }
-
+        api_headers = self._build_headers()
         task_result = requests.get(
             url=f'{self.server_url}/admin/helpdesk/api/dags/{dag_id}/graph',
             headers=api_headers
@@ -231,15 +211,9 @@ class AirflowClient:
             return {}
 
     @timed_cache(minutes=15)
-    @auto_refresh_token
     def get_user_roles(self, username):
-        api_headers = {
-            'Authorization': 'Bearer {}'.format(self._access_token),
-            'Cache-Control': 'no-cache',
-            'Content-Type': 'application/json'
-        }
         resp = requests.get(
-            url=f'{self.server_url}/admin/helpdesk/api/user/roles', headers=api_headers, params={'username': username})
+            url=f'{self.server_url}/admin/helpdesk/api/user/roles', headers=self._build_headers(), params={'username': username})
         result = self._check_resp(resp, AirflowClientGetUserRolesException, f"Get user {username}'s roles error: {{}}")
         return result
 

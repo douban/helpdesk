@@ -30,6 +30,13 @@ class FakeTaskInstance:
         return getattr(self, item, None)
 
 
+class AirflowExecId:
+    def __init__(self, dag_id, exec_date, run_id=None):
+        self.dag_id = dag_id
+        self.exec_date = exec_date
+        self.run_id = run_id
+
+
 AIRFLOW_FAKE_TI = FakeTaskInstance()
 
 
@@ -115,18 +122,29 @@ class AirflowProvider(BaseProvider):
             return None
 
     def get_result_url(self, execution_id):
-        dag_id, execution_date = execution_id.split('|')
-        return self.airflow_client.build_graph_url(dag_id, execution_date)
+        exec_id = self._parse_execution_id(execution_id)
+        return self.airflow_client.build_graph_url(exec_id.dag_id, exec_id.exec_date)
 
     def _build_execution_from_dag(self, trigger_resp, dag_id):
         return {
             'dag_id': dag_id,
             'execution_date': trigger_resp['execution_date'],
-            'msg': trigger_resp['message'],
-            'id': f'{dag_id}|{trigger_resp["execution_date"]}',
+            'msg': trigger_resp['state'],
+            'id': f'{dag_id}|{trigger_resp["execution_date"]}|{trigger_resp["dag_run_id"]}',
             'provider': self.provider_type,
             'web_url': self.get_result_url(f'{dag_id}|{trigger_resp["execution_date"]}')
         }
+
+    @staticmethod
+    def _parse_execution_id(execution_id: str) -> AirflowExecId:
+        assert "|" in execution_id, "execution_id in helpdesk airflow provider must contains | separator"
+        if execution_id.count("|") == 2:
+            # compatible airflow v1.x
+            dag_id, execution_date = execution_id.split('|')
+            return AirflowExecId(dag_id, execution_date)
+        else:
+            dag_id, execution_date, run_id = execution_id.split('|', 2)
+            return AirflowExecId(dag_id, execution_date, run_id)
 
     def run_action(self, ref, parameters):
         msg = ''
@@ -229,7 +247,8 @@ class AirflowProvider(BaseProvider):
         return schema['highlight_queries']
 
     def _build_result_from_dag_exec(self, execution, execution_id):
-        dag_id, execution_date = execution_id.split('|')
+        airflow_exec_id = self._parse_execution_id(execution_id)
+        dag_id, execution_date, _ = airflow_exec_id.dag_id, airflow_exec_id.exec_date, airflow_exec_id.run_id
         schema = self.get_action(dag_id)
         highlight_queries = schema['highlight_queries']
         status_filter = schema['status_filter']
@@ -299,9 +318,9 @@ class AirflowProvider(BaseProvider):
         return result
 
     def get_execution(self, execution_id):
-        dag_id, execution_date = execution_id.split('|')
+        exec_id = self._parse_execution_id(execution_id)
         try:
-            execution = self.airflow_client.get_dag_result(dag_id, execution_date)
+            execution = self.airflow_client.get_dag_result(exec_id.dag_id, exec_id.exec_date, exec_id.run_id)
             return self._build_result_from_dag_exec(
                 execution, execution_id) if execution else None, ''
         except Exception as e:
