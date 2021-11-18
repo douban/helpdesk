@@ -138,7 +138,7 @@ class AirflowProvider(BaseProvider):
     @staticmethod
     def _parse_execution_id(execution_id: str) -> AirflowExecId:
         assert "|" in execution_id, "execution_id in helpdesk airflow provider must contains | separator"
-        if execution_id.count("|") == 2:
+        if execution_id.count("|") == 1:
             # compatible airflow v1.x
             dag_id, execution_date = execution_id.split('|')
             return AirflowExecId(dag_id, execution_date)
@@ -152,6 +152,8 @@ class AirflowProvider(BaseProvider):
             trigger_result = self.airflow_client.trigger_dag(ref, conf=parameters)
             return self._build_execution_from_dag(trigger_result, ref) if trigger_result else None, msg
         except Exception as e:
+            import traceback
+            logger.exception(e)
             logger.error(f'run dag {ref} error: {str(e)}')
             return None, str(e)
 
@@ -320,7 +322,7 @@ class AirflowProvider(BaseProvider):
     def get_execution(self, execution_id):
         exec_id = self._parse_execution_id(execution_id)
         try:
-            execution = self.airflow_client.get_dag_result(exec_id.dag_id, exec_id.exec_date, exec_id.run_id)
+            execution = self.airflow_client.get_dag_result(exec_id.dag_id, exec_id.exec_date, dag_run_id=exec_id.run_id)
             return self._build_result_from_dag_exec(
                 execution, execution_id) if execution else None, ''
         except Exception as e:

@@ -6,7 +6,7 @@ uvicorn[standard]
 python-multipart>=0.0.5
 itsdangerous>=1.1.0
 sentry-asgi>=0.1.5
-databases[postgresql,mysql,sqlite]==0.4.0
+databases[mysql,sqlite]==0.4.0
 SQLAlchemy-Utils>=0.33.11
 mysqlclient>=1.4.2
 cached-property>=1.5.1
