@@ -12,6 +12,6 @@ mysqlclient>=1.4.2
 cached-property>=1.5.1
 st2client==3.3.0
 rule==0.1.1
-Authlib==0.15.2
+Authlib==0.*
 httpx==0.*
 fastapi==0.*

@@ -37,6 +37,8 @@ def create_app():
 
     enabled_middlewares = [
         Middleware(ProxyHeadersMiddleware, trusted_hosts=TRUSTED_HOSTS),
+        Middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY, max_age=SESSION_TTL),
+        Middleware(BearerAuthMiddleware),
         Middleware(CORSMiddleware,
                    allow_origins=ALLOW_ORIGINS,
                    allow_origin_regex=ALLOW_ORIGINS_REG,
