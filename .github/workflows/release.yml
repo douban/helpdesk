@@ -22,13 +22,11 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v2
 
-    - run: npm install
+    - run: npm ci --prefer-offline --no-audit
       working-directory: frontend
     - run: npm run lint
       working-directory: frontend
-    - run: npm run test:unit
-      working-directory: frontend
-    - run: npm run build
+    - run: npm run generate
       working-directory: frontend
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2

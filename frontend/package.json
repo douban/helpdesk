@@ -11,9 +11,7 @@
     "lint": "npm run lint:js"
   },
   "dependencies": {
-    "@nuxtjs/auth-next": "^5.0.0-1624817847.21691f1",
     "@nuxtjs/axios": "^5.13.6",
-    "@nuxtjs/proxy": "^2.1.0",
     "ajv": "^8.8.1",
     "ant-design-vue": "^1.7.6",
     "core-js": "^3.15.1",
@@ -27,6 +25,7 @@
     "@babel/eslint-parser": "^7.14.7",
     "@nuxtjs/eslint-config": "^6.0.1",
     "@nuxtjs/eslint-module": "^3.0.2",
+    "@nuxtjs/proxy": "^2.1.0",
     "eslint": "^7.29.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-nuxt": "^2.0.0",
