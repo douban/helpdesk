@@ -131,11 +131,11 @@ export default {
       this.resetForm()
       this.$axios.get('/api/action/' + this.actionName).then((response) => {
           this.formDefinitionHandler(response)
-          this.handelBackfill(this.$route.query.backfill)
+          this.handleBackfill(this.$route.query.backfill)
         }
       )
     },
-    handelBackfill (backfillNum) {
+    handleBackfill (backfillNum) {
       if (backfillNum && Number(backfillNum) > 0) {
         const notificationTitle = "Rerun ticket " + backfillNum + " error"
         this.$axios.get('/api/ticket/' + backfillNum).then(
@@ -267,7 +267,7 @@ export default {
       this.formData = data
     },
     gotoTicketDetail () {
-      this.$router.push({ name: 'HTicketDetail', params: { id: this.submitResponse.ticket.id }})
+      this.$router.push({ name: 'ticket-id', params: { id: this.submitResponse.ticket.id }})
     },
     errorAsNotification (title, rawMsg) {
       const msg = rawMsg.length > 300 ? rawMsg.slice(0, 300) + '... ' : rawMsg

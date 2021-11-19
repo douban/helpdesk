@@ -1,4 +1,7 @@
 <template>
-  <Nuxt />
+  <div>
+    <notify-card/>
+    <Nuxt />
+  </div>
 </template>
 

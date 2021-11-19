@@ -108,7 +108,6 @@ import {UTCtoLcocalTime} from '@/utils/HDate'
 
 export default {
 // TODO a new TicketDetail component for ticket detail view
-  name: 'HTicketDetail',
   data () {
     return {
       table_data: [{}],
@@ -254,14 +253,14 @@ export default {
     onReject () {
       if (this.ticketInfo.status !== "pending") {
         this.$message.info('Ticket has is not pending, cannot be rejected.')
-        this.$router.push({ name: 'HTicketDetail', params: { id: this.$route.params.id }})
+        this.$router.push({ name: 'ticket-id', params: { id: this.$route.params.id }})
         this.hideRejectModal()
         return
       }
       this.$axios.post(this.ticketInfo.reject_url, {"reason": this.rejectReason}).then(() => {
         this.updateTicket()
         this.$message.info('Ticket rejected.')
-        this.$router.push({ name: 'HTicketDetail', params: { id: this.$route.params.id }})
+        this.$router.push({ name: 'ticket-id', params: { id: this.$route.params.id }})
         this.hideRejectModal()
       }).catch((error) => {
         this.errorAsNotification(
@@ -273,13 +272,13 @@ export default {
     onApprove () {
       if (this.ticketInfo.status !== "pending") {
         this.$message.info('Ticket has is not pending, cannot be approved.')
-        this.$router.push({ name: 'HTicketDetail', params: { id: this.$route.params.id }})
+        this.$router.push({ name: 'ticket-id', params: { id: this.$route.params.id }})
         return
       }
       this.$axios.post(this.ticketInfo.approve_url, {}).then(() => {
         this.updateTicket()
         this.$message.info('Ticket approved.')
-        this.$router.push({ name: 'HTicketDetail', params: { id: this.$route.params.id }})
+        this.$router.push({ name: 'ticket-id', params: { id: this.$route.params.id }})
       }).catch((error) => {
         this.errorAsNotification(
           "Ticket approve failed",

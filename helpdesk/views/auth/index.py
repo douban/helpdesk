@@ -54,7 +54,7 @@ async def callback(oauth_provider: str, request: Request):
     access = id_token.get('resource_access', {})
     roles = access.get(oauth_client.client_id, {}).get('roles', [])
 
-    user = User(name=username, email=email, role=roles, avatar=id_token.get('picture'))
+    user = User(name=username, email=email, roles=roles, avatar=id_token.get('picture'))
 
     request.session['user'] = user.json()
 

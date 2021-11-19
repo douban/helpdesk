@@ -60,13 +60,13 @@ export default {
           (response) => {
             this.$store.dispatch('updateUserProfile', response.data)
           }
-        ).catch()
+        )
       }
     },
     logout () {
       this.$axios.post('/auth/logout').then(() => {
         document.cookie = 'session' + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;'
-        this.$router.push({name: 'Login'})
+        this.$router.push({name: 'login'})
       })
     }
   }

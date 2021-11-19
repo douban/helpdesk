@@ -100,7 +100,7 @@ export default {
   },
   computed: {
     currentForm () {
-      return this.$route.params.name
+      return this.$route.params.action
     },
     url_param_rule () {
       return '/api/admin_panel/' + this.currentForm + '/param_rule'
