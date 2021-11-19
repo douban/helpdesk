@@ -22,11 +22,6 @@ for provider, info in OPENID_PRIVIDERS.items():
     oauth_clients[provider] = client
 
 
-@router.get("/oidc-configs.json")
-async def oidc_configs() -> dict:
-    return KEYCLOAK_SETTINGS
-
-
 @router.get('/oauth/{oauth_provider}')
 async def oauth(request: Request):
 
