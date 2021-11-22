@@ -6,7 +6,7 @@ from authlib.integrations.starlette_client import OAuth
 
 from fastapi import Request
 
-from helpdesk.config import OPENID_PRIVIDERS, oauth_username_func, KEYCLOAK_SETTINGS
+from helpdesk.config import OPENID_PRIVIDERS, oauth_username_func, KEYCLOAK_SETTINGS, DEFAULT_BASE_URL
 from helpdesk.models.user import User
 
 from . import router
@@ -22,47 +22,36 @@ for provider, info in OPENID_PRIVIDERS.items():
     oauth_clients[provider] = client
 
 
-@router.get("/oidc-configs.json")
-async def oidc_configs() -> dict:
-    return KEYCLOAK_SETTINGS
+@router.get('/oauth/{oauth_provider}')
+async def oauth(request: Request):
 
-
-@router.get('/oauth/{provider}')
-async def oauth(request):
-
-    provider = request.path_params.get('provider', '')
-    client = oauth_clients[provider]
+    oauth_provider = request.path_params.get('oauth_provider', '')
+    oauth_client = oauth_clients[oauth_provider]
 
     # FIXME: url_for behind proxy
-    url_path = request['router'].url_path_for('auth:callback', provider=provider)
-    server = request["server"]
-    if server[1] in (80, 443):
-        base_url = f"{request['scheme']}://{server[0]}{request.get('app_root_path', '/')}"
-    else:
-        base_url = f"{request['scheme']}://{server[0]}:{server[1]}{request.get('app_root_path', '/')}"
-    redirect_uri = url_path.make_absolute_url(base_url=base_url)
+    url_path = request.app.router.url_path_for('callback', oauth_provider=oauth_provider)
+    redirect_uri = url_path.make_absolute_url(base_url=DEFAULT_BASE_URL)
 
-    return await client.authorize_redirect(request, redirect_uri)
+    return await oauth_client.authorize_redirect(request, redirect_uri)
 
 
-@router.get('/callback/{provider}')
-async def callback(request):
-    provider = request.path_params.get('provider', '')
-    client = oauth_clients[provider]
+@router.get('/callback/{oauth_provider}')
+async def callback(oauth_provider: str, request: Request):
+    oauth_client = oauth_clients[oauth_provider]
 
-    token = await client.authorize_access_token(request)
-    id_token = await client.parse_id_token(request, token)
+    token = await oauth_client.authorize_access_token(request)
+    id_token = await oauth_client.parse_id_token(request, token)
     logger.debug("auth succeed %s", id_token)
 
     username = oauth_username_func(id_token)
     email = id_token['email']
 
     access = id_token.get('resource_access', {})
-    roles = access.get(client.client_id, {}).get('roles', [])
+    roles = access.get(oauth_client.client_id, {}).get('roles', [])
 
-    user = User(username, email, roles, id_token.get('picture', ''))
+    user = User(name=username, email=email, roles=roles, avatar=id_token.get('picture'))
 
-    request.session['user'] = user.to_json()
+    request.session['user'] = user.json()
 
     return HTMLResponse("OK, you can close this window now", 200)
 

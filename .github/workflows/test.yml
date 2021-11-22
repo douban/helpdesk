@@ -10,18 +10,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - uses: actions/setup-node@v1
+    - name: Checkout 🛎
+      uses: actions/checkout@master
+
+    - name: Setup node env 🏗
+      uses: actions/setup-node@v2.1.5
       with:
-        node-version: '12'
+        node-version: ${{ matrix.node }}
+        check-latest: true
 
-    - name: Check out code
-      uses: actions/checkout@v2
+    - name: Cache node_modules 📦
+      uses: actions/cache@v2.1.4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
 
-    - run: npm install
+    - name: Install dependencies 👨🏻‍💻
+      run: npm ci --prefer-offline --no-audit
       working-directory: frontend
-    - run: npm run lint
-      working-directory: frontend
-    - run: npm run test:unit
+
+    - name: Run linter 👀
+      run: npm run lint
       working-directory: frontend
   backend:
     name: Build backend

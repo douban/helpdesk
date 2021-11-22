@@ -32,7 +32,7 @@ First make sure you have installed latest [nodejs](https://nodejs.org/en/downloa
 ```
 cd frontend
 npm install
-npm start
+npm run dev
 ```
 Follow the link in the console.
 
