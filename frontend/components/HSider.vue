@@ -5,7 +5,7 @@
     </div>
     <a-menu
       v-model="SelectedKeys"
-      :open-keys.sync="openKeys"
+      :open-keys="openKeys"
       mode="inline"
       :style="{ height: '100%', borderRight: 0, 'background-color': 'white'}"
       @openChange="onOpenChange"
