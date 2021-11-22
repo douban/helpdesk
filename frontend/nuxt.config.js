@@ -4,7 +4,7 @@ export default {
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    title: 'helpdesk-frontend',
+    title: 'helpdesk',
     htmlAttrs: {
       lang: 'en'
     },
