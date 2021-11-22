@@ -21,7 +21,21 @@
           </router-link>
           <span v-else>{{item.name}}</span>
         </a-menu-item>
-        <sub-menu v-else :key="item.name" :menu-info="item"/>
+        <a-sub-menu v-else :key="item.name">
+          <span slot='title'>
+            <a-icon type="folder" />
+            <span>{{ item.name }}</span>
+          </span>
+          <a-menu-item v-for='child in item.children' :key='child.name'>
+            <router-link v-if="child.target_object"
+                         :to="{ name: 'action', params: { action: child.target_object }}"
+                         :title="child.desc"
+            >
+              {{child.name}}
+            </router-link>
+            <span v-else>{{child.name}}</span>
+          </a-menu-item>
+        </a-sub-menu>
       </template>
     </a-menu>
   </div>
@@ -92,11 +106,9 @@ export default {
       }
 
       if (loadErrorAction.length > 0) {
-        this.$notification.open({
-          message: "Action tree load error",
+        this.$notification.warning({
           description: loadErrorAction.join(",") + " pack load error",
-          duration: 0,
-          icon: '<a-icon type="warning" style="color: red" />',
+          message: "Action tree load error",
           key: this.actionLoadNotifyKey
         })
       }
