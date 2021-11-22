@@ -14,7 +14,7 @@
         <!-- 如果要更改此处的自定义渲染, 请同时修改下方 import 的 SubMenu 内的渲染, 以保证一致 -->
         <a-menu-item v-if="!item.children" :key="item.name">
           <router-link v-if="item.target_object"
-            :to="{ name: 'action', params: { name: item.target_object }}"
+            :to="{ name: 'action', params: { action: item.target_object }}"
             :title="item.desc"
           >
             {{item.name}}
