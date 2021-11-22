@@ -291,7 +291,7 @@ export default {
       this.$refs.ticketResult.loadResult(callback)
     },
     rerunTicket () {
-      this.$router.push({ name: 'action', params: { name: this.ticketInfo.provider_object }, query: { backfill: this.ticketInfo.id }})
+      this.$router.push({ name: 'action', params: { action: this.ticketInfo.provider_object }, query: { backfill: this.ticketInfo.id }})
     },
     isTicketEndStatus() {
       const ticketStatus = this.ticketInfo.status

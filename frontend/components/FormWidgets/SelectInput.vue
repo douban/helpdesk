@@ -32,7 +32,9 @@ export default {
   },
   watch: {
     value () {
-      if (this.selectedValues.join(',') !== this.value) {
+      if (!this.value) {
+        this.selectedValues = []
+      } else if (this.selectedValues.join(',') !== this.value) {
         this.selectedValues = this.value.split(',')
       }
     }
