@@ -130,7 +130,7 @@ class BearerAuthMiddleware(BaseHTTPMiddleware):
 
                     user = User(name=username, email=email, roles=roles, avatar=id_token.get('picture'))
 
-                    request.session['user'] = user.to_json()
+                    request.session['user'] = user.json()
                     break
         response = await call_next(request)
         return response
