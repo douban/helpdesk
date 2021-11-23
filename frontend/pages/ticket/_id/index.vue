@@ -203,18 +203,6 @@ export default {
       this.$axios.get('/api/ticket/' + this.$route.params.id).then(
         (response) => {
           this.table_data = response.data.tickets
-          switch (this.$route.params.action) {
-            case 'approve':
-              this.onApprove()
-              break
-            case 'reject':
-              this.showRejectModal()
-              break
-            case undefined:
-              break
-            default:
-              this.$message.warning('Action ' + this.$route.params.action + 'for this ticket is invalid.')
-          }
         })
     },
     updateTicket () {

@@ -17,18 +17,25 @@ export default {
       ticketInfo : {}
     }
   },
-  async mounted () {
-    await this.loadTickets()
-    if (this.$route.params.op === "approve") {
-      this.onApprove()
-    } else if (this.$route.params.op === "reject") {
-      this.rejectModalVisible = true
-    }
+  mounted () {
+    this.$nextTick(() => {
+      this.loadTickets().then(()=> {
+        if (this.$route.params.op === "approve") {
+          this.onApprove()
+        } else if (this.$route.params.op === "reject") {
+          this.rejectModalVisible = true
+        }
+      })
+    })
   },
   methods: {
-    async loadTickets () {
-      const ticketResponse = await this.$axios.get('/api/ticket/' + this.$route.params.id)
-      this.ticketInfo = ticketResponse.data.tickets[0]
+    loadTickets () {
+      this.$axios.get('/api/ticket/' + this.$route.params.id).then((response)=> {
+        const ticketResponse = response.data
+        this.ticketInfo = ticketResponse.tickets[0]
+        return Promise.resolve()
+      })
+      return Promise.resolve()
     },
     resetResult () {
       this.resultVisible = false
