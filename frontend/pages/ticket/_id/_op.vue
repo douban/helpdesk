@@ -1,7 +1,8 @@
 <template>
   <a-layout>
+    <span>Loading...</span>
     <a-modal v-model="rejectModalVisible" title="Reject reason" ok-text="confirm" cancel-text="cancel" @ok="onReject" @cancel="hideRejectModal">
-      <a-input v-model="rejectReason" placeholder="Reject reason" maxLength:=128 />
+      <a-input v-model="rejectReason" placeholder="Reject reason" max-length:=128 />
     </a-modal>
   </a-layout>
 </template>
@@ -17,25 +18,20 @@ export default {
       ticketInfo : {}
     }
   },
-  mounted () {
-    this.$nextTick(() => {
-      this.loadTickets().then(()=> {
-        if (this.$route.params.op === "approve") {
-          this.onApprove()
-        } else if (this.$route.params.op === "reject") {
-          this.rejectModalVisible = true
-        }
-      })
+  async mounted () {
+    this.ticketInfo = await this.$axios.get('/api/ticket/' + this.$route.params.id).then(res => {
+      return res.data.tickets[0]
     })
+    if (this.$route.params.op === "approve") {
+      this.onApprove()
+    } else if (this.$route.params.op === "reject") {
+      this.rejectModalVisible = true
+    }
   },
   methods: {
-    loadTickets () {
-      this.$axios.get('/api/ticket/' + this.$route.params.id).then((response)=> {
-        const ticketResponse = response.data
-        this.ticketInfo = ticketResponse.tickets[0]
-        return Promise.resolve()
-      })
-      return Promise.resolve()
+    async loadTickets () {
+      const ticketResponse = await this.$axios.get('/api/ticket/' + this.id)
+      this.ticketInfo = ticketResponse.data.tickets[0]
     },
     resetResult () {
       this.resultVisible = false
@@ -94,7 +90,5 @@ export default {
 </script>
 
 <style scoped>
-.whiteBackground {
-  background: #fff
-}
+
 </style>
