@@ -53,7 +53,7 @@ async def callback(oauth_provider: str, request: Request):
 
     request.session['user'] = user.json()
 
-    return HTMLResponse("OK, you can close this window now", 200)
+    return HTMLResponse("<script>window.close()</script>", 200)
 
 
 @router.post('/logout')
