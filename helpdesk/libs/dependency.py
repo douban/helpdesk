@@ -7,7 +7,7 @@ from starlette import status
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
 
-from helpdesk.config import OPENID_PROVIDER, oauth_username_func
+from helpdesk.config import oauth_username_func
 from helpdesk.models.user import User
 
 logger = logging.getLogger(__name__)
