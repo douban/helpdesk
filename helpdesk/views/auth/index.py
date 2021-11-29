@@ -6,7 +6,7 @@ from authlib.integrations.starlette_client import OAuth
 
 from fastapi import Request
 
-from helpdesk.config import OPENID_PRIVIDERS, oauth_username_func, KEYCLOAK_SETTINGS, DEFAULT_BASE_URL
+from helpdesk.config import OPENID_PRIVIDERS, oauth_username_func, DEFAULT_BASE_URL
 from helpdesk.models.user import User
 
 from . import router
