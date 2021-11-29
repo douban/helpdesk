@@ -10,13 +10,12 @@ from sentry_asgi import SentryMiddleware
 from starlette.middleware import Middleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.gzip import GZipMiddleware
-from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from fastapi import FastAPI
 
 from helpdesk.libs.auth import SessionAuthBackend, BearerAuthMiddleware
-from helpdesk.libs.proxy import ProxyHeadersMiddleware
 from helpdesk.config import DEBUG, SESSION_SECRET_KEY, SESSION_TTL, SENTRY_DSN, TRUSTED_HOSTS,\
     ALLOW_ORIGINS_REG, ALLOW_ORIGINS
 from helpdesk.views.api import router as api_bp
@@ -36,7 +35,7 @@ def create_app():
     logging.getLogger('uvicorn').setLevel(logging.INFO)
 
     enabled_middlewares = [
-        Middleware(ProxyHeadersMiddleware, trusted_hosts=TRUSTED_HOSTS),
+        Middleware(TrustedHostMiddleware, allowed_hosts=TRUSTED_HOSTS),
         Middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY, max_age=SESSION_TTL),
         Middleware(BearerAuthMiddleware),
         Middleware(CORSMiddleware,
