@@ -16,8 +16,7 @@
       />
       <a-col>
         <a-form
-        :form="form"
-        @submit="handleSubmit">
+        :form="form">
           <dynamic-form
             :schema="schema"
             :value="formData"
@@ -258,7 +257,6 @@ export default {
           this.canSubmit = true
         }
       })
-      this.canSubmit = true
     },
     handleSubmitResult (response) {
       this.resultVisible = true
