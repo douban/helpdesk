@@ -197,7 +197,15 @@ export default {
 
           // airflow json schema verify
           if (this.actionDefinition.provider_type==='airflow' && this.actionDefinition.params_json_schema) {
-            const validate = this.formAjv.compile(this.actionDefinition.params_json_schema)
+            let validate
+            try {
+              validate = this.formAjv.compile(this.actionDefinition.params_json_schema)
+            } catch (e) {
+              this.$message.error("init json schema failed, please contact sysadmin, " + e)
+              console.log("init json schema failed, please contact sysadmin, " + e) // eslint-disable-line no-console
+              return
+            }
+
             const jsonFormData = {}
             for (const [name, data] of Object.entries(this.formData)) {
               if (!data) {
@@ -250,6 +258,7 @@ export default {
           this.canSubmit = true
         }
       })
+      this.canSubmit = true
     },
     handleSubmitResult (response) {
       this.resultVisible = true
