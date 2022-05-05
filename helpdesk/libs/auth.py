@@ -2,7 +2,7 @@
 
 import logging
 
-import requests
+import httpx
 from starlette.authentication import (
     AuthenticationBackend,
     AuthCredentials,
@@ -36,13 +36,13 @@ class Validator:
 
     def get(self, *args, **kwargs):
         if self.client_kwargs:
-            r = requests.get(*args, **kwargs, **self.client_kwargs)
+            r = httpx.get(*args, **kwargs, **self.client_kwargs)
         else:
-            r = requests.get(*args, **kwargs)
+            r = httpx.get(*args, **kwargs)
         r.raise_for_status()
         return r.json()
 
-    def valide_token(self, token: str):
+    def validate_token(self, token: str):
         """validate token string, return a parsed token if valid, return None if not valid
         :return tuple (is_token -> bool, id_token or None)
         The BearerAuthMiddleware would use this to decide if we should validate the token in the next provider.
@@ -97,7 +97,7 @@ class SessionAuthBackend(AuthenticationBackend):
             return AuthCredentials([]), UnauthenticatedUser()
 
         try:
-            user = User.from_json(userinfo)
+            user = User.parse_raw(userinfo)
             return user.auth_credentials, user
         except Exception:
             return AuthCredentials([]), UnauthenticatedUser()
@@ -111,7 +111,7 @@ class BearerAuthMiddleware(BaseHTTPMiddleware):
             if token_str:
                 for validator_name, validator in registed_validator.items():
                     logger.info("Trying to validate token with %s", validator_name)
-                    is_token, id_token = validator.valide_token(token_str)
+                    is_token, id_token = validator.validate_token(token_str)
                     if not is_token:
                         break
                     if is_token and not id_token:
