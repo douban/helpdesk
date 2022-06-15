@@ -15,3 +15,10 @@ local_config.py
 contrib/charts/*/charts/*.tgz
 # chart requirements lock
 requirements.lock
+
+# add by pdectl
+.doubanpde/*
+!.doubanpde/pde.yaml
+!.doubanpde/pdectl-*
+.doubanpde/pdectl-*/*
+!.doubanpde/pdectl-*/Dockerfile.tpl

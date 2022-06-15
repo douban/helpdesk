@@ -1,0 +1,192 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: "helpdesk"
+    createId: "{{ uuid }}"
+    createdBy: pdectl
+    createdByUser: wangqiang
+    runByUser: '{{ .CliArgs.String "username" }}'
+    runByPdectlVersion: "{{ .CliArgs.App.Version }}"
+    runnerAddress: "{{ .RunnerAddress }}"
+    createdTime: "{{ .CreatedTime }}"
+    pdeVersion: "v0.0.9-rc3"
+    useWebEditor: "false"
+    webEditorPort: 0
+    webEditorType: ""
+  name: "helpdesk"
+  annotations:
+    pdectl.douban.com/cfg/exec-cmd: '{{ .CliArgs.String "exec-default-cmd" }}'
+spec:
+  containers:
+    - name: "main"
+      env:
+        - name: HOSTNAME
+          value: "helpdesk-main"
+        - name: PIDLPROXY_CLIENT_HOST
+          value: 10.0.2.2
+        - name: SCRIBE_HOST
+          value: 10.0.2.2
+      image: "docker.douban/sa/pde-python-cli:latest-3.9"
+      ports:
+      volumeMounts:
+        # mount code folder
+        - mountPath: /home/project/
+          name: code
+        - mountPath: /root/
+          name: userhome
+        - mountPath: /var/run/mysqld/
+          name: mysql-run
+        - mountPath: /fuse:rslave
+          name: fuse
+        - mountPath: /etc/douban/
+          name: etc-douban
+          readOnly: true
+        - mountPath: /etc/localtime
+          name: etc-localtime
+          readOnly: true
+        - mountPath: /etc/openldap/
+          name: etc-openldap
+          readOnly: true
+        - mountPath: /etc/dba/
+          name: etc-dba
+          readOnly: true
+        - mountPath: /dev/shm
+          name: dev-shm
+        - mountPath: /var/run/nscd/
+          name: var-run-nscd
+          readOnly: true
+        - mountPath: /etc/dpark.conf
+          name: etc-dpark.conf
+          readOnly: true
+        - mountPath: /var/shire/
+          name: var-shire
+          readOnly: true
+        - mountPath: /etc/dae/
+          name: etc-dae
+          readOnly: true
+        - mountPath: /etc/pidl/
+          name: etc-pidl
+          readOnly: true
+        - mountPath: /etc/fusible/
+          name: etc-fusible
+          readOnly: true
+        - mountPath: /var/apps/configs/staticng/
+          name: var-apps-configs-staticng
+          readOnly: true
+        - mountPath: /var/tmp/
+          name: var-tmp
+          readOnly: true
+      workingDir: /home/project
+    - name: mysql
+      image: docker.douban/dba/mysql:5.7
+      command:
+        - /bin/bash
+        - -c
+      args:
+        - sed -i "s/are_correct('mysql'/are_correct('root'/g" /run_mysqld.py && /run_mysqld.py --farm test --set server_id=1 --set port=3306 --set innodb_buffer_pool_size=134217728 --set max_connections=1024 --set max_user_connections=1024 --set log_error=/mysql/logs/error.log --set innodb_log_file_size=64M --set user=root --set innodb_use_native_aio=0
+      env:
+        - name: HOSTNAME
+          value: pde_mysql
+      volumeMounts:
+        - mountPath: /mysql/
+          name: mysql-data-dir
+        - mountPath: /var/run/mysqld/
+          name: mysql-run
+        - mountPath: /mysql/data/
+          name: mysql-data
+        - mountPath: /mysql/configs/
+          name: mysql-data-configs
+        - mountPath: /mysql/logs/
+          name: mysql-data-logs
+        - mountPath: /mysql/ssd/
+          name: mysql-data-ssd
+        - mountPath: /mysql/tmp/
+          name: mysql-data-tmp
+      workingDir: /
+  restartPolicy: Never
+  volumes:
+    - hostPath:
+        path: '{{ .CliArgs.String "project-dir" }}/.doubanpde/data/mysql/'
+        type: DirectoryOrCreate
+      name: mysql-data-dir
+    - hostPath:
+        path: '{{ .CliArgs.String "project-dir" }}/.doubanpde/data/mysql/configs/'
+        type: DirectoryOrCreate
+      name: mysql-data-configs
+    - hostPath:
+        path: '{{ .CliArgs.String "project-dir" }}/.doubanpde/data/mysql/data/'
+        type: DirectoryOrCreate
+      name: mysql-data
+    - hostPath:
+        path: '{{ .CliArgs.String "project-dir" }}/.doubanpde/data/mysql/logs/'
+        type: DirectoryOrCreate
+      name: mysql-data-logs
+    - hostPath:
+        path: '{{ .CliArgs.String "project-dir" }}/.doubanpde/data/mysql/ssd/'
+        type: DirectoryOrCreate
+      name: mysql-data-ssd
+    - hostPath:
+        path: '{{ .CliArgs.String "project-dir" }}/.doubanpde/data/mysql/tmp/'
+        type: DirectoryOrCreate
+      name: mysql-data-tmp
+    - hostPath:
+        path: '{{ .CliArgs.String "project-dir" }}/.doubanpde/data/mysql/run/'
+        type: DirectoryOrCreate
+      name: mysql-run
+    - hostPath:
+        path: '{{ .CliArgs.String "project-dir" }}'
+        type: Directory
+      name: code
+    - hostPath:
+        path: '{{ expandEnvVar "$HOME/" }}'
+        type: Directory
+      name: userhome
+    # dae mount to dae pod
+    # https://github.intra.douban.com/dae/bridge/blob/79e305f5963cc6e0b1bdf7ceb35515f86dd184b5/k8s/volumes.py#L16-L29
+    # https://github.intra.douban.com/dae/bridge/blob/79e305f5963cc6e0b1bdf7ceb35515f86dd184b5/k8s/volumes.py#L62
+    # https://github.intra.douban.com/dae/bridge/blob/79e305f5963cc6e0b1bdf7ceb35515f86dd184b5/k8s/volumes.py#L435
+    - hostPath:
+        path: /fuse
+        type: Directory
+      name: fuse
+    - hostPath:
+        path: /etc/douban/
+      name: etc-douban
+    - hostPath:
+        path: /etc/localtime
+      name: etc-localtime
+    - hostPath:
+        path: /etc/openldap/
+      name: etc-openldap
+    - hostPath:
+        path: /etc/dba/
+      name: etc-dba
+    - hostPath:
+        path: /dev/shm
+      name: dev-shm
+    - hostPath:
+        path: /var/run/nscd/
+      name: var-run-nscd
+    - hostPath:
+        path: /etc/dpark.conf
+        type: File
+      name: etc-dpark.conf
+    - hostPath:
+        path: /var/shire/
+      name: var-shire
+    - hostPath:
+        path: /etc/dae/
+      name: etc-dae
+    - hostPath:
+        path: /etc/pidl/
+      name: etc-pidl
+    - hostPath:
+        path: /etc/fusible/
+      name: etc-fusible
+    - hostPath:
+        path: /var/apps/configs/staticng/
+      name: var-apps-configs-staticng
+    - hostPath:
+        path: /var/tmp/
+      name: var-tmp
