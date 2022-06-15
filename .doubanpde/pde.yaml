@@ -39,43 +39,11 @@ spec:
           name: mysql-run
         - mountPath: /fuse:rslave
           name: fuse
-        - mountPath: /etc/douban/
-          name: etc-douban
-          readOnly: true
         - mountPath: /etc/localtime
           name: etc-localtime
           readOnly: true
-        - mountPath: /etc/openldap/
-          name: etc-openldap
-          readOnly: true
-        - mountPath: /etc/dba/
-          name: etc-dba
-          readOnly: true
-        - mountPath: /dev/shm
-          name: dev-shm
         - mountPath: /var/run/nscd/
           name: var-run-nscd
-          readOnly: true
-        - mountPath: /etc/dpark.conf
-          name: etc-dpark.conf
-          readOnly: true
-        - mountPath: /var/shire/
-          name: var-shire
-          readOnly: true
-        - mountPath: /etc/dae/
-          name: etc-dae
-          readOnly: true
-        - mountPath: /etc/pidl/
-          name: etc-pidl
-          readOnly: true
-        - mountPath: /etc/fusible/
-          name: etc-fusible
-          readOnly: true
-        - mountPath: /var/apps/configs/staticng/
-          name: var-apps-configs-staticng
-          readOnly: true
-        - mountPath: /var/tmp/
-          name: var-tmp
           readOnly: true
       workingDir: /home/project
     - name: mysql
@@ -142,51 +110,13 @@ spec:
         path: '{{ expandEnvVar "$HOME/" }}'
         type: Directory
       name: userhome
-    # dae mount to dae pod
-    # https://github.intra.douban.com/dae/bridge/blob/79e305f5963cc6e0b1bdf7ceb35515f86dd184b5/k8s/volumes.py#L16-L29
-    # https://github.intra.douban.com/dae/bridge/blob/79e305f5963cc6e0b1bdf7ceb35515f86dd184b5/k8s/volumes.py#L62
-    # https://github.intra.douban.com/dae/bridge/blob/79e305f5963cc6e0b1bdf7ceb35515f86dd184b5/k8s/volumes.py#L435
     - hostPath:
         path: /fuse
         type: Directory
       name: fuse
     - hostPath:
-        path: /etc/douban/
-      name: etc-douban
-    - hostPath:
         path: /etc/localtime
       name: etc-localtime
     - hostPath:
-        path: /etc/openldap/
-      name: etc-openldap
-    - hostPath:
-        path: /etc/dba/
-      name: etc-dba
-    - hostPath:
-        path: /dev/shm
-      name: dev-shm
-    - hostPath:
         path: /var/run/nscd/
       name: var-run-nscd
-    - hostPath:
-        path: /etc/dpark.conf
-        type: File
-      name: etc-dpark.conf
-    - hostPath:
-        path: /var/shire/
-      name: var-shire
-    - hostPath:
-        path: /etc/dae/
-      name: etc-dae
-    - hostPath:
-        path: /etc/pidl/
-      name: etc-pidl
-    - hostPath:
-        path: /etc/fusible/
-      name: etc-fusible
-    - hostPath:
-        path: /var/apps/configs/staticng/
-      name: var-apps-configs-staticng
-    - hostPath:
-        path: /var/tmp/
-      name: var-tmp
