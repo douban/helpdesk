@@ -26,3 +26,13 @@ class OperateTicket(BaseModel):
     操作工单的请求体
     """
     reason: Optional[str]
+
+
+class ApprovalFlow(BaseModel):
+    """
+    审批流
+    """
+    policy_id: Optional[int]
+    name: Optional[str]
+    display: Optional[str]
+    definition: Optional[str]

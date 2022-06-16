@@ -13,6 +13,7 @@ from helpdesk.libs.db import extract_filter_from_query_params
 from helpdesk.models.provider import get_provider
 from helpdesk.models.db.ticket import Ticket, TicketPhase
 from helpdesk.models.db.param_rule import ParamRule
+from helpdesk.models.db.approval_flow import ApprovalFlow
 from helpdesk.models.action_tree import action_tree
 from helpdesk.models.user import User
 from helpdesk.libs.dependency import get_current_user, require_admin
@@ -269,3 +270,32 @@ async def ticket_result(ticket_id: int, exec_output_id: Optional[str] = None, _:
         except AttributeError as e:
             logger.warning(f"can not get status from execution, error: {str(e)}")
     return execution
+
+
+@router.get('/approval_flows')
+async def approval_flow_list(page: Optional[str] = None, pagesize: Optional[str] = None,
+                             _: User = Depends(require_admin)):
+    filter_ = extract_filter_from_query_params(query_params={
+        'page': page,
+        'page_size': pagesize,
+    }, model=ApprovalFlow)
+    if page and page.isdigit():
+        page = max(1, int(page))
+    else:
+        page = 1
+    if pagesize and pagesize.isdigit():
+        pagesize = max(1, int(pagesize))
+        pagesize = min(pagesize, config.TICKETS_PER_PAGE)
+    else:
+        pagesize = config.TICKETS_PER_PAGE
+    kw = dict(filter_=filter_, limit=pagesize, offset=(page - 1) * pagesize)
+
+    approval_flows = await ApprovalFlow.get_all(**kw)
+    total = await ApprovalFlow.count(filter_=filter_)
+
+    return dict(
+        tickets=[extra_dict(t.to_dict(show=True)) for t in approval_flows],
+        page=page,
+        page_size=pagesize,
+        total=total,
+    )
