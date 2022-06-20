@@ -5,4 +5,4 @@ from fastapi import APIRouter
 router = APIRouter()
 
 
-from . import index, auth # NOQA
+from . import index, auth, approval_flow # NOQA
