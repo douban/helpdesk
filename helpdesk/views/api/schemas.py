@@ -55,3 +55,11 @@ class PolicyFlowReq(BaseModel):
     display: Optional[str]
     definition: Optional[dict]
 
+
+class TicketPolicyReq(BaseModel):
+    """
+    工单和审批流关联的请求体
+    """
+    ticket_name: Optional[str]
+    policy_id: Optional[int]
+    link_condition: Optional[dict] = None

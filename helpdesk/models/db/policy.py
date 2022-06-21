@@ -19,10 +19,16 @@ class Policy(db.Model):
     updated_at = db.Column(db.DateTime)
 
 
-class TicketFlow(db.Model):
-    __tablename__ = 'ticket_flow'
+class TicketPolicy(db.Model):
+    __tablename__ = 'ticket_policy'
     __table_args__ = {'mysql_charset': 'utf8mb4'}
 
     id = db.Column(db.Integer, primary_key=True)
     policy_id = db.Column(db.Integer)
     ticket_name = db.Column(db.String(length=64))
+    link_condition = db.Column(db.JSON)
+
+    @classmethod
+    async def get_by_ticket_name(cls, ticket_name):
+        filter_ = cls.__table__.c.ticket_name == ticket_name
+        return await cls.get_all(filter_=filter_)
