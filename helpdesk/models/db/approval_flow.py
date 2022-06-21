@@ -18,11 +18,6 @@ class Policy(db.Model):
     updated_by = db.Column(db.String(length=32))
     updated_at = db.Column(db.DateTime)
 
-policys = [
-    Policy(id=1, name="test", display="test", definition="", created_by="qxy", created_at="", updated_at="", updated_by="")
-    # ...
-]
-
 
 class TicketFlow(db.Model):
     __tablename__ = 'ticket_flow'

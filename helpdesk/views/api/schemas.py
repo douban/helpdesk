@@ -29,16 +29,29 @@ class OperateTicket(BaseModel):
     reason: Optional[str]
 
 
-class PolicyFlow(BaseModel):
+class PolicyFlowResp(BaseModel):
     """
-    审批流
+    审批流的响应体
     """
     id: int
     name: Optional[str]
-    display: Optional[str]
-    definition: Optional[str]
+    display: str
+    definition: Optional[dict]
 
     created_at: datetime
-    created_by:Optional[str]
-    update_at: datetime = None
-    updated_by:Optional[str]
+    created_by: Optional[str]
+    updated_at: datetime
+    updated_by: Optional[str]
+
+    class Config:
+        orm_mode = True
+
+
+class PolicyFlowReq(BaseModel):
+    """
+    审批流的请求体
+    """
+    name: Optional[str]
+    display: Optional[str]
+    definition: Optional[dict]
+
