@@ -13,6 +13,7 @@ from helpdesk.libs.decorators import cached_property
 from helpdesk.libs.sentry import report
 from helpdesk.models import db
 from helpdesk.models.db.param_rule import ParamRule
+from helpdesk.models.db.policy import TicketPolicy
 from helpdesk.models.provider import get_provider
 from helpdesk.config import (
     SYSTEM_USER,
@@ -147,6 +148,16 @@ class Ticket(db.Model):
 
         logger.debug('Ticket.get_rule_actions(%s): %s', rule_action, ret)
         return ret
+ 
+    @cached_property
+    async def associate_policies(self):
+        # ticket associate approval flow policy
+        policies = await TicketPolicy.get_by_ticket_name(self.title)
+        return policies
+
+    async def get_flow_policy(self):
+        policies = await self.associate_policies
+        return policies[0].policy_id
 
     def annotate(self, dict_=None, **kw):
         d = dict_ or {}
