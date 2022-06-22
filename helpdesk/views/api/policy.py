@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 from datetime import datetime
 from fastapi import HTTPException, Depends
 from fastapi_pagination import Page, Params, paginate
@@ -80,9 +81,15 @@ async def remove_policy(policy_id: int, _: User = Depends(require_admin)):
     return dict(policy_id=policy_id)
 
 
-@router.post('/policy_associate')
-async def ticket_policy_associate(params: TicketPolicyReq, _: User = Depends(require_admin)):
+@router.post('/policy_associate/{op}')
+async def ticket_policy_associate(params: TicketPolicyReq, op: Optional[str] = None, _: User = Depends(require_admin)):
+    if op == 'del':
+        if not params.id:
+            raise HTTPException(status_code=400, detail='ticket associate policy id is required')
+        await TicketPolicy.delete(params.id)
+        return params.id
     ticket_policy_form = TicketPolicy(
+        id=params.id,
         policy_id=params.policy_id,
         ticket_name=params.ticket_name,
         link_condition=params.link_condition

@@ -60,6 +60,7 @@ class TicketPolicyReq(BaseModel):
     """
     工单和审批流关联的请求体
     """
+    id: Optional[int]
     ticket_name: Optional[str]
     policy_id: Optional[int]
-    link_condition: Optional[dict] = None
+    link_condition: Optional[str]

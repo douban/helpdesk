@@ -232,31 +232,6 @@ async def list_ticket(page: Optional[str] = None, pagesize: Optional[str] = None
     )
 
 
-@router.post('/ticket')
-async def create_ticket(ticket_action, provider, params: dict, extra_params: dict,
-                        current_user: User = Depends(get_current_user)):
-    ticket = Ticket(
-        title=ticket_action.name,
-        provider_type=provider.provider_type,
-        provider_object=ticket_action.target_object,
-        params=params,
-        extra_params=extra_params,
-        submitter=current_user.name,
-        reason=params.get('reason'),
-        created_at=datetime.now()
-    )
-
-    policy_id = ticket.get_flow_policy()
-    ticket.annotate(policy_id=policy_id)
-
-    id_ = await ticket.save()
-    new_ticket = await Ticket.get(id_)
-
-    return (
-        new_ticket.to_dict(),
-        'Success. Your request has been approved automatically, please go to ticket page for details')
-
-
 @router.get('/ticket/{ticket_id}')
 @router.post('/ticket/{ticket_id}')
 async def get_ticket(ticket_id: int, current_user: User = Depends(get_current_user)):
