@@ -47,13 +47,31 @@ class PolicyFlowResp(BaseModel):
         orm_mode = True
 
 
+class Node(BaseModel):
+    """
+    审批流的节点定义
+    """
+    name: Optional[str]
+    desc: Optional[str]
+    approvers: Optional[str]
+    next: Optional[str]
+    
+
+class FlowDefinition(BaseModel):
+    """
+    审批流的定义
+    """
+    version: Optional[float]
+    nodes: Optional[list()]
+
+
 class PolicyFlowReq(BaseModel):
     """
     审批流的请求体
     """
     name: Optional[str]
     display: Optional[str]
-    definition: Optional[dict]
+    definition: Optional[FlowDefinition]
 
 
 class TicketPolicyReq(BaseModel):

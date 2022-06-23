@@ -1,3 +1,4 @@
+import json
 import logging
 from helpdesk.models import db
 from helpdesk.libs.rule import Rule
@@ -18,6 +19,39 @@ class Policy(db.Model):
     created_at = db.Column(db.DateTime)
     updated_by = db.Column(db.String(length=32))
     updated_at = db.Column(db.DateTime)
+
+    @property
+    def node_next_dict(self):
+        nodes = self.definition.get("nodes")
+        if not nodes or len(nodes) == 0:
+            return None
+        node_next = dict()
+        for node in nodes:
+            if node.get("next"):
+                pass
+        return node_next
+
+    @property
+    def init_node(self):
+        nodes = self.definition.get("nodes")
+        if not nodes or len(nodes) == 0:
+            return None
+        node_nexts = [node.get("next") for node in nodes]
+        for node in nodes:
+            if node.get("name") not in node_nexts:
+                return node
+        return None
+
+    @property
+    def next_node(self, node_name):
+        link_node_dict = self.node_next_dict
+        return link_node_dict.get(node_name)
+        
+
+    @property
+    def is_end_node(self, node_name):
+        link_node_dict = self.node_next_dict
+        return link_node_dict.get(node_name) == None
 
 
 class TicketPolicy(db.Model):

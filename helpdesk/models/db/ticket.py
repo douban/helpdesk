@@ -4,6 +4,7 @@ import logging
 import importlib
 from enum import Enum
 from datetime import datetime
+from this import d
 from urllib.parse import urlencode, quote_plus
 
 from authlib.jose import jwt
@@ -149,17 +150,22 @@ class Ticket(db.Model):
 
         logger.debug('Ticket.get_rule_actions(%s): %s', rule_action, ret)
         return ret
- 
-    @cached_property
-    async def associate_policies(self):
-        # ticket associate approval flow policy
-        return await TicketPolicy.get_by_ticket_name(self.title)
 
-    async def get_flow_policy(self):
-        for associate in await self.associate_policies:
+    async def get_flow_policy_id(self):
+        associates = await TicketPolicy.get_by_ticket_name(self.title)
+        for associate in associates:
             if associate.match(self.params):
-                return await Policy.get(associate.policy_id)
+                return associate.policy_id
         return None
+
+    async def execute_policy(self):
+        policy = await Policy.get(self.annotate.get("policy_id"))
+        # todo: 根据审批流程获取当前审批节点，如果是自动审批，且没有下一节点，则执行，否则通知审批人
+        if self.is_approved:
+            execution, _ = self.execute()
+            if execution:
+                await self.notify(TicketPhase.REQUEST)
+            await self.save()
 
     def annotate(self, dict_=None, **kw):
         d = dict_ or {}
