@@ -1,5 +1,6 @@
 import json
 import logging
+from operator import ne
 from helpdesk.models import db
 from helpdesk.libs.rule import Rule
 
@@ -27,8 +28,12 @@ class Policy(db.Model):
             return None
         node_next = dict()
         for node in nodes:
-            if node.get("next"):
-                pass
+            node_next[node.get("name")] = node.get("next")
+        for node, next in node_next.items():
+            if next:
+                for next_node in nodes:
+                    if next == next_node.get("name"):
+                        node_next[node] = next_node
         return node_next
 
     @property
@@ -48,10 +53,14 @@ class Policy(db.Model):
         return link_node_dict.get(node_name)
         
 
-    @property
     def is_end_node(self, node_name):
         link_node_dict = self.node_next_dict
-        return link_node_dict.get(node_name) == None
+        return link_node_dict.get(node_name) == ""
+
+    @property
+    def is_auto_approved(self):
+        start_node = self.init_node
+        return start_node.get("name")=="auto_approve"
 
 
 class TicketPolicy(db.Model):

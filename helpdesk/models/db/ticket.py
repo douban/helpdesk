@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import json
 import logging
 import importlib
 from enum import Enum
@@ -151,21 +152,12 @@ class Ticket(db.Model):
         logger.debug('Ticket.get_rule_actions(%s): %s', rule_action, ret)
         return ret
 
-    async def get_flow_policy_id(self):
+    async def get_flow_policy(self):
         associates = await TicketPolicy.get_by_ticket_name(self.title)
         for associate in associates:
             if associate.match(self.params):
-                return associate.policy_id
+                return await Policy.get(id_=associate.policy_id)
         return None
-
-    async def execute_policy(self):
-        policy = await Policy.get(self.annotate.get("policy_id"))
-        # todo: 根据审批流程获取当前审批节点，如果是自动审批，且没有下一节点，则执行，否则通知审批人
-        if self.is_approved:
-            execution, _ = self.execute()
-            if execution:
-                await self.notify(TicketPhase.REQUEST)
-            await self.save()
 
     def annotate(self, dict_=None, **kw):
         d = dict_ or {}
@@ -210,6 +202,11 @@ class Ticket(db.Model):
             self.confirmed_by = SYSTEM_USER
         else:
             self.confirmed_by = by_user
+        # 审批流节点流转记录
+        approvals = self.annotation.get("approvals")
+        approvals.append(dict(node=self.annotation.get("current_node"), approver=by_user or SYSTEM_USER, operated_type="approve", operated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        self.annotate(approvals=approvals)
+        print(self.to_dict())
 
         self.is_approved = True
         self.confirmed_at = datetime.now()

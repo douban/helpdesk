@@ -4,6 +4,7 @@ import logging
 from datetime import datetime
 
 from helpdesk.libs.rest import DictSerializableClassMixin
+from helpdesk.models.db import policy
 from helpdesk.models.db.ticket import Ticket, TicketPhase
 from helpdesk.config import AUTO_APPROVAL_TARGET_OBJECTS, PARAM_FILLUP, TICKET_CALLBACK_PARAMS
 
@@ -95,18 +96,37 @@ class Action(DictSerializableClassMixin):
             reason=params.get('reason'),
             created_at=datetime.now())
 
-        policy_id = await ticket.get_flow_policy_id()
-        if not policy_id:
+        policy = await ticket.get_flow_policy()
+        if not policy:
             return None, 'Failed to get ticket flow policy'
-        ticket.annotate(policy_id=policy_id)
+
+        ticket.annotate(policy_id=policy.id)
+        ticket.annotate(current_node=policy.init_node.get("name"))
+        ticket.annotate(approvals=list())
+        if (self.target_object in AUTO_APPROVAL_TARGET_OBJECTS or user.is_admin or 
+        await ticket.get_rule_actions('is_auto_approval') or policy.is_auto_approved):
+            ret, msg = ticket.approve(auto=True)
+            if not ret:
+                return None, msg
 
         id_ = await ticket.save()
         ticket_added = await Ticket.get(id_)
 
         if ticket_added is None:
             return ticket_added, 'Failed to create ticket.'
-        
-        await ticket_added.execute_policy()
 
-        return ticket_added.to_dict(), 'Success. Your request has been submitted, please wait for approval.'
+        if not ticket_added.is_approved:
+            # todo: 消息通知
+            await ticket_added.notify(TicketPhase.REQUEST)
+            return ticket_added.to_dict(), 'Success. Your request has been submitted, please wait for approval.'
+
+        # if this ticket is auto approved, execute it immediately
+        execution, _ = ticket_added.execute()
+        if execution:
+            await ticket_added.notify(TicketPhase.REQUEST)
+        await ticket_added.save()
+
+        return (
+            ticket_added.to_dict(),
+            'Success. Your request has been approved automatically, please go to ticket page for details')
     

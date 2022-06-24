@@ -2,7 +2,7 @@
 这个文件里是 pandatic 的 model, 用来构建 fastapi 的请求和响应的body
 """
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 
 
@@ -54,15 +54,7 @@ class Node(BaseModel):
     name: Optional[str]
     desc: Optional[str]
     approvers: Optional[str]
-    next: Optional[str]
-    
-
-class FlowDefinition(BaseModel):
-    """
-    审批流的定义
-    """
-    version: Optional[float]
-    nodes: Optional[list()]
+    next: Optional[str] = None
 
 
 class PolicyFlowReq(BaseModel):
@@ -71,7 +63,7 @@ class PolicyFlowReq(BaseModel):
     """
     name: Optional[str]
     display: Optional[str]
-    definition: Optional[FlowDefinition]
+    definition: Optional[dict]
 
 
 class TicketPolicyReq(BaseModel):
