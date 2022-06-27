@@ -61,12 +61,16 @@ class Notification:
         content = ''.join(piece.text for piece in tree.findall('content'))
         return title, content
 
+    async def get_approvers(self):
+        policy = await self.ticket.get_flow_policy()
+        return policy.get_node_approvers(self.ticket.annotation.get("current_node"))
+
 
 class MailNotification(Notification):
     method = 'mail'
 
     async def get_mail_addrs(self):
-        email_addrs = [ADMIN_EMAIL_ADDRS] + [get_user_email(cc) for cc in self.ticket.ccs]
+        email_addrs = [ADMIN_EMAIL_ADDRS] + [get_user_email(cc) for cc in self.ticket.ccs] + await self.get_approvers()
         email_addrs += [get_user_email(approver) for approver in await self.ticket.get_rule_actions('approver')]
         if self.phase.value in ('approval', 'mark'):
             email_addrs += [get_user_email(self.ticket.submitter)]

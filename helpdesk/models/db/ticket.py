@@ -1,5 +1,6 @@
 # coding: utf-8
 
+from ast import Await
 import json
 import logging
 import importlib
@@ -192,25 +193,35 @@ class Ticket(db.Model):
             return True, msg
         return False, 'not confirmed yet'
 
-    def approve(self, by_user=None, auto=False):
+    async def node_circulation(self):
+        policy = await self.get_flow_policy()
+        current_node = self.annotation.get("current_node")
+        if policy.is_end_node(current_node):
+            return True, None
+        else:
+            return False, policy.next_node(current_node).get("name")
+    
+    async def approve(self, by_user=None, auto=False):
         is_confirmed, msg = self.check_confirmed()
         if is_confirmed:
             return False, msg
 
         if auto:
             self.annotate(auto_approved=True)
-            self.confirmed_by = SYSTEM_USER
-        else:
-            self.confirmed_by = by_user
         # 审批流节点流转记录
         approvals = self.annotation.get("approvals")
         approvals.append(dict(node=self.annotation.get("current_node"), approver=by_user or SYSTEM_USER, operated_type="approve", operated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
         self.annotate(approvals=approvals)
-        print(self.to_dict())
+        is_end_node, next_node = await self.node_circulation()
 
-        self.is_approved = True
-        self.confirmed_at = datetime.now()
-        return True, 'Success'
+        if is_end_node:
+            self.is_approved = True
+            self.confirmed_by = by_user or SYSTEM_USER
+            self.confirmed_at = datetime.now()
+            return True, 'Success'
+        else:
+            self.annotate(current_node=next_node)
+            return True, 'Wait for next approval.'
 
     def reject(self, by_user):
         is_confirmed, msg = self.check_confirmed()
@@ -220,6 +231,9 @@ class Ticket(db.Model):
         self.confirmed_by = by_user
         self.is_approved = False
         self.confirmed_at = datetime.now()
+        approvals = self.annotation.get("approvals")
+        approvals.append(dict(node=self.annotation.get("current_node"), approver=by_user or SYSTEM_USER, operated_type="approve", operated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        self.annotate(approvals=approvals)
         return True, 'Success'
 
     def execute(self):

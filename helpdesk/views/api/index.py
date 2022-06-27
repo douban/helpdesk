@@ -161,9 +161,15 @@ async def ticket_op(ticket_id: int, op: str,
         raise HTTPException(status_code=403, detail='Permission denied')
 
     if op == 'approve':
-        ret, msg = ticket.approve(by_user=current_user.name)
+        ret, msg = await ticket.approve(by_user=current_user.name)
         if not ret:
             raise HTTPException(status_code=400, detail=msg)
+        if ret and "Success" not in msg:
+            await ticket.notify(TicketPhase.REQUEST)
+            ticket_id = await ticket.save()
+            if not ticket_id:
+                raise HTTPException(status_code=500, detail='Failed to save ticket info when has next approval')
+            return dict(msg='Waiting for the approval of the next level')
         execution, msg = ticket.execute()
         if not execution:
             raise HTTPException(status_code=400, detail=msg)

@@ -103,9 +103,10 @@ class Action(DictSerializableClassMixin):
         ticket.annotate(policy_id=policy.id)
         ticket.annotate(current_node=policy.init_node.get("name"))
         ticket.annotate(approvals=list())
-        if (self.target_object in AUTO_APPROVAL_TARGET_OBJECTS or user.is_admin or 
-        await ticket.get_rule_actions('is_auto_approval') or policy.is_auto_approved):
-            ret, msg = ticket.approve(auto=True)
+        # if (self.target_object in AUTO_APPROVAL_TARGET_OBJECTS or user.is_admin or 
+        # await ticket.get_rule_actions('is_auto_approval') or policy.is_auto_approved):
+        if policy.is_auto_approved:
+            ret, msg = await ticket.approve(auto=True)
             if not ret:
                 return None, msg
 

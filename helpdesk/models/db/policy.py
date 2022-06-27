@@ -47,7 +47,6 @@ class Policy(db.Model):
                 return node
         return None
 
-    @property
     def next_node(self, node_name):
         link_node_dict = self.node_next_dict
         return link_node_dict.get(node_name)
@@ -61,6 +60,13 @@ class Policy(db.Model):
     def is_auto_approved(self):
         start_node = self.init_node
         return start_node.get("name")=="auto_approve"
+
+    def get_node_approvers(self, node_name):
+        nodes = self.definition.get("nodes")
+        for node in nodes:
+            if node.get("name") == node_name:
+                return node.get("approvers").split(",")
+        return []
 
 
 class TicketPolicy(db.Model):
