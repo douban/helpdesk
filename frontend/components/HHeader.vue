@@ -13,6 +13,9 @@
       <a-menu-item key="2">
         <NuxtLink :to="{name: 'ticket'}">Tickets</NuxtLink>
       </a-menu-item>
+       <a-menu-item key="3">
+        <NuxtLink :to="{name: 'policies'}">Approval Flow</NuxtLink>
+      </a-menu-item>
       <a-sub-menu :style="{ float: 'right' }">
         <span slot="title">
             <span :style="{margin: '10px'}">{{ user.name }}</span>

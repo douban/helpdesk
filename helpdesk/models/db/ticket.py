@@ -134,7 +134,9 @@ class Ticket(db.Model):
             user.name in await self.get_rule_actions('approver'))
 
     async def can_admin(self, user):
-        return user.is_admin or user.name in await self.get_rule_actions('approver')
+        policy = await self.get_flow_policy()
+        approvers = policy.get_node_approvers(self.ticket.annotation.get("current_node"))
+        return user.is_admin or user.name in approvers
 
     @cached_property
     async def rules(self):
