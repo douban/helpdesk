@@ -14,7 +14,7 @@
         <NuxtLink :to="{name: 'ticket'}">Tickets</NuxtLink>
       </a-menu-item>
        <a-menu-item key="3">
-        <NuxtLink :to="{name: 'policies'}">Approval Flow</NuxtLink>
+        <NuxtLink :to="{name: 'policy'}">Approval Flow</NuxtLink>
       </a-menu-item>
       <a-sub-menu :style="{ float: 'right' }">
         <span slot="title">
@@ -48,8 +48,11 @@ export default {
     },
     selectedMenu () {
       const ticketRouteNames = ['ticket', 'ticket-id']
+      const policyRouteNames = ['policy', 'policy-id']
       if (ticketRouteNames.includes(this.$route.name)) {
         return ['2']
+      } else if (policyRouteNames.includes(this.$route.name)) {
+        return ['3']
       } else return ['1']
     }
   },
