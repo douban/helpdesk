@@ -1,5 +1,11 @@
 <template>
   <a-layout>
+    <a-layout-content>
+      <!-- <div style="text-align: right; margin: 0"> -->
+      <a-button type="primary" style="margin-top:16px;margin-bottom:16px" @click="toggleResult">Create</a-button>
+      <a-divider type="vertical" />
+      <a-button type="primary" style="margin-top:16px;margin-bottom:16px" @click="toggleResult">Associate</a-button>
+    <!-- </div> -->
     <a-table
       :columns="columns"
       :data-source="tableData"
@@ -8,18 +14,13 @@
       row-key="id"
       class="whiteBackground"
     >
-      <NuxtLink
-        slot="id"
-        slot-scope="text, record"
-        :to="{name: 'policy-id', params: {id: record.id}}">
-        {{record.id}}
-      </NuxtLink>
       <span slot="action" slot-scope="text, record">
-        <a :href="record.url">detail</a>
+        <NuxtLink :to="{name: 'policy-id', params: {id: record.id}}">detail</NuxtLink>
         <a-divider type="vertical" />
         <NuxtLink :to="{ name: 'action', params: { action: record.provider_object }, query: { backfill: record.id }}">delete</NuxtLink>
         </span>
     </a-table>
+    </a-layout-content>
   </a-layout>
 </template>
 
