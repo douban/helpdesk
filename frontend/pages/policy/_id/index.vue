@@ -5,9 +5,9 @@
         <a-icon type="left" /> <span>Return to list</span>
       </router-link>
       <a-divider></a-divider>
-      <a-card title="Basic Info" :style="{ marginTop: '16px' }">
-        <a-row><b>Policy Name</b>: {{policyInfo.name}}</a-row>
-        <a-row><b>Display</b>: {{policyInfo.display}}</a-row>
+      <a-card title="Info" :style="{ marginTop: '16px' }">
+        <a-row><b>Policy Name</b>: {{ policyInfo.name }}</a-row>
+        <a-row><b>Display</b>: {{ policyInfo.display }}</a-row>
         <a-row>
           <a-col :span="12"><b>Created by</b>: {{policyInfo.created_by}}</a-col>
           <a-col :span="12"><b>Created at</b>: {{UTCtoLcocalTime(policyInfo.created_at)}}</a-col>
@@ -16,18 +16,50 @@
           <a-col :span="12"><b>Updated by</b>: {{policyInfo.submitter}}</a-col>
           <a-col :span="12"><b>Updated at</b>: {{UTCtoLcocalTime(policyInfo.updated_at)}}</a-col>
         </a-row>
-        <a-row><b>definition</b>: {{ nodesInfo }}</a-row>
-      </a-card>
-      <a-card title="Params" :style="{ marginTop: '16px' }">
-        <a-row v-for="(value, name, index) in policyInfo.definition" :key="index">
-          <b>{{name}}</b>: {{value}}
+        <a-row><b>Definition</b>: </a-row>
+        <a-steps :space="100" >
+          <a-step title="Start"  style="margin-top:24px;margin-bottom:24px"></a-step>
+          <a-step v-for="node in nodesInfo" :key="node" :title="node.name" style="margin-top:24px;margin-bottom:24px"></a-step>
+          <a-step title="End" style="margin-top:24px;margin-bottom:24px"></a-step>
+		    </a-steps>
+        <a-form v-for="(node, index) in nodesInfo"
+              :key="index"
+              method="POST"
+              layout="vertical"
+              hide-required-mark
+              @submit="(e) => onSubmit(e, index)">
+        <a-row>
+          <a-col :span="10" style="float:left">
+            <a-form-item label="Node Name">
+              <a-input v-model="node.name" name="name" placeholder="Untitled"></a-input>
+            </a-form-item>
+          </a-col>
+          <a-col :span="10" style="float:right">
+            <a-form-item label="Next Node">
+              <a-input v-model="node.next" name="next" placeholder='Untitled'></a-input>
+            </a-form-item>
+          </a-col>
         </a-row>
+        <a-row>
+          <a-col :span="10" style="float:left">
+            <a-form-item label="Description"  label-width="100px">
+              <a-textarea v-model="node.desc" name="desc" placeholder='Untitled'></a-textarea>
+            </a-form-item>
+          </a-col>
+          <a-col :span="10" style="float:right">
+            <a-form-item label="Approvers">
+              <a-input v-model="node.approvers" name="approvers"
+                       placeholder="Approver names seperated by comma"
+              ></a-input>
+    
+            </a-form-item>
+            </a-col>
+        </a-row>
+      </a-form>
+        <a-button type="medium" shape="circle" style="margin-top" icon="plus" @click="addNode"/>
+
+        <a-button type="primary" :disabled="!canSubmit" >Submit</a-button>
       </a-card>
-      <!-- <a-card title="Flow Info" :style="{ marginTop: '16px' }">
-      <a-steps :space="100" :active="active" finish-status="success">
-			<a-step v-for="node in policyInfo.defination.nodes" v-bind:key="node" :title="node.name"></a-step>
-		  </a-steps> -->
-      <!-- </a-card> -->
     </a-card>
   </a-layout>
 </template>
@@ -42,6 +74,7 @@ export default {
       table_data: [{}],
       filtered: {},
       loadingIntervalId: null,
+      canSubmit: true,
       autoRefreshOn: false,
       autoRefreshDisabled: false,
       autoRefreshBtnText: 'Auto Refresh OFF',
@@ -54,8 +87,14 @@ export default {
       return this.table_data[0]
     },
     nodesInfo () {
-      return this.policyInfo.definition
-    } 
+      const nodes = "nodes"
+      if (this.policyInfo.definition) {
+        if (this.policyInfo.definition[nodes]) {
+          return this.policyInfo.definition[nodes]
+        }
+      }
+      return []
+    }
   },
   watch: {
     '$route' () {
@@ -79,6 +118,10 @@ export default {
           this.table_data = response.data.policies
         })
     },
+    addNode () {
+      this.dialogForm = true
+      this.List.push ({name: '', next: '', desc: '', approvers: ''})
+    }
   }
 }
 </script>

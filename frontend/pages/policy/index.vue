@@ -1,9 +1,9 @@
 <template>
-  <a-layout>
+  <!-- <a-layout> -->
     <a-layout-content>
       <!-- <div style="text-align: right; margin: 0"> -->
       <a-button type="primary" style="margin-top:16px;margin-bottom:16px" @click="toggleResult">Create</a-button>
-      <a-divider type="vertical" />
+        <a-divider type="vertical" />
       <a-button type="primary" style="margin-top:16px;margin-bottom:16px" @click="toggleResult">Associate</a-button>
     <!-- </div> -->
     <a-table
@@ -12,16 +12,15 @@
       :pagination="pagination"
       :loading="loading"
       row-key="id"
-      class="whiteBackground"
-    >
+      class="whiteBackground">
       <span slot="action" slot-scope="text, record">
         <NuxtLink :to="{name: 'policy-id', params: {id: record.id}}">detail</NuxtLink>
-        <a-divider type="vertical" />
+          <a-divider type="vertical" />
         <NuxtLink :to="{ name: 'action', params: { action: record.provider_object }, query: { backfill: record.id }}">delete</NuxtLink>
-        </span>
+      </span>
     </a-table>
     </a-layout-content>
-  </a-layout>
+  <!-- </a-layout> -->
 </template>
 
 <script>
