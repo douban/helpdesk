@@ -1,11 +1,11 @@
 <template>
   <!-- <a-layout> -->
     <a-layout-content>
-      <!-- <div style="text-align: right; margin: 0"> -->
-      <a-button type="primary" style="margin-top:16px;margin-bottom:16px" @click="toggleResult">Create</a-button>
+      <div style="margin-top:16px;margin-bottom:16px">
+      <a-button type="primary" @click="toggleResult">Create</a-button>
         <a-divider type="vertical" />
-      <a-button type="primary" style="margin-top:16px;margin-bottom:16px" @click="toggleResult">Associate</a-button>
-    <!-- </div> -->
+      <a-button type="primary" @click="toggleResult">Associate</a-button>
+    </div>
     <a-table
       :columns="columns"
       :data-source="tableData"
@@ -15,8 +15,11 @@
       class="whiteBackground">
       <span slot="action" slot-scope="text, record">
         <NuxtLink :to="{name: 'policy-id', params: {id: record.id}}">detail</NuxtLink>
-          <a-divider type="vertical" />
-        <NuxtLink :to="{ name: 'action', params: { action: record.provider_object }, query: { backfill: record.id }}">delete</NuxtLink>
+        <a-divider type="vertical" />
+        <a-popconfirm title="Sure to delete?" ok-text="Ok" cancel-text="Cancel" 
+          @confirm="delPolicy(record.id)">
+          <a>delete</a>
+        </a-popconfirm>
       </span>
     </a-table>
     </a-layout-content>
@@ -118,13 +121,20 @@ export default {
     handlePolicyList (response) {
       this.pagination.total = response.data.total
       this.pagination.current = response.data.page
-      this.pagination.pageSize = response.data.page_size || "20"
+      this.pagination.pageSize = response.data.page_size || 20
       // pagination.pageSize  and pagination.current are decorated by ```.sync``
       // the following line is vital. dont know why, just do it.
       this.pagination = {...this.pagination}
       this.tableData = response.data.items
       this.loading = false
     },
+    delPolicy (id) {
+      this.$axios.delete('/api/policies', {"params": {id}}).then(
+        res => { 
+          this.$message(res)
+      })
+      // this.loading = true
+    }
   }
 }
 </script>

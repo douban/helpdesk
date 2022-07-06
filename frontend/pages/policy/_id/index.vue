@@ -4,61 +4,61 @@
       <router-link :to="{name: 'policy'}">
         <a-icon type="left" /> <span>Return to list</span>
       </router-link>
-      <a-divider></a-divider>
-      <a-card title="Info" :style="{ marginTop: '16px' }">
-        <a-row><b>Policy Name</b>: {{ policyInfo.name }}</a-row>
-        <a-row><b>Display</b>: {{ policyInfo.display }}</a-row>
-        <a-row>
-          <a-col :span="12"><b>Created by</b>: {{policyInfo.created_by}}</a-col>
-          <a-col :span="12"><b>Created at</b>: {{UTCtoLcocalTime(policyInfo.created_at)}}</a-col>
-        </a-row>
-        <a-row>
-          <a-col :span="12"><b>Updated by</b>: {{policyInfo.submitter}}</a-col>
-          <a-col :span="12"><b>Updated at</b>: {{UTCtoLcocalTime(policyInfo.updated_at)}}</a-col>
-        </a-row>
-        <a-row><b>Definition</b>: </a-row>
+      <a-card :title="policyInfo.name" :style="{ marginTop: '16px' }">
         <a-steps :space="100" >
           <a-step title="Start"  style="margin-top:24px;margin-bottom:24px"></a-step>
-          <a-step v-for="node in nodesInfo" :key="node" :title="node.name" style="margin-top:24px;margin-bottom:24px"></a-step>
+          <a-step v-for="node in nodesInfo" :key="node" :title="node.name" :description="node.approvers" style="margin-top:24px;margin-bottom:24px"></a-step>
           <a-step title="End" style="margin-top:24px;margin-bottom:24px"></a-step>
 		    </a-steps>
-        <a-form v-for="(node, index) in nodesInfo"
-              :key="index"
-              method="POST"
-              layout="vertical"
-              hide-required-mark
-              @submit="(e) => onSubmit(e, index)">
-        <a-row>
-          <a-col :span="10" style="float:left">
-            <a-form-item label="Node Name">
-              <a-input v-model="node.name" name="name" placeholder="Untitled"></a-input>
-            </a-form-item>
+        <a-form layout="inline">
+        	<div>
+          <a-col :span="12" style="margin-bottom: 24px">
+          <a-form-item label="Flow Name">
+            <a-input v-model="policyInfo.name" placeholder="input approver flow name" style="width:300px"></a-input>
+          </a-form-item>
           </a-col>
-          <a-col :span="10" style="float:right">
-            <a-form-item label="Next Node">
-              <a-input v-model="node.next" name="next" placeholder='Untitled'></a-input>
-            </a-form-item>
+          <a-col :span="12" style="margin-bottom: 24px">
+          <a-form-item label="Description">
+            <a-input v-model="policyInfo.display" placeholder="input description" style="width:300px"></a-input>
+          </a-form-item>
           </a-col>
-        </a-row>
-        <a-row>
-          <a-col :span="10" style="float:left">
-            <a-form-item label="Description"  label-width="100px">
-              <a-textarea v-model="node.desc" name="desc" placeholder='Untitled'></a-textarea>
-            </a-form-item>
-          </a-col>
-          <a-col :span="10" style="float:right">
-            <a-form-item label="Approvers">
-              <a-input v-model="node.approvers" name="approvers"
-                       placeholder="Approver names seperated by comma"
-              ></a-input>
-    
-            </a-form-item>
-            </a-col>
-        </a-row>
-      </a-form>
-        <a-button type="medium" shape="circle" style="margin-top" icon="plus" @click="addNode"/>
-
-        <a-button type="primary" :disabled="!canSubmit" >Submit</a-button>
+          </div>
+          <a-divider>Nodes</a-divider>
+          <div v-for="(node, index) in nodesInfo" :key="index" style="margin-bottom: 24px">
+          <a-form-item label="name">
+	 	        <a-input v-model="node.name" placeholder="input node name"></a-input>
+ 	        </a-form-item>
+          <a-form-item label="desc">
+	 	        <a-input v-model="node.desc" placeholder="input node description"></a-input>
+ 	        </a-form-item>
+          <a-form-item label="next">
+	 	        <a-input v-model="node.next" placeholder="input next node name"></a-input>
+ 	        </a-form-item>
+          <a-form-item label="approvers">
+	 	        <a-input v-model="node.approvers" placeholder="input node approvers"></a-input>
+ 	        </a-form-item>
+          <a-form-item>
+		        <a-icon type="plus-circle" @click="addNode"/>
+ 	        </a-form-item>
+ 	        <a-form-item v-if="index !== 0">
+		        <a-icon type="minus-circle" @click="removeNode(node)"/>
+ 	        </a-form-item>
+          </div>
+         <div style="text-align: center; margin-top: 32px">
+          <a-form-item>
+            <a-button type="primary" :disabled="!canSubmit" @click="handleSubmit">Submit</a-button>
+            <a-modal
+              v-model="showSubmitOK"
+              title="Submit success!"
+              ok-text="Go detail"
+              cancel-text="Submit another"
+              @ok="gotoTicketDetail"
+              @cancel="showSubmitOK = false">
+              <p>You can stay here to submit another one</p>
+            </a-modal>
+          </a-form-item>
+        </div>
+        </a-form>
       </a-card>
     </a-card>
   </a-layout>
@@ -118,9 +118,21 @@ export default {
           this.table_data = response.data.policies
         })
     },
-    addNode () {
-      this.dialogForm = true
-      this.List.push ({name: '', next: '', desc: '', approvers: ''})
+	  addNode() { 
+		  this.nodesInfo.push({
+        name: '',
+        next: '',
+        desc: '',
+        approvers: ''})
+    },
+    removeNode(node) {
+		  const index = this.nodesInfo.indexOf(node);
+		  if(index !== -1) {
+			  this.nodesInfo.splice(index, 1);
+		  }
+	  },
+    handleSubmit() {
+
     }
   }
 }

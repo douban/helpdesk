@@ -17,27 +17,6 @@ async def policy_list(params: Params = Depends(), _: User = Depends(require_admi
     return paginate(policies, params)
 
 
-@router.post('/policies')
-async def add_policy(flow_data: PolicyFlowReq, current_user: User = Depends(get_current_user),
-                     _: User = Depends(require_admin)):
-    policy = Policy(
-        name=flow_data.name,
-        display=flow_data.display,
-        definition=flow_data.definition,
-        created_by=current_user.name,
-        created_at=datetime.now(),
-        updated_by='',
-        updated_at=datetime.now())
-    policy_id = await policy.save()
-    new_policy = await Policy.get(policy_id)
-    if not new_policy:
-        raise HTTPException(status_code=500, detail="policy create failed")
-    return dict(
-        policies=[new_policy],
-        total=1,
-    )
-
-
 @router.get('/policies/{policy_id}')
 async def get_policy(policy_id: int, _: User = Depends(require_admin)):
     policy = await Policy.get(policy_id)
@@ -49,13 +28,29 @@ async def get_policy(policy_id: int, _: User = Depends(require_admin)):
     )
 
 
-@router.patch('/policies/{policy_id}')
-async def update_policy(policy_id: int, flow_data: PolicyFlowReq, current_user: User = Depends(get_current_user),
+@router.post('/policies/{policy_id}')
+async def createOrupdate_policy(policy_id: int, flow_data: PolicyFlowReq, current_user: User = Depends(get_current_user),
                         _: User = Depends(require_admin)):
     policy = await Policy.get(policy_id)
     if not policy:
-        raise HTTPException(status_code=500, detail="policy not exist")
-
+        # new
+        policy = Policy(
+            name=flow_data.name,
+            display=flow_data.display,
+            definition=flow_data.definition,
+            created_by=current_user.name,
+            created_at=datetime.now(),
+            updated_by='',
+            updated_at=datetime.now())
+        policy_id = await policy.save()
+        new_policy = await Policy.get(policy_id)
+        if not new_policy:
+            raise HTTPException(status_code=500, detail="policy create failed")
+        return dict(
+            policies=[new_policy],
+            total=1,
+        )
+    # update
     flow = dict(
         id=policy_id,
         name=flow_data.name if flow_data.name else policy.name,
