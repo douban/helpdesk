@@ -21,7 +21,8 @@ async def policy_list(params: Params = Depends(), _: User = Depends(require_admi
 async def get_policy(policy_id: int, _: User = Depends(require_admin)):
     policy = await Policy.get(policy_id)
     if not policy:
-        raise HTTPException(status_code=500, detail="policy not exist")
+        # raise HTTPException(status_code=500, detail="policy not exist")
+        return dict(policies=[], total=1)
     return dict(
         policies=[policy],
         total=1,

@@ -2,9 +2,7 @@
   <!-- <a-layout> -->
     <a-layout-content>
       <div style="margin-top:16px;margin-bottom:16px">
-      <a-button type="primary" @click="toggleResult">Create</a-button>
-        <a-divider type="vertical" />
-      <a-button type="primary" @click="toggleResult">Associate</a-button>
+      <a-button type="primary" @click="createPolicy">Create</a-button>
     </div>
     <a-table
       :columns="columns"
@@ -15,6 +13,8 @@
       class="whiteBackground">
       <span slot="action" slot-scope="text, record">
         <NuxtLink :to="{name: 'policy-id', params: {id: record.id}}">detail</NuxtLink>
+        <a-divider type="vertical" />
+        <NuxtLink :to="{name: 'policy-id', params: {id: record.id}}">associate</NuxtLink>
         <a-divider type="vertical" />
         <a-popconfirm title="Sure to delete?" ok-text="Ok" cancel-text="Cancel" 
           @confirm="delPolicy(record.id)">
@@ -129,12 +129,14 @@ export default {
       this.loading = false
     },
     delPolicy (id) {
-      this.$axios.delete('/api/policies', {"params": {id}}).then(
+      this.$axios.delete('/api/policies/' + id).then(
         res => { 
-          this.$message(res)
-      })
-      // this.loading = true
-    }
+          this.$message.info("success!")
+      }).catch((error) => {
+        this.$message.warning(error)
+        })
+      this.loadPolicies(this.$route.params)
+    },
   }
 }
 </script>
