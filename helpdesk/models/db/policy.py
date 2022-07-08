@@ -83,6 +83,11 @@ class TicketPolicy(db.Model):
         filter_ = cls.__table__.c.ticket_name == ticket_name
         return await cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset)
 
+    @classmethod
+    async def get_by_policy_id(cls, policy_id, desc=False, limit=None, offset=None):
+        filter_ = cls.__table__.c.policy_id == policy_id
+        return await cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset)
+
     def match(self, context):
         try:
             return Rule(self.link_condition).match(context)

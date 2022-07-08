@@ -1,8 +1,9 @@
 <template>
-  <!-- <a-layout> -->
     <a-layout-content>
       <div style="margin-top:16px;margin-bottom:16px">
-      <a-button type="primary" @click="createPolicy">Create</a-button>
+      <NuxtLink :to="{name: 'policy-id', params: {id: 0}}">
+        <a-button type="primary">Create</a-button>
+      </NuxtLink>
     </div>
     <a-table
       :columns="columns"
@@ -14,6 +15,7 @@
       <span slot="action" slot-scope="text, record">
         <NuxtLink :to="{name: 'policy-id', params: {id: record.id}}">detail</NuxtLink>
         <a-divider type="vertical" />
+        <!-- <h-associate-drawer v-if="$store.getters.isAdmin"></h-associate-drawer> -->
         <NuxtLink :to="{name: 'policy-id', params: {id: record.id}}">associate</NuxtLink>
         <a-divider type="vertical" />
         <a-popconfirm title="Sure to delete?" ok-text="Ok" cancel-text="Cancel" 
@@ -23,7 +25,6 @@
       </span>
     </a-table>
     </a-layout-content>
-  <!-- </a-layout> -->
 </template>
 
 <script>

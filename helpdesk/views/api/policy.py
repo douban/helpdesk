@@ -6,7 +6,7 @@ from fastapi_pagination import Page, Params, paginate
 from helpdesk.models.db.policy import Policy, TicketPolicy
 from helpdesk.models.user import User
 from helpdesk.libs.dependency import get_current_user, require_admin
-
+from helpdesk.models.action_tree import action_tree
 from . import router
 from .schemas import PolicyFlowReq, PolicyFlowResp, TicketPolicyReq
 
@@ -77,7 +77,23 @@ async def remove_policy(policy_id: int, _: User = Depends(require_admin)):
     return dict(policy_id=policy_id)
 
 
-@router.post('/policy_associate/{op}')
+@router.get('/associates/{config_type}/{target_object}')
+async def get_policy_associate(config_type: str, target_object: str):
+    if config_type not in ('policy', 'ticket'):
+        raise HTTPException(status_code=400, detail='Config type not supported')
+    if config_type == "policy":
+        associates = await TicketPolicy.get_by_policy_id(int(target_object))
+        return dict(data=associates)
+    if config_type == "ticket":
+        action_tree_leaf = action_tree.find(target_object) if target_object != '' else action_tree.first()
+        if not action_tree_leaf:
+            raise HTTPException(status_code=404, detail='Target object not found')
+        action = action_tree_leaf.action
+        associates = await TicketPolicy.get_by_ticket_name(action.target_object)
+        return dict(data=associates)
+
+
+@router.post('/associate/{op}')
 async def ticket_policy_associate(params: TicketPolicyReq, op: Optional[str] = None, _: User = Depends(require_admin)):
     if op == 'del':
         if not params.id:
