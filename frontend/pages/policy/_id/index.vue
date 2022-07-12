@@ -58,75 +58,76 @@
         </div>
       </a-card>
     </a-card>
+    <h-associate-drawer></h-associate-drawer>
   </a-layout>
 </template>
 
 <script>
+import HAssociateDrawer from '../../../components/HAssociateDrawer.vue'
 import { UTCtoLcocalTime } from '@/utils/HDate'
 export default {
-  data() {
-    return {
-      table_data: [{}],
-      filtered: {},
-      policyInfo: {},
-      nodesInfo: [{}],
-      loadingIntervalId: null,
-      canSubmit: true,
-      autoRefreshOn: false,
-      autoRefreshDisabled: false,
-      autoRefreshBtnText: 'Auto Refresh OFF',
-      autoRefreshBtnUpdateTimer: null,
-      isRefreshing: false,
-    }
-  },
-  computed: {
-  },
-  watch: {
-    '$route'() {
-      this.loadPolicy()
-    }
-  },
-  mounted() {
-    this.loadPolicy()
-  },
-  methods: {
-    UTCtoLcocalTime,
-    loadPolicy () {
-      this.$axios.get('/api/policies/' + this.$route.params.id).then(
-        (response) => {
-          this.table_data = response.data.policies
-          if (this.table_data[0]) {
-            this.policyInfo = this.table_data[0]
-          }
-          if (this.table_data[0?.definition?.nodes])  {
-              this.nodesInfo = this.policyInfo.definition.nodes
-          }
-        })
+    components: { HAssociateDrawer },
+    data() {
+        return {
+            table_data: [{}],
+            filtered: {},
+            policyInfo: {},
+            nodesInfo: [{}],
+            loadingIntervalId: null,
+            canSubmit: true,
+            autoRefreshOn: false,
+            autoRefreshDisabled: false,
+            autoRefreshBtnText: "Auto Refresh OFF",
+            autoRefreshBtnUpdateTimer: null,
+            isRefreshing: false,
+        };
     },
-    addNode() {
-      this.nodesInfo.push({})
+    computed: {},
+    watch: {
+        "$route"() {
+            this.loadPolicy();
+        }
     },
-    removeNode(node) {
-      const index = this.nodesInfo.indexOf(node);
-      if (index !== -1) {
-        this.nodesInfo.splice(index, 1);
-      }
+    mounted() {
+        this.loadPolicy();
     },
-    changeInput() {
-      this.$forceUpdate()
+    methods: {
+        UTCtoLcocalTime,
+        loadPolicy() {
+            this.$axios.get("/api/policies/" + this.$route.params.id).then((response) => {
+                this.table_data = response.data.policies;
+                if (this.table_data[0]) {
+                    this.policyInfo = this.table_data[0];
+                    if (this.policyInfo.definition && this.policyInfo.definition.nodes) {
+                        this.nodesInfo = this.table_data[0].definition.nodes;
+                    }
+                }
+            });
+            console.log(this.nodesInfo);
+        },
+        addNode() {
+            this.nodesInfo.push({});
+        },
+        removeNode(node) {
+            const index = this.nodesInfo.indexOf(node);
+            if (index !== -1) {
+                this.nodesInfo.splice(index, 1);
+            }
+        },
+        changeInput() {
+            this.$forceUpdate();
+        },
+        handleSubmit() {
+            const data = { "name": this.policyInfo.name, "display": this.policyInfo.display, "definition": { nodes: this.nodesInfo } };
+            this.$axios.post("/api/policies/" + this.$route.params.id, data).then((response) => {
+                this.table_data = response.data.policies;
+                this.$message.success("submit success!");
+            }).catch((e) => {
+                this.$message.warning(JSON.stringify(e));
+            });
+            this.loadPolicy();
+        }
     },
-    handleSubmit() {
-      const data = { "name": this.policyInfo.name, "display": this.policyInfo.display, "definition": { nodes: this.nodesInfo } }
-      this.$axios.post('/api/policies/' + this.$route.params.id, data).then(
-        (response) => {
-          this.table_data = response.data.policies
-          this.$message.success("submit success!")
-        }).catch((e) => {
-          this.$message.warning(JSON.stringify(e))
-        })
-      this.loadPolicy()
-    }
-  }
 }
 </script>
 

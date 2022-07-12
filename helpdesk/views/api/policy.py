@@ -83,23 +83,23 @@ async def get_policy_associate(config_type: str, target_object: str):
         raise HTTPException(status_code=400, detail='Config type not supported')
     if config_type == "policy":
         associates = await TicketPolicy.get_by_policy_id(int(target_object))
-        return dict(data=associates)
+        return dict(associates=associates)
     if config_type == "ticket":
         action_tree_leaf = action_tree.find(target_object) if target_object != '' else action_tree.first()
         if not action_tree_leaf:
             raise HTTPException(status_code=404, detail='Target object not found')
         action = action_tree_leaf.action
         associates = await TicketPolicy.get_by_ticket_name(action.target_object)
-        return dict(data=associates)
+        return dict(associates=associates)
 
 
-@router.post('/associate/{op}')
+@router.post('/associates/{op}')
 async def ticket_policy_associate(params: TicketPolicyReq, op: Optional[str] = None, _: User = Depends(require_admin)):
     if op == 'del':
         if not params.id:
             raise HTTPException(status_code=400, detail='ticket associate policy id is required')
         await TicketPolicy.delete(params.id)
-        return params.id
+        return dict(associate=params.id)
     ticket_policy_form = TicketPolicy(
         id=params.id,
         policy_id=params.policy_id,
@@ -107,10 +107,8 @@ async def ticket_policy_associate(params: TicketPolicyReq, op: Optional[str] = N
         link_condition=params.link_condition
     )
     ticket_policy_id = await ticket_policy_form.save()
-    ticket_policy = await TicketPolicy.get(ticket_policy_id)
+    associate_id = params.id if params.id else ticket_policy_id
+    ticket_policy = await TicketPolicy.get(associate_id)
     if not ticket_policy:
         raise HTTPException(status_code=500, detail="ticket policy associate failed")
-    return dict(
-        association=[ticket_policy],
-        total=1,
-    )
+    return dict(associate=ticket_policy)
