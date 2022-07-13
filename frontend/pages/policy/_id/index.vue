@@ -55,6 +55,15 @@
         </a-form>
         <div style="text-align: center; margin-top: 32px">
           <a-button type="primary" :disabled="!canSubmit" @click="handleSubmit">Submit</a-button>
+            <a-modal
+              v-model="showCreateOK"
+              title="Submit success!"
+              ok-text="Go detail"
+              @ok="gotoNewPolicy"
+              @cancel="showCreateOK = false"
+            >
+            <p>create approval flow success, id: {{ newPolicyId }}</p>
+            </a-modal>
         </div>
       </a-card>
     </a-card>
@@ -69,7 +78,6 @@ export default {
     components: { HAssociateDrawer },
     data() {
         return {
-            table_data: [{}],
             filtered: {},
             policyInfo: {},
             nodesInfo: [{}],
@@ -80,6 +88,8 @@ export default {
             autoRefreshBtnText: "Auto Refresh OFF",
             autoRefreshBtnUpdateTimer: null,
             isRefreshing: false,
+            showCreateOK: false,
+            newPolicyId: 0
         };
     },
     computed: {},
@@ -94,16 +104,14 @@ export default {
     methods: {
         UTCtoLcocalTime,
         loadPolicy() {
+          if (this.$route.params.id !== 0) {
             this.$axios.get("/api/policies/" + this.$route.params.id).then((response) => {
-                this.table_data = response.data.policies;
-                if (this.table_data[0]) {
-                    this.policyInfo = this.table_data[0];
-                    if (this.policyInfo.definition && this.policyInfo.definition.nodes) {
-                        this.nodesInfo = this.table_data[0].definition.nodes;
-                    }
+              this.policyInfo = response.data;
+              if (this.policyInfo.definition && this.policyInfo.definition.nodes) {
+                this.nodesInfo = this.policyInfo.definition.nodes;
                 }
             });
-            console.log(this.nodesInfo);
+          }
         },
         addNode() {
             this.nodesInfo.push({});
@@ -118,15 +126,29 @@ export default {
             this.$forceUpdate();
         },
         handleSubmit() {
-            const data = { "name": this.policyInfo.name, "display": this.policyInfo.display, "definition": { nodes: this.nodesInfo } };
-            this.$axios.post("/api/policies/" + this.$route.params.id, data).then((response) => {
-                this.table_data = response.data.policies;
+          const data = { "name": this.policyInfo.name, "display": this.policyInfo.display, "definition": { nodes: this.nodesInfo } };
+          if (this.$route.params.id === 0) {
+            this.$axios.post("/api/policies", data).then((response) => {
+                this.newPolicyId = response.data.id;
+                this.$message.success("submit success!");
+                console.log(this.newPolicyId)
+                this.showCreateOK = true
+            }).catch((e) => {
+                this.$message.warning(JSON.stringify(e));
+            });
+          } else {
+            this.$axios.patch("/api/policies/" + this.$route.params.id, data).then((response) => {
+                this.policyInfo = response.data;
                 this.$message.success("submit success!");
             }).catch((e) => {
                 this.$message.warning(JSON.stringify(e));
             });
-            this.loadPolicy();
-        }
+          }
+          this.loadPolicy();
+        },
+        gotoNewPolicy () {
+          this.$router.push({path:'/policy/' + this.newPolicyId})
+        },
     },
 }
 </script>

@@ -62,7 +62,8 @@ export default {
     return {
       visible: false,
       handle: 'handle',
-      associates: [{}]
+      associates: [{}],
+      config_type: 'policy'
     }
   },
   computed: {
@@ -70,14 +71,8 @@ export default {
       return this.$route.params.id
     },
     url_associate () {
-      return '/api/associates/policy/' + this.currentPolicy
+      return '/api/associates'
     },
-    url_associate_add () {
-      return '/api/associates/add'
-    },
-    url_associate_del () {
-      return '/api/associates/del'
-    }
   },
   watch: {
     '$route' () {
@@ -95,12 +90,10 @@ export default {
       this.visible = !this.visible
     },
     loadAssociates () {
-      this.$axios.get(this.url_associate).then(
+      this.$axios.get(this.url_associate, {params: {config_type: this.config_type, policy_id: this.currentPolicy}}).then(
         (response) => {
           if (response.status === 200 && response.data) {
-            if (response.data !== []) {
-              this.associates = response.data.associates
-            }
+            this.associates = response.data
           }
           this.associates.push({})
         }
@@ -111,24 +104,35 @@ export default {
     },
     onSubmit (e, index) {
       e.preventDefault()
-      const data = {id:this.associates[index].id, ticket_name: this.associates[index].ticket_name, policy_id: parseInt(this.currentPolicy), link_condition: this.associates[index].link_condition}
-      this.$axios.post(this.url_associate_add, data).then((response) => {
+      const data = {ticket_name: this.associates[index].ticket_name, policy_id: parseInt(this.currentPolicy), link_condition: this.associates[index].link_condition}
+      if (this.associates[index].id) {
+        this.$axios.patch('/api/associates/'+this.associates[index].id, data).then((response) => {
         if (response.data && response.data.id) {
-          this.associates[index].id = response.data.associate
-        }
+          this.associates[index].id = response.data.id
         this.$message.success(JSON.stringify(response.data))
         if (this.associates.length - 1 === index) {
           this.associates.push({})
-        }
+        }}
       }).catch((e) => {
         this.$message.warning(JSON.stringify(e))
       })
+      } else {
+      this.$axios.post(this.url_associate, data).then((response) => {
+        if (response.data && response.data.id) {
+          this.associates[index].id = response.data.id
+        this.$message.success(JSON.stringify(response.data))
+        if (this.associates.length - 1 === index) {
+          this.associates.push({})
+        }}
+      }).catch((e) => {
+        this.$message.warning(JSON.stringify(e))
+      })
+      }
     },
     onDelete (e, index) {
       e.preventDefault()
-      this.$axios.post(this.url_associate_del, {id: this.associates[index].id}).then((response) => {
-        this.$message.success(JSON.stringify(response.data))
-        // delete in js
+      this.$axios.delete('/api/associates/' + this.associates[index].id).then((response) => {
+        this.$message.success("delete success!")
         this.associates.splice(index, 1)
       })
     }

@@ -12,21 +12,26 @@
           <a-form-item label="Approval Flow">
             <!-- <a-input v-model="associate.policy_id" name="policy_id" placeholder="Untitled" required="true"
               style="width: 240px" autocomplete="off"></a-input> -->
-            <a-select v-model="associate.policy_id" :show-search="true" placeholder="select a approval flow" @search="handleSearch" @change="handleChange" style="width: 240px">
+            <a-select v-model="associate.policy_id" :show-search="true" placeholder="select a approval flow" style="width: 240px" @search="handleSearch" @change="handleChange">
               <a-select-option v-for="item in policies" :key="item.id" :value="item.id">{{ item.name }}</a-select-option>
             </a-select>
           </a-form-item>
-          <a-form-item :style="{ textAlign: 'right' }">
-            <a-button type="danger" shape="circle" icon="close" :style="{ marginRight: '8px' }"
-              :disabled="associate.length - 1 === index" @click="(e) => onDelete(e, index)" />
-            <a-button html-type="submit" type="primary" shape="circle" icon="check" />
-          </a-form-item>
+          <a-form-item v-if="associate.policy_id" label="Flow Detail">
+          <a @click="gotoPolicyDetail(associate.policy_id)"> {{associate.policy_id}}</a>
+          </a-form-item>        
         </a-row>
         <a-row>
           <a-form-item label="Rule">
             <a-textarea v-model="associate.link_condition" name="link_condition" rows="1"
               placeholder='e.g. ["onlycontains", ["split", "hosts", ","], "host1", "host2", "host3"]' required="true"
               style="width: 560px"></a-textarea>
+          </a-form-item>
+        </a-row>
+        <a-row :style="{ textAlign: 'right' }">
+        <a-form-item>
+            <a-button type="danger" shape="circle" icon="close" :style="{ marginRight: '8px' }"
+              :disabled="associate.length - 1 === index" @click="(e) => onDelete(e, index)" />
+            <a-button html-type="submit" type="primary" shape="circle" icon="check" />
           </a-form-item>
         </a-row>
         <a-divider />
@@ -57,6 +62,7 @@ export default {
       associates: [{}],
       policies: [{}],
       currentPolicy: undefined,
+      config_type: 'ticket',
     }
   },
   computed: {
@@ -64,13 +70,7 @@ export default {
       return this.$route.params.action
     },
     url_associate() {
-      return '/api/associates/ticket/' + this.currentTicket
-    },
-    url_associate_add() {
-      return '/api/associates/add'
-    },
-    url_associate_del() {
-      return '/api/associates/del'
+      return '/api/associates'
     },
   },
   watch: {
@@ -91,12 +91,10 @@ export default {
       this.visible = !this.visible
     },
     loadAssociates() {
-      this.$axios.get(this.url_associate).then(
+      this.$axios.get(this.url_associate, {params: {config_type: this.config_type, target_object: this.currentTicket}}).then(
         (response) => {
           if (response.status === 200 && response.data) {
-            if (response.data !== []) {
-              this.associates = response.data.associates
-            }
+            this.associates = response.data
           }
           this.associates.push({})
         }
@@ -116,26 +114,41 @@ export default {
     onClose() {
       this.visible = false
     },
+    gotoPolicyDetail(id) {
+      this.$router.push({path:'/policy/' + id})
+    },
     onSubmit(e, index) {
       e.preventDefault()
-      const data = { id: this.associates[index].id, ticket_name: this.currentTicket, policy_id: this.associates[index].policy_id, link_condition: this.associates[index].link_condition }
-      this.$axios.post(this.url_associate_add, data).then((response) => {
+      const data = { ticket_name: this.currentTicket, policy_id: this.associates[index].policy_id, link_condition: this.associates[index].link_condition }
+      if (this.associates[index].id) {
+        this.$axios.patch('/api/associates/'+this.associates[index].id, data).then((response) => {
         if (response.data && response.data.id) {
-          this.associates[index].id = response.data.associate
-        }
+          this.associates[index].id = response.data.id
         this.$message.success(JSON.stringify(response.data))
         if (this.associates.length - 1 === index) {
           this.associates.push({})
-        }
+        }}
       }).catch((e) => {
         this.$message.warning(JSON.stringify(e))
       })
+      } else {
+        this.$axios.post(this.url_associate, data).then((response) => {
+        if (response.data && response.data.id) {
+          this.associates[index].id = response.data.id
+        this.$message.success(JSON.stringify(response.data))
+        if (this.associates.length - 1 === index) {
+          this.associates.push({})
+        }}
+      }).catch((e) => {
+        this.$message.warning(JSON.stringify(e))
+      })
+      }
+
     },
     onDelete(e, index) {
       e.preventDefault()
-      this.$axios.post(this.url_associate_del, { id: this.associates[index].id }).then((response) => {
-        this.$message.success(JSON.stringify(response.data))
-        // delete in js
+      this.$axios.delete('/api/associates/' + this.associates[index].id ).then((response) => {
+        this.$message.success(JSON.stringify("delete success!"))
         this.associates.splice(index, 1)
       })
     }
