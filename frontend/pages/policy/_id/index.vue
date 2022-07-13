@@ -137,7 +137,7 @@ export default {
                 this.$message.warning(JSON.stringify(e));
             });
           } else {
-            this.$axios.patch("/api/policies/" + this.$route.params.id, data).then((response) => {
+            this.$axios.put("/api/policies/" + this.$route.params.id, data).then((response) => {
                 this.policyInfo = response.data;
                 this.$message.success("submit success!");
             }).catch((e) => {

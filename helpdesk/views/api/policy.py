@@ -4,6 +4,7 @@ from datetime import datetime
 from xmlrpc.client import TRANSPORT_ERROR
 from fastapi import HTTPException, Depends
 from fastapi_pagination import Page, Params, paginate
+from h11 import Data
 from helpdesk.models.db.policy import Policy, TicketPolicy
 from helpdesk.models.user import User
 from helpdesk.libs.dependency import get_current_user, require_admin
@@ -22,7 +23,7 @@ async def policy_list(params: Params = Depends(), _: User = Depends(require_admi
 async def get_policy(policy_id: int, _: User = Depends(require_admin)):
     policy = await Policy.get(policy_id)
     if not policy:
-        raise HTTPException(status_code=500, detail="approval flow not found")
+        raise HTTPException(status_code=404, detail="approval flow not found")
     return policy
 
 
@@ -44,19 +45,14 @@ async def createOrupdate_policy(flow_data: PolicyFlowReq, current_user: User = D
     return new_policy
 
 
-@router.patch('/policies/{policy_id}', response_model=PolicyFlowResp)
+@router.put('/policies/{policy_id}', response_model=PolicyFlowResp)
 async def update_policy(policy_id: int, flow_data: PolicyFlowReq, current_user: User = Depends(get_current_user), _: User = Depends(require_admin)):
     policy = await Policy.get(policy_id)
     if not policy:
         raise HTTPException(status_code=404, detail="approval flow not found")
-    policy_form = dict(
-        id=policy_id,
-        name=flow_data.name if flow_data.name else policy.name,
-        display=flow_data.display if flow_data.display else policy.display,
-        definition=flow_data.definition if flow_data.definition else policy.definition,
-        updated_by=current_user.name,
-        updated_at=datetime.now(),
-    )
+    policy_form = flow_data.dict()
+    policy_form["updated_by"] = current_user.name
+    policy_form["updated_at"] = datetime.now()
     await policy.update(**policy_form)
     update_data = await Policy.get(policy_id)
     return update_data
@@ -101,16 +97,12 @@ async def add_associate(params: TicketPolicyReq, _: User = Depends(require_admin
     return ticket_policy
 
 
-@router.patch('/associates/{id}', response_model=TicketPolicyResp)
+@router.put('/associates/{id}', response_model=TicketPolicyResp)
 async def update_associate(id: int, params: TicketPolicyReq, _: User = Depends(require_admin)):
     associate = await TicketPolicy.get(id)
     if not associate:
         raise HTTPException(status_code=404, detail='ticket and policy associate not found')
-    ticket_policy_form = dict(
-        policy_id=params.policy_id,
-        ticket_name=params.ticket_name,
-        link_condition=params.link_condition
-    )
+    ticket_policy_form = params.dict()
     await associate.update(**ticket_policy_form)
     ticket_policy = await TicketPolicy.get(id)
     if not ticket_policy:

@@ -33,15 +33,15 @@ class PolicyFlowResp(BaseModel):
     """
     审批流的响应体
     """
-    id: int = None
-    name: Optional[str] = None
-    display: str = None
-    definition: Optional[dict] = None
+    id: int
+    name: Optional[str]
+    display: str
+    definition: Optional[dict]
 
-    created_at: datetime = None
-    created_by: Optional[str] = None
-    updated_at: datetime = None
-    updated_by: Optional[str] = None
+    created_at: datetime
+    created_by: Optional[str]
+    updated_at: datetime
+    updated_by: Optional[str]
 
     class Config:
         orm_mode = True
@@ -61,8 +61,8 @@ class PolicyFlowReq(BaseModel):
     """
     审批流的请求体
     """
-    name: Optional[str]
-    display: Optional[str]
+    name: str
+    display: str = ""
     definition: Optional[dict]
 
 
@@ -70,19 +70,19 @@ class TicketPolicyReq(BaseModel):
     """
     工单和审批流关联的请求体
     """
-    ticket_name: Optional[str]
-    policy_id: Optional[int]
-    link_condition: Optional[str]
+    ticket_name: str
+    policy_id: int
+    link_condition: str
     
 
 class TicketPolicyResp(BaseModel):
     """
-    工单和审批流关联的请求体
+    工单和审批流关联的响应体
     """
-    id: int = 0
-    ticket_name: Optional[str] = None
-    policy_id: Optional[int] = None
-    link_condition: Optional[str] = None
+    id: int
+    ticket_name: Optional[str]
+    policy_id: Optional[int]
+    link_condition: Optional[str]
 
     class Config:
         orm_mode = True

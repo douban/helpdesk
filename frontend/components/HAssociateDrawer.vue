@@ -27,6 +27,9 @@
                        style="width: 240px"
                        autocomplete="off"
               ></a-input>
+            <a-select v-model="associate.ticket_name" :show-search="true" placeholder="select a ticket name" style="width: 240px" @search="handleSearch" @change="handleChange">
+              <a-select-option v-for="item in list" :key="item.target_object" :value="item.target_object">{{ item.target_object }}</a-select-option>
+            </a-select>
             </a-form-item>
 
           <a-form-item :style="{textAlign: 'right'}">
@@ -56,6 +59,7 @@
 </template>
 
 <script>
+import { addKeyForEachElement, getElementFromArray, getElementsContains } from '~/utils/HFinder'
 export default {
   name: 'HDrawer',
   data () {
@@ -72,6 +76,12 @@ export default {
     },
     url_associate () {
       return '/api/associates'
+    },
+      list () {
+      if (!this.searchText) {
+        return this.$store.state.actionTree
+      }
+      return getElementsContains(this.$store.state.actionTree, this.searchText)
     },
   },
   watch: {
@@ -99,6 +109,32 @@ export default {
         }
       )
     },
+    loadActionTree () {
+      this.$axios.get('/api/action_tree').then(
+        (response) => {
+          let definition = [{name: response.data[0].name}]
+          definition.push.apply(definition, response.data[0].children)
+          // add key for each element in tree
+          definition = addKeyForEachElement(definition)
+          for (let i = 0; i < definition.length; i++) {
+            this.rootSubmenuKeys.push(definition[i].key)
+          }
+          this.checkActionTreeError(definition)
+          this.$store.dispatch('updateActionTree', definition)
+          const actionName = this.$route.params.action
+          // looking for selected item with actionName
+          const e = getElementFromArray(definition, 'target_object', actionName, 'key')
+          if (e !== undefined) {
+            const path = e.key.split('-')
+            this.SelectedKeys = [e.key]
+            this.openKeys = []
+            for (let i = 1; i < path.length; i++) {
+              this.openKeys.push(path.slice(0, i).join('-'))
+            }
+          }
+        }
+      )
+    },
     onClose () {
       this.visible = false
     },
@@ -106,7 +142,7 @@ export default {
       e.preventDefault()
       const data = {ticket_name: this.associates[index].ticket_name, policy_id: parseInt(this.currentPolicy), link_condition: this.associates[index].link_condition}
       if (this.associates[index].id) {
-        this.$axios.patch('/api/associates/'+this.associates[index].id, data).then((response) => {
+        this.$axios.put('/api/associates/'+this.associates[index].id, data).then((response) => {
         if (response.data && response.data.id) {
           this.associates[index].id = response.data.id
         this.$message.success(JSON.stringify(response.data))

@@ -121,7 +121,7 @@ export default {
       e.preventDefault()
       const data = { ticket_name: this.currentTicket, policy_id: this.associates[index].policy_id, link_condition: this.associates[index].link_condition }
       if (this.associates[index].id) {
-        this.$axios.patch('/api/associates/'+this.associates[index].id, data).then((response) => {
+        this.$axios.put('/api/associates/'+this.associates[index].id, data).then((response) => {
         if (response.data && response.data.id) {
           this.associates[index].id = response.data.id
         this.$message.success(JSON.stringify(response.data))
