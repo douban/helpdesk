@@ -13,7 +13,7 @@
       <a-menu-item key="2">
         <NuxtLink :to="{name: 'ticket'}">Tickets</NuxtLink>
       </a-menu-item>
-       <a-menu-item key="3">
+       <a-menu-item key="3" v-if="$store.getters.isAdmin">
         <NuxtLink :to="{name: 'policy'}">Approval Flow</NuxtLink>
       </a-menu-item>
       <a-sub-menu :style="{ float: 'right' }">

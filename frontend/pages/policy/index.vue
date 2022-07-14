@@ -11,7 +11,8 @@
       :pagination="pagination"
       :loading="loading"
       row-key="id"
-      class="whiteBackground">
+      class="whiteBackground"
+      @change="handleTableChange">
       <span slot="action" slot-scope="text, record">
         <NuxtLink :to="{name: 'policy-id', params: {id: record.id}}">detail</NuxtLink>
         <a-divider type="vertical" />
@@ -99,11 +100,11 @@ export default {
         if (queryParams.page === undefined) {
             queryParams.page = 1;
         }
-        if (queryParams.pagesize === undefined) {
-            queryParams.pagesize = 10;
+        if (queryParams.size === undefined) {
+            queryParams.size = 10;
         }
         queryParams.page = Number(queryParams.page);
-        queryParams.pageSize = Number(queryParams.pageSize || 10);
+        queryParams.size = Number(queryParams.size || 10);
         this.loadPolicies(queryParams);
     },
     methods: {
@@ -117,12 +118,26 @@ export default {
         handlePolicyList(response) {
             this.pagination.total = response.data.total;
             this.pagination.current = response.data.page;
-            this.pagination.pageSize = response.data.page_size || 20;
-            // pagination.pageSize  and pagination.current are decorated by ```.sync``
-            // the following line is vital. dont know why, just do it.
+            this.pagination.pageSize = response.data.size || 20;
             this.pagination = { ...this.pagination };
             this.tableData = response.data.items;
             this.loading = false;
+        },
+        handleTableChange (pagination, filters, sorter) {
+            const queryParams = {page: pagination.current, size: pagination.pageSize}
+            const selectedStatus = filters.status
+            if (selectedStatus !== undefined) {
+                queryParams.status__in = selectedStatus.join()
+            }
+            if (sorter.columnKey !== undefined) {
+                queryParams.order_by = sorter.columnKey
+                if (sorter.order === 'ascend') {
+                    queryParams.desc = false
+                } else {
+                    queryParams.desc = true
+                }
+            }
+            this.loadPolicies(queryParams)
         },
         delPolicy(id) {
             this.$axios.delete("/api/policies/" + id).then(res => {

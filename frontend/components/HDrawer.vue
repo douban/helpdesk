@@ -12,8 +12,8 @@
           <a-form-item label="Approval Flow">
             <!-- <a-input v-model="associate.policy_id" name="policy_id" placeholder="Untitled" required="true"
               style="width: 240px" autocomplete="off"></a-input> -->
-            <a-select v-model="associate.policy_id" :show-search="true" placeholder="select a approval flow" style="width: 240px" @search="handleSearch" @change="handleChange">
-              <a-select-option v-for="item in policies" :key="item.id" :value="item.id">{{ item.name }}</a-select-option>
+            <a-select v-model="associate.policy_id" show-search  option-filter-prop="label" allow-clear placeholder="select a approval flow" style="width: 240px">
+              <a-select-option v-for="item in policies" :key="item.id" :value="item.id" :label="item.name">{{ item.name }}</a-select-option>
             </a-select>
           </a-form-item>
           <a-form-item v-if="associate.policy_id" label="Flow Detail">
@@ -105,12 +105,6 @@ export default {
         this.policies = response.data.items;
       });
     },
-    handleSearch(value){
-      this.handleChange(value)
-    },
-    handleChange(value){
-      this.currentPolicy = (value !== null && value !== '') ? value : undefined
-      },
     onClose() {
       this.visible = false
     },

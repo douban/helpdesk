@@ -21,25 +21,16 @@
       >
       <a-row>
             <a-form-item label="Ticket">
-              <a-input v-model="associate.ticket_name" name="ticket_name"
+              <!-- <a-input v-model="associate.ticket_name" name="ticket_name"
                        placeholder="Untitled"
                        required="true"
                        style="width: 240px"
                        autocomplete="off"
-              ></a-input>
-            <a-select v-model="associate.ticket_name" :show-search="true" placeholder="select a ticket name" style="width: 240px" @search="handleSearch" @change="handleChange">
-              <a-select-option v-for="item in list" :key="item.target_object" :value="item.target_object">{{ item.target_object }}</a-select-option>
+              ></a-input> -->
+            <a-select v-model="associate.ticket_name" show-search  option-filter-prop="label" allow-clear placeholder="select a ticket name" style="width: 240px">
+              <a-select-option v-for="item in ticketActions" :key="item.target_object" :value="item.target_object" :label="item.name">{{ item.name }}</a-select-option>
             </a-select>
             </a-form-item>
-
-          <a-form-item :style="{textAlign: 'right'}">
-          <a-button type="danger" shape="circle" icon="close"
-                    :style="{marginRight: '8px'}"
-                    :disabled="associate.length - 1 === index"
-                    @click="(e) => onDelete(e, index)"
-          />
-          <a-button html-type="submit" type="primary" shape="circle" icon="check" />
-        </a-form-item>
       </a-row>
       <a-row>
             <a-form-item label="Rule">
@@ -52,6 +43,13 @@
               ></a-textarea>
             </a-form-item>
             </a-row>
+                    <a-row :style="{ textAlign: 'right' }">
+        <a-form-item>
+            <a-button type="danger" shape="circle" icon="close" :style="{ marginRight: '8px' }"
+              :disabled="associate.length - 1 === index" @click="(e) => onDelete(e, index)" />
+            <a-button html-type="submit" type="primary" shape="circle" icon="check" />
+          </a-form-item>
+        </a-row>
         <a-divider />
       </a-form>
     </a-drawer>
@@ -59,7 +57,7 @@
 </template>
 
 <script>
-import { addKeyForEachElement, getElementFromArray, getElementsContains } from '~/utils/HFinder'
+import {getElementsContains } from '~/utils/HFinder'
 export default {
   name: 'HDrawer',
   data () {
@@ -67,7 +65,9 @@ export default {
       visible: false,
       handle: 'handle',
       associates: [{}],
-      config_type: 'policy'
+      config_type: 'policy',
+      ticketActions: [],
+      selectKeys: [],
     }
   },
   computed: {
@@ -97,6 +97,7 @@ export default {
     },
     showDrawer () {
       this.loadAssociates()
+      this.loadTicketActions()
       this.visible = !this.visible
     },
     loadAssociates () {
@@ -109,31 +110,25 @@ export default {
         }
       )
     },
-    loadActionTree () {
+    loadTicketActions () {
       this.$axios.get('/api/action_tree').then(
         (response) => {
-          let definition = [{name: response.data[0].name}]
+          const definition = [{name: response.data[0].name}]
           definition.push.apply(definition, response.data[0].children)
-          // add key for each element in tree
-          definition = addKeyForEachElement(definition)
           for (let i = 0; i < definition.length; i++) {
-            this.rootSubmenuKeys.push(definition[i].key)
-          }
-          this.checkActionTreeError(definition)
-          this.$store.dispatch('updateActionTree', definition)
-          const actionName = this.$route.params.action
-          // looking for selected item with actionName
-          const e = getElementFromArray(definition, 'target_object', actionName, 'key')
-          if (e !== undefined) {
-            const path = e.key.split('-')
-            this.SelectedKeys = [e.key]
-            this.openKeys = []
-            for (let i = 1; i < path.length; i++) {
-              this.openKeys.push(path.slice(0, i).join('-'))
+            if (definition[i].children) {
+              for (let j = 0; j < definition[i].children.length; j++) {
+                if (!this.selectKeys.includes(definition[i].children[j].target_object)) {
+                  this.ticketActions.push(definition[i].children[j])
+                  this.selectKeys.push(definition[i].children[j].target_object)
+                }
+              }
+            } else if (definition[i].target_object && !this.selectKeys.includes(definition[i].target_object)) {
+              this.ticketActions.push(definition[i])
+              this.selectKeys.push(definition[i].target_object)
             }
           }
-        }
-      )
+        })
     },
     onClose () {
       this.visible = false

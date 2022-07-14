@@ -131,7 +131,6 @@ export default {
             this.$axios.post("/api/policies", data).then((response) => {
                 this.newPolicyId = response.data.id;
                 this.$message.success("submit success!");
-                console.log(this.newPolicyId)
                 this.showCreateOK = true
             }).catch((e) => {
                 this.$message.warning(JSON.stringify(e));
