@@ -1,5 +1,6 @@
 # coding: utf-8
 
+from __future__ import annotations
 import logging
 import smtplib
 from email.message import EmailMessage
@@ -13,6 +14,7 @@ from helpdesk.config import (
     NOTIFICATION_TITLE_PREFIX,
     WEBHOOK_URL,
     LARK_WEBHOOK_URL,
+    WEBHOOK_EVENT_URL,
     ADMIN_EMAIL_ADDRS,
     FROM_EMAIL_ADDR,
     SMTP_SERVER,
@@ -24,6 +26,7 @@ from helpdesk.config import (
     TIME_FORMAT
 )
 from helpdesk.libs.sentry import report
+from helpdesk.models.db import ticket
 from helpdesk.models.db.ticket import TicketPhase
 
 logger = logging.getLogger(__name__)
@@ -214,6 +217,50 @@ class LarkWebhookNotification(Notification):
                 ]
             })
         r = requests.post(LARK_WEBHOOK_URL, json={"msg_type": "interactive", "card": msg})
+        if r.status_code == 200 and r.json()["StatusCode"] == 0:
+            return
+        else:
+            report()
+
+
+class WebhookEventNotification(Notification):
+    def render(self) -> Tuple[str, str]:
+        content = f"[Ticket url]({self.ticket.web_url})\n"
+        content += "Parameters:\n"
+        for name, value in self.ticket.params.items():
+            content += f"  {name}: {value}\n"
+        content += f"Request time: {self.ticket.created_at}\n"
+        if self.phase == TicketPhase.REQUEST:
+            title = f"[helpdesk]{self.ticket.submitter}  requested to {self.ticket.title}"
+            content += f"Reason: {self.ticket.reason}\n"
+            policy = self.ticket.annotation.get('policy')
+            for node in policy.get("definition").get("nodes"):
+                current_node = node if node.get("name") == self.ticket.annotation.get("current_node") else None
+            approvers = current_node['approvers'] or ""
+            content += f"Approval Flow: { policy['name'] }\n"
+            content += f"Current Approval Node: { current_node['name'] }  Next Approval Node: { current_node['next'] }\n"
+            content += f"Current Approvers: {approvers}\n"
+            
+        elif self.phase == TicketPhase.APPROVAL:
+            if self.ticket.is_approved:
+                title = f"[helpdesk approved]{self.ticket.submitter}'s request to {self.ticket.title} was approved " \
+                        f"by {self.ticket.confirmed_by}"
+                content += f"Reason: {self.ticket.reason}\n"
+            else:
+                title = f"[helpdesk approved]{self.ticket.submitter}'s request to {self.ticket.title} was rejected " \
+                        f"by {self.ticket.confirmed_by}"
+                if self.ticket.reason != self.ticket.annotation.get("reason"):
+                    content += f"Reject reason: {self.ticket.reason}"
+        elif self.phase == TicketPhase.MARK:
+            title = f"[helpdesk approved]{self.ticket.submitter}'s request to {self.ticket.title} was marked " \
+                    f"{self.ticket.status}"
+        else:
+            title = f"[helpdesk]{self.ticket.submitter}  {self.phase.value}ed {self.ticket.title}"
+        return title, content
+
+    async def send(self):
+        title, content = self.render()
+        r = requests.post(WEBHOOK_EVENT_URL, json={"title": title, "main_md": content})
         if r.status_code == 200 and r.json()["StatusCode"] == 0:
             return
         else:

@@ -208,13 +208,13 @@ class Ticket(db.Model):
         if is_confirmed:
             return False, msg
 
+        # 审批流节点流转记录
+        approval_log = self.annotation.get("approval_log")
+        approval_log.append(dict(node=self.annotation.get("current_node"), approver=by_user or SYSTEM_USER, operated_type="approve", operated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        self.annotate(approval_log=approval_log)
+        is_end_node, next_node = await self.node_circulation()
         if auto:
             self.annotate(auto_approved=True)
-        # 审批流节点流转记录
-        approvals = self.annotation.get("approvals")
-        approvals.append(dict(node=self.annotation.get("current_node"), approver=by_user or SYSTEM_USER, operated_type="approve", operated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-        self.annotate(approvals=approvals)
-        is_end_node, next_node = await self.node_circulation()
 
         if is_end_node:
             self.is_approved = True
@@ -233,9 +233,10 @@ class Ticket(db.Model):
         self.confirmed_by = by_user
         self.is_approved = False
         self.confirmed_at = datetime.now()
-        approvals = self.annotation.get("approvals")
-        approvals.append(dict(node=self.annotation.get("current_node"), approver=by_user or SYSTEM_USER, operated_type="approve", operated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-        self.annotate(approvals=approvals)
+
+        approval_log = self.annotation.get("approval_log")
+        approval_log.append(dict(node=self.annotation.get("current_node"), approver=by_user or SYSTEM_USER, operated_type="reject", operated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        self.annotate(approval_log=approval_log)
         return True, 'Success'
 
     def execute(self):

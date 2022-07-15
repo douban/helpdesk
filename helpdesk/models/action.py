@@ -100,16 +100,14 @@ class Action(DictSerializableClassMixin):
         if not policy:
             return None, 'Failed to get ticket flow policy'
 
-        ticket.annotate(policy_id=policy.id)
+        ticket.annotate(policy=policy.to_dict())
         ticket.annotate(current_node=policy.init_node.get("name"))
-        ticket.annotate(approvals=list())
-        # if (self.target_object in AUTO_APPROVAL_TARGET_OBJECTS or user.is_admin or 
-        # await ticket.get_rule_actions('is_auto_approval') or policy.is_auto_approved):
+        ticket.annotate(approval_log=list())
+        # if (self.target_object in AUTO_APPROVAL_TARGET_OBJECTS or user.is_admin or policy.is_auto_approved):
         if policy.is_auto_approved:
             ret, msg = await ticket.approve(auto=True)
             if not ret:
                 return None, msg
-
         id_ = await ticket.save()
         ticket_added = await Ticket.get(id_)
 
@@ -117,7 +115,6 @@ class Action(DictSerializableClassMixin):
             return ticket_added, 'Failed to create ticket.'
 
         if not ticket_added.is_approved:
-            # todo: 消息通知
             await ticket_added.notify(TicketPhase.REQUEST)
             return ticket_added.to_dict(), 'Success. Your request has been submitted, please wait for approval.'
 

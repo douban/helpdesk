@@ -54,7 +54,7 @@ class Policy(db.Model):
 
     def is_end_node(self, node_name):
         link_node_dict = self.node_next_dict
-        return link_node_dict.get(node_name) == ""
+        return link_node_dict.get(node_name) == None
 
     @property
     def is_auto_approved(self):
