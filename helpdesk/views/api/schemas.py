@@ -2,8 +2,8 @@
 这个文件里是 pandatic 的 model, 用来构建 fastapi 的请求和响应的body
 """
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel
+from typing import Dict, List, Optional
+from pydantic import BaseModel, Field
 
 
 class MarkTickets(BaseModel):
@@ -86,3 +86,24 @@ class TicketPolicyResp(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class NotifyMessage(BaseModel):
+    """
+    notify message
+    """
+    from helpdesk.models.db.ticket import TicketPhase
+    phase: TicketPhase
+    title: str
+    ticket_url: str
+    status: str
+    is_approved: bool
+    submitter: str
+    params: Dict[str, str]
+    request_time: datetime
+    reason: str = ""
+    approval_flow: str = ""
+    current_node: str = ""
+    approvers: str = ""
+    next_node: Optional[str] = ""
+    approval_log: List[Dict] = []
