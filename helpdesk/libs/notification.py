@@ -237,7 +237,7 @@ class WebhookEventNotification(Notification):
                 approvers = node.get("approvers")
                 next_node = node.get("next")
         return NotifyMessage(
-            phase=self.phase,
+            phase=self.phase.value,
             title=self.ticket.title,
             ticket_url=self.ticket.web_url,
             status=self.ticket.status,

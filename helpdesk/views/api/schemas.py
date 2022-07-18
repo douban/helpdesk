@@ -92,8 +92,7 @@ class NotifyMessage(BaseModel):
     """
     notify message
     """
-    from helpdesk.models.db.ticket import TicketPhase
-    phase: TicketPhase
+    phase: str
     title: str
     ticket_url: str
     status: str
