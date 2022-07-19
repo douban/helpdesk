@@ -1,9 +1,8 @@
-import json
 import logging
-from operator import ne
 from helpdesk.models import db
 from helpdesk.libs.rule import Rule
 
+from helpdesk.config import AUTO_POLICY, ADMIN_POLICY
 logger = logging.getLogger(__name__)
 
 
@@ -22,7 +21,7 @@ class Policy(db.Model):
     updated_at = db.Column(db.DateTime)
 
     @property
-    def node_next_dict(self):
+    def node_relation(self):
         nodes = self.definition.get("nodes")
         if not nodes or len(nodes) == 0:
             return None
@@ -30,7 +29,7 @@ class Policy(db.Model):
         for node in nodes:
             node_next[node.get("name")] = node.get("next")
         for node, next in node_next.items():
-            if next:
+            if next and next != "":
                 for next_node in nodes:
                     if next == next_node.get("name"):
                         node_next[node] = next_node
@@ -48,18 +47,17 @@ class Policy(db.Model):
         return None
 
     def next_node(self, node_name):
-        link_node_dict = self.node_next_dict
+        link_node_dict = self.node_relation
         return link_node_dict.get(node_name)
         
 
     def is_end_node(self, node_name):
-        link_node_dict = self.node_next_dict
-        return link_node_dict.get(node_name) == None
+        link_node_dict = self.node_relation
+        return link_node_dict.get(node_name) == ""
 
     @property
     def is_auto_approved(self):
-        start_node = self.init_node
-        return start_node.get("name")=="auto_approve"
+        return self.id == AUTO_POLICY
 
     def get_node_approvers(self, node_name):
         nodes = self.definition.get("nodes")
@@ -82,6 +80,22 @@ class TicketPolicy(db.Model):
     async def get_by_ticket_name(cls, ticket_name, desc=False, limit=None, offset=None):
         filter_ = cls.__table__.c.ticket_name == ticket_name
         return await cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset)
+
+    @classmethod
+    async def default_associate(cls, ticket_name, auto):
+        policy_id = ADMIN_POLICY
+        if auto:
+            policy_id = AUTO_POLICY
+        ticket_policy_form = TicketPolicy(
+            policy_id=policy_id,
+            ticket_name=ticket_name,
+            link_condition="[\"=\", 1, 1]"
+        )
+        ticket_policy_id = await ticket_policy_form.save()
+        ticket_policy = await TicketPolicy.get(ticket_policy_id)
+        if not ticket_policy:
+            logger.exception('Failed to associate default approval flow, ticket: %s', ticket_name)
+        return policy_id
 
     @classmethod
     async def get_by_policy_id(cls, policy_id, desc=False, limit=None, offset=None):

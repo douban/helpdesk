@@ -1,7 +1,5 @@
-import logging
 from typing import List, Optional
 from datetime import datetime
-from xmlrpc.client import TRANSPORT_ERROR
 from fastapi import HTTPException, Depends
 from fastapi_pagination import Page, Params, paginate
 from h11 import Data

@@ -123,12 +123,8 @@ export default {
             this.tableData = response.data.items;
             this.loading = false;
         },
-        handleTableChange (pagination, filters, sorter) {
+        handleTableChange (pagination, sorter) {
             const queryParams = {page: pagination.current, size: pagination.pageSize}
-            const selectedStatus = filters.status
-            if (selectedStatus !== undefined) {
-                queryParams.status__in = selectedStatus.join()
-            }
             if (sorter.columnKey !== undefined) {
                 queryParams.order_by = sorter.columnKey
                 if (sorter.order === 'ascend') {

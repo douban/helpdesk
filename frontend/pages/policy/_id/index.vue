@@ -80,7 +80,7 @@ export default {
         return {
             filtered: {},
             policyInfo: {},
-            nodesInfo: [{}],
+            nodesInfo: [{name:'', approvers: '', desc: '', next: ''}],
             loadingIntervalId: null,
             canSubmit: true,
             autoRefreshOn: false,
@@ -114,7 +114,7 @@ export default {
           }
         },
         addNode() {
-            this.nodesInfo.push({});
+            this.nodesInfo.push({name:'', approvers: '', desc: '', next: ''});
         },
         removeNode(node) {
             const index = this.nodesInfo.indexOf(node);

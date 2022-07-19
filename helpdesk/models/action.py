@@ -95,15 +95,14 @@ class Action(DictSerializableClassMixin):
             submitter=user.name,
             reason=params.get('reason'),
             created_at=datetime.now())
-
-        policy = await ticket.get_flow_policy()
+        auto = True if self.target_object in AUTO_APPROVAL_TARGET_OBJECTS else False
+        policy = await ticket.get_flow_policy(auto)
         if not policy:
             return None, 'Failed to get ticket flow policy'
 
         ticket.annotate(policy=policy.to_dict())
         ticket.annotate(current_node=policy.init_node.get("name"))
         ticket.annotate(approval_log=list())
-        # if (self.target_object in AUTO_APPROVAL_TARGET_OBJECTS or user.is_admin or policy.is_auto_approved):
         if policy.is_auto_approved:
             ret, msg = await ticket.approve(auto=True)
             if not ret:

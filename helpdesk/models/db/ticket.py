@@ -1,12 +1,9 @@
 # coding: utf-8
 
-from ast import Await
-import json
 import logging
 import importlib
 from enum import Enum
 from datetime import datetime
-from this import d
 from urllib.parse import urlencode, quote_plus
 
 from authlib.jose import jwt
@@ -155,12 +152,13 @@ class Ticket(db.Model):
         logger.debug('Ticket.get_rule_actions(%s): %s', rule_action, ret)
         return ret
 
-    async def get_flow_policy(self):
+    async def get_flow_policy(self, auto=False):
         associates = await TicketPolicy.get_by_ticket_name(self.provider_object)
         for associate in associates:
             if associate.match(self.params):
                 return await Policy.get(id_=associate.policy_id)
-        return None
+        policy_id = await TicketPolicy.default_associate(self.provider_object, auto)
+        return await Policy.get(id_=policy_id)
 
     def annotate(self, dict_=None, **kw):
         d = dict_ or {}
@@ -195,7 +193,7 @@ class Ticket(db.Model):
             return True, msg
         return False, 'not confirmed yet'
 
-    async def node_circulation(self):
+    async def node_transation(self):
         policy = await self.get_flow_policy()
         current_node = self.annotation.get("current_node")
         if policy.is_end_node(current_node):
@@ -212,10 +210,10 @@ class Ticket(db.Model):
         approval_log = self.annotation.get("approval_log")
         approval_log.append(dict(node=self.annotation.get("current_node"), approver=by_user or SYSTEM_USER, operated_type="approve", operated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
         self.annotate(approval_log=approval_log)
-        is_end_node, next_node = await self.node_circulation()
         if auto:
             self.annotate(auto_approved=True)
 
+        is_end_node, next_node = await self.node_transation()
         if is_end_node:
             self.is_approved = True
             self.confirmed_by = by_user or SYSTEM_USER

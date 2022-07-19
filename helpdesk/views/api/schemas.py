@@ -54,7 +54,7 @@ class Node(BaseModel):
     name: Optional[str]
     desc: Optional[str]
     approvers: Optional[str]
-    next: Optional[str] = None
+    next: Optional[str] = ""
 
 
 class PolicyFlowReq(BaseModel):
