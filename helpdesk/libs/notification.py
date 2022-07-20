@@ -76,7 +76,8 @@ class MailNotification(Notification):
     method = 'mail'
 
     async def get_mail_addrs(self):
-        email_addrs = [ADMIN_EMAIL_ADDRS] + [get_user_email(cc) for cc in self.ticket.ccs] + await self.get_approvers()
+        approvers = await self.get_approvers()
+        email_addrs = [ADMIN_EMAIL_ADDRS] + [get_user_email(cc) for cc in self.ticket.ccs] + approvers.split(",")
         email_addrs += [get_user_email(approver) for approver in await self.ticket.get_rule_actions('approver')]
         if self.phase.value in ('approval', 'mark'):
             email_addrs += [get_user_email(self.ticket.submitter)]

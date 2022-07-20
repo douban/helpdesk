@@ -78,6 +78,13 @@
         </a-row>
       </a-card>
       <a-row :style="{ marginTop: '16px' }">
+      <a-button :style="{ marginRight: '16px' }" @click="showPolicy">Approval Flow</a-button>
+      <a-modal :visible="approvalVisible" title="Approval Flow" @ok="approvalVisible = false"  @cancel="approvalVisible = false">
+      <p>Current Node: {{ticketAnnotation.current_node}}</p>
+      <p>Current Approvers: {{ticketAnnotation.approvers}}</p>
+      <p>Approval Log:</p>
+      <p v-for="(value, index) in ticketAnnotation.approval_log" :key="index">{{value.node}} {{value.approver}} {{value.operated_at}} {{value.operated_type}}</p>
+    </a-modal>
         <a-button-group v-show="showActionButtons">
           <a-modal v-model="rejectModalVisible" title="Reject reason" ok-text="confirm" cancel-text="cancel" @ok="onReject" @cancel="hideRejectModal">
               <a-input v-model="rejectReason" placeholder="Reject reason" maxLength:=128 />
@@ -117,6 +124,7 @@ export default {
       params_in_modal: [],
       resultButtonText: 'Show results',
       resultVisible: false,
+      approvalVisible: false,
       rejectModalVisible: false,
       statusToStepStatus: {
         'created': {'status': 'finish', 'stepKey': 0},
@@ -187,7 +195,7 @@ export default {
         this.statusToStepStatus.approved.stepKey) && this.ticketInfo.status !== 'rejected'
       }
       return false
-    }
+    },
   },
   watch: {
     '$route' () {
@@ -347,6 +355,9 @@ export default {
         this.autoRefreshOn = false
       }
 
+    },
+    showPolicy () {
+      this.approvalVisible = true
     }
   }
 }

@@ -63,8 +63,8 @@ class Policy(db.Model):
         nodes = self.definition.get("nodes")
         for node in nodes:
             if node.get("name") == node_name:
-                return node.get("approvers").split(",")
-        return []
+                return node.get("approvers")
+        return ""
 
 
 class TicketPolicy(db.Model):

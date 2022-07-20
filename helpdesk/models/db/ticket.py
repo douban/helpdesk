@@ -197,9 +197,10 @@ class Ticket(db.Model):
         policy = await self.get_flow_policy()
         current_node = self.annotation.get("current_node")
         if policy.is_end_node(current_node):
-            return True, None
+            return True, None, None
         else:
-            return False, policy.next_node(current_node).get("name")
+            next_node = policy.next_node(current_node).get("name")
+            return False, next_node, policy.get_node_approvers(next_node)
     
     async def approve(self, by_user=None, auto=False):
         is_confirmed, msg = self.check_confirmed()
@@ -213,7 +214,7 @@ class Ticket(db.Model):
         if auto:
             self.annotate(auto_approved=True)
 
-        is_end_node, next_node = await self.node_transation()
+        is_end_node, next_node, approvers = await self.node_transation()
         if is_end_node:
             self.is_approved = True
             self.confirmed_by = by_user or SYSTEM_USER
@@ -221,6 +222,7 @@ class Ticket(db.Model):
             return True, 'Success'
         else:
             self.annotate(current_node=next_node)
+            self.annotate(approvers=approvers)
             return True, 'Wait for next approval.'
 
     def reject(self, by_user):
