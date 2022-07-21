@@ -1,6 +1,7 @@
 """
 这个文件里是 pandatic 的 model, 用来构建 fastapi 的请求和响应的body
 """
+from enum import Enum
 from datetime import datetime
 from typing import Dict, List, Optional
 from pydantic import BaseModel, Field
@@ -50,6 +51,7 @@ class PolicyFlowResp(BaseModel):
 class Node(BaseModel):
     """
     审批流的节点定义
+    approvers: "aaa,bbb,ccc"
     """
     name: Optional[str]
     desc: Optional[str]
@@ -106,3 +108,8 @@ class NotifyMessage(BaseModel):
     approvers: str = ""
     next_node: Optional[str] = ""
     approval_log: List[Dict] = []
+
+
+class ConfigType(Enum):
+    ticket = "ticket"
+    policy = "policy"
