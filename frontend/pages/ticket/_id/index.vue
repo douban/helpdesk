@@ -16,7 +16,14 @@
             at {{UTCtoLcocalTime(ticketInfo.created_at)}}
           </template>
         </a-step>
-        <a-step key="1" title="Pending"/>
+        <a-step key="1" title="Pending">
+          <template slot="description">
+            <span v-if="ticketInfo.status==='pending'">
+              in {{ticketAnnotation.current_node}}<br/>
+              approvers {{ticketAnnotation.approvers}}
+            </span>
+          </template>
+        </a-step>
         <a-step v-if="ticketInfo.status==='rejected'" key="3" title="Rejected">
           <template slot="description">
             <span v-if="!ticketInfo.is_approved">
@@ -78,13 +85,6 @@
         </a-row>
       </a-card>
       <a-row :style="{ marginTop: '16px' }">
-      <a-button :style="{ marginRight: '16px' }" @click="showPolicy">Approval Flow</a-button>
-      <a-modal :visible="approvalVisible" title="Approval Flow" @ok="approvalVisible = false"  @cancel="approvalVisible = false">
-      <p>Current Node: {{ticketAnnotation.current_node}}</p>
-      <p>Current Approvers: {{ticketAnnotation.approvers}}</p>
-      <p>Approval Log:</p>
-      <p v-for="(value, index) in ticketAnnotation.approval_log" :key="index">{{value.node}} {{value.approver}} {{value.operated_at}} {{value.operated_type}}</p>
-    </a-modal>
         <a-button-group v-show="showActionButtons">
           <a-modal v-model="rejectModalVisible" title="Reject reason" ok-text="confirm" cancel-text="cancel" @ok="onReject" @cancel="hideRejectModal">
               <a-input v-model="rejectReason" placeholder="Reject reason" maxLength:=128 />
@@ -355,9 +355,6 @@ export default {
         this.autoRefreshOn = false
       }
 
-    },
-    showPolicy () {
-      this.approvalVisible = true
     }
   }
 }

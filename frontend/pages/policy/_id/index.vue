@@ -43,9 +43,6 @@
           <a-form-item label="desc" name="desc">
             <a-input v-model="node.desc" placeholder="input node description"></a-input>
           </a-form-item>
-          <a-form-item label="next" name="next">
-            <a-input v-model="node.next" placeholder="input next node name"></a-input>
-          </a-form-item>
           <a-form-item>
             <a-icon type="plus-circle" @click="addNode" />
           </a-form-item>
