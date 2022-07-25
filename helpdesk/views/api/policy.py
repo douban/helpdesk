@@ -1,3 +1,4 @@
+from hashlib import new
 from typing import List, Optional
 from datetime import datetime
 from fastapi import HTTPException, Depends
@@ -26,12 +27,12 @@ async def get_policy(policy_id: int, _: User = Depends(require_admin)):
 
 
 @router.post('/policies', response_model=PolicyFlowResp)
-async def createOrupdate_policy(flow_data: PolicyFlowReq, current_user: User = Depends(get_current_user),
+async def create_policy(flow_data: PolicyFlowReq, current_user: User = Depends(get_current_user),
                         _: User = Depends(require_admin)):
     policy = Policy(
         name=flow_data.name,
         display=flow_data.display,
-        definition=flow_data.definition,
+        definition=flow_data.definition.dict(),
         created_by=current_user.name,
         created_at=datetime.now(),
         updated_by='',

@@ -35,7 +35,7 @@ class PolicyFlowResp(BaseModel):
     审批流的响应体
     """
     id: int
-    name: Optional[str]
+    name: str
     display: str
     definition: Optional[dict]
 
@@ -48,15 +48,29 @@ class PolicyFlowResp(BaseModel):
         orm_mode = True
 
 
+class NodeType(str, Enum):
+    """
+    节点类型 cc 则自动同意 approval 则需要审批
+    """
+    CC = 'cc'
+    APPROVAL = 'approval'
+
+
 class Node(BaseModel):
     """
     审批流的节点定义
     approvers: "aaa,bbb,ccc"
+    节点顺序根据列表的先后顺序来
     """
-    name: Optional[str]
-    desc: Optional[str]
-    approvers: Optional[str]
-    next: Optional[str] = ""
+    name: str
+    desc: Optional[str] = ""
+    approvers: str
+    node_type: NodeType = NodeType.APPROVAL
+
+
+class NodeDefinition(BaseModel):
+    version: str = "0.1"
+    nodes: List[Node]
 
 
 class PolicyFlowReq(BaseModel):
@@ -65,7 +79,7 @@ class PolicyFlowReq(BaseModel):
     """
     name: str
     display: str = ""
-    definition: Optional[dict]
+    definition: NodeDefinition
 
 
 class TicketPolicyReq(BaseModel):

@@ -40,6 +40,11 @@
           <a-form-item label="approvers" name="approvers">
             <a-input v-model="node.approvers" placeholder="input node approvers"></a-input>
           </a-form-item>
+          <a-form-item label="node_type" name="node_type">
+            <a-select v-model="node.node_type" allow-clear placeholder="select a ticket name" style="width: 160px">
+              <a-select-option v-for="item in nodeType" :key="item.value" :value="item.value" >{{ item.name }}</a-select-option>
+            </a-select>
+          </a-form-item>
           <a-form-item label="desc" name="desc">
             <a-input v-model="node.desc" placeholder="input node description"></a-input>
           </a-form-item>
@@ -86,7 +91,11 @@ export default {
             autoRefreshBtnUpdateTimer: null,
             isRefreshing: false,
             showCreateOK: false,
-            newPolicyId: 0
+            newPolicyId: 0,
+            nodeType: [
+              {"name": "抄送", "value": "cc"},
+              {"name": "审批", "value": "approval"}
+            ]
         };
     },
     computed: {},

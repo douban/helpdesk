@@ -3,6 +3,7 @@ from helpdesk.models import db
 from helpdesk.libs.rule import Rule
 
 from helpdesk.config import AUTO_POLICY, ADMIN_POLICY
+from helpdesk.views.api.schemas import NodeType
 logger = logging.getLogger(__name__)
 
 
@@ -25,26 +26,17 @@ class Policy(db.Model):
         nodes = self.definition.get("nodes")
         if not nodes or len(nodes) == 0:
             return None
-        node_next = dict()
-        for node in nodes:
-            node_next[node.get("name")] = node.get("next")
-        for node, next in node_next.items():
-            if next and next != "":
-                for next_node in nodes:
-                    if next == next_node.get("name"):
-                        node_next[node] = next_node
-        return node_next
+        node_related = dict()
+        for index, node in enumerate(nodes):
+            node_related[node.get("name")] = nodes[index+1] if (index != len(nodes)-1) else None
+        return node_related
 
     @property
     def init_node(self):
         nodes = self.definition.get("nodes")
         if not nodes or len(nodes) == 0:
             return None
-        node_nexts = [node.get("next") for node in nodes]
-        for node in nodes:
-            if node.get("name") not in node_nexts:
-                return node
-        return None
+        return nodes[0]
 
     def next_node(self, node_name):
         link_node_dict = self.node_relation
@@ -53,11 +45,16 @@ class Policy(db.Model):
 
     def is_end_node(self, node_name):
         link_node_dict = self.node_relation
-        return link_node_dict.get(node_name) == ""
+        return link_node_dict.get(node_name) == None
 
-    @property
     def is_auto_approved(self):
-        return self.id == AUTO_POLICY
+        return len(self.definition.get("nodes")) == 1 and self.init_node.get("node_type")  == NodeType.CC.value
+
+    def is_cc_node(self, node_name):
+        for node in self.definition.get("nodes"):
+            if node.get("name") == node_name and node.get("node_type") == NodeType.CC.value:
+                return True
+        return False
 
     def get_node_approvers(self, node_name):
         nodes = self.definition.get("nodes")

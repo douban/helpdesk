@@ -104,7 +104,8 @@ class Action(DictSerializableClassMixin):
         ticket.annotate(current_node=policy.init_node.get("name"))
         ticket.annotate(approval_log=list())
         ticket.annotate(approvers=policy.get_node_approvers(policy.init_node.get("name")))
-        if policy.is_auto_approved:
+
+        if policy.is_auto_approved():
             ret, msg = await ticket.approve(auto=True)
             if not ret:
                 return None, msg

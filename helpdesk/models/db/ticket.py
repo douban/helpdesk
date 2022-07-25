@@ -23,6 +23,7 @@ from helpdesk.config import (
     TICKET_CALLBACK_PARAMS,
     NOTIFICATION_METHODS,
 )
+from helpdesk.views.api.schemas import NodeType
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +154,7 @@ class Ticket(db.Model):
         return ret
 
     async def get_flow_policy(self, auto=False):
-        associates = await TicketPolicy.get_by_ticket_name(self.provider_object)
+        associates = await TicketPolicy.get_by_ticket_name(self.provider_object, desc=True)
         for associate in associates:
             if associate.match(self.params):
                 return await Policy.get(id_=associate.policy_id)
@@ -193,13 +194,21 @@ class Ticket(db.Model):
             return True, msg
         return False, 'not confirmed yet'
 
+    def get_next_node(self, policy, node_name):
+        next_node = policy.next_node(node_name)
+        if next_node.get("node_type") == NodeType.CC.value:
+            self.notify(TicketPhase.APPROVAL)
+
     async def node_transation(self):
         policy = await self.get_flow_policy()
         current_node = self.annotation.get("current_node")
         if policy.is_end_node(current_node):
             return True, None, None
         else:
-            next_node = policy.next_node(current_node).get("name")
+            next_node = policy.next_node(current_node)
+            if next_node.get("node_type") == NodeType.CC.value:
+                self.notify(TicketPhase.APPROVAL)
+            
             return False, next_node, policy.get_node_approvers(next_node)
     
     async def approve(self, by_user=None, auto=False):
@@ -223,7 +232,7 @@ class Ticket(db.Model):
         else:
             self.annotate(current_node=next_node)
             self.annotate(approvers=approvers)
-            return True, 'Wait for next approval.'
+            return True, 'Wait for next approval node.'
 
     def reject(self, by_user):
         is_confirmed, msg = self.check_confirmed()
