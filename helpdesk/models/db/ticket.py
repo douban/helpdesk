@@ -194,10 +194,10 @@ class Ticket(db.Model):
             return True, msg
         return False, 'not confirmed yet'
 
-    def get_next_node(self, policy, node_name):
-        next_node = policy.next_node(node_name)
-        if next_node.get("node_type") == NodeType.CC.value:
-            self.notify(TicketPhase.APPROVAL)
+    def set_approval_log(self, by_user):
+        approval_log = self.annotation.get("approval_log")
+        approval_log.append(dict(node=self.annotation.get("current_node"), approver=by_user or SYSTEM_USER, operated_type="approve", operated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        self.annotate(approval_log=approval_log)
 
     async def node_transation(self):
         policy = await self.get_flow_policy()
@@ -206,9 +206,16 @@ class Ticket(db.Model):
             return True, None, None
         else:
             next_node = policy.next_node(current_node)
+            self.annotate(current_node=next_node.get("name"))
+            self.annotate(approvers=policy.get_node_approvers(next_node.get("name")))
             if next_node.get("node_type") == NodeType.CC.value:
+                self.set_approval_log(by_user=SYSTEM_USER)
                 self.notify(TicketPhase.APPROVAL)
-            
+                next_node = policy.next_node(self.annotation.get("current_node"))
+                self.annotate(current_node=next_node.get("name"))
+                self.annotate(approvers=policy.get_node_approvers(next_node.get("name")))
+                if policy.is_end_node(next_node.get("name")):
+                    return True, None, None
             return False, next_node, policy.get_node_approvers(next_node)
     
     async def approve(self, by_user=None, auto=False):
@@ -216,22 +223,22 @@ class Ticket(db.Model):
         if is_confirmed:
             return False, msg
 
-        # 审批流节点流转记录
-        approval_log = self.annotation.get("approval_log")
-        approval_log.append(dict(node=self.annotation.get("current_node"), approver=by_user or SYSTEM_USER, operated_type="approve", operated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-        self.annotate(approval_log=approval_log)
+        self.set_approval_log()
         if auto:
             self.annotate(auto_approved=True)
+            self.is_approved = True
+            self.confirmed_by = by_user or SYSTEM_USER
+            self.confirmed_at = datetime.now()
+            return True, 'Success'
 
-        is_end_node, next_node, approvers = await self.node_transation()
+        is_end_node = await self.node_transation()
         if is_end_node:
             self.is_approved = True
             self.confirmed_by = by_user or SYSTEM_USER
             self.confirmed_at = datetime.now()
             return True, 'Success'
         else:
-            self.annotate(current_node=next_node)
-            self.annotate(approvers=approvers)
+ 
             return True, 'Wait for next approval node.'
 
     def reject(self, by_user):
