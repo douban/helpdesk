@@ -122,6 +122,7 @@ class NotifyMessage(BaseModel):
     approvers: str = ""
     next_node: Optional[str] = ""
     approval_log: List[Dict] = []
+    notify_type: str
 
 
 class ConfigType(Enum):

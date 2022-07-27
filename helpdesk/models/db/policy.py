@@ -22,16 +22,6 @@ class Policy(db.Model):
     updated_at = db.Column(db.DateTime)
 
     @property
-    def node_relation(self):
-        nodes = self.definition.get("nodes")
-        if not nodes or len(nodes) == 0:
-            return None
-        node_related = dict()
-        for index, node in enumerate(nodes):
-            node_related[node.get("name")] = nodes[index+1] if (index != len(nodes)-1) else None
-        return node_related
-
-    @property
     def init_node(self):
         nodes = self.definition.get("nodes")
         if not nodes or len(nodes) == 0:
@@ -39,13 +29,17 @@ class Policy(db.Model):
         return nodes[0]
 
     def next_node(self, node_name):
-        link_node_dict = self.node_relation
-        return link_node_dict.get(node_name)
+        nodes = self.definition.get("nodes")
+        for index, node in enumerate(nodes):
+            if node.get("name") == node_name:
+                return nodes[index+1] if (index != len(nodes)-1) else None
         
 
     def is_end_node(self, node_name):
-        link_node_dict = self.node_relation
-        return link_node_dict.get(node_name) == None
+        nodes = self.definition.get("nodes")
+        for index, node in enumerate(nodes):
+            if node.get("name") == node_name:
+                return index == len(nodes)-1
 
     def is_auto_approved(self):
         return len(self.definition.get("nodes")) == 1 and self.init_node.get("node_type")  == NodeType.CC.value

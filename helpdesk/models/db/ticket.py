@@ -4,6 +4,7 @@ import logging
 import importlib
 from enum import Enum
 from datetime import datetime
+import pstats
 from urllib.parse import urlencode, quote_plus
 
 from authlib.jose import jwt
@@ -194,43 +195,53 @@ class Ticket(db.Model):
             return True, msg
         return False, 'not confirmed yet'
 
-    def set_approval_log(self, by_user):
+    def set_approval_log(self, by_user=SYSTEM_USER, operated_type="approve"):
         approval_log = self.annotation.get("approval_log")
-        approval_log.append(dict(node=self.annotation.get("current_node"), approver=by_user or SYSTEM_USER, operated_type="approve", operated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        approval_log.append(dict(node=self.annotation.get("current_node"), approver=by_user, operated_type=operated_type, operated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
         self.annotate(approval_log=approval_log)
 
     async def node_transation(self):
         policy = await self.get_flow_policy()
         current_node = self.annotation.get("current_node")
         if policy.is_end_node(current_node):
-            return True, None, None
+            return True
         else:
             next_node = policy.next_node(current_node)
             self.annotate(current_node=next_node.get("name"))
             self.annotate(approvers=policy.get_node_approvers(next_node.get("name")))
             if next_node.get("node_type") == NodeType.CC.value:
-                self.set_approval_log(by_user=SYSTEM_USER)
-                self.notify(TicketPhase.APPROVAL)
-                next_node = policy.next_node(self.annotation.get("current_node"))
-                self.annotate(current_node=next_node.get("name"))
-                self.annotate(approvers=policy.get_node_approvers(next_node.get("name")))
+                self.set_approval_log(operated_type="cc")
+                await self.notify(TicketPhase.REQUEST)
                 if policy.is_end_node(next_node.get("name")):
-                    return True, None, None
-            return False, next_node, policy.get_node_approvers(next_node)
+                    return True
+                next_again = policy.next_node(next_node.get("name"))
+                self.annotate(current_node=next_again.get("name"))
+                self.annotate(approvers=policy.get_node_approvers(next_again.get("name")))
+            return False
+
+    async def pre_approve(self):
+        policy = await self.get_flow_policy()
+        if policy.is_auto_approved():
+            self.annotate(auto_approved=True)
+            self.set_approval_log(operated_type="cc")
+            self.is_approved = True
+            self.confirmed_by = SYSTEM_USER
+            self.confirmed_at = datetime.now()
+
+        if len(policy.definition.get("nodes")) != 1 and policy.is_cc_node(policy.init_node.get("name")):
+            self.set_approval_log(operated_type="cc")
+            await self.notify(TicketPhase.REQUEST)
+            next_node = policy.next_node( self.annotation.get("current_node"))
+            self.annotate(current_node=next_node.get("name"))
+            self.annotate(approvers=policy.get_node_approvers(next_node.get("name")))
+        return True, "success"
     
     async def approve(self, by_user=None, auto=False):
         is_confirmed, msg = self.check_confirmed()
         if is_confirmed:
             return False, msg
 
-        self.set_approval_log()
-        if auto:
-            self.annotate(auto_approved=True)
-            self.is_approved = True
-            self.confirmed_by = by_user or SYSTEM_USER
-            self.confirmed_at = datetime.now()
-            return True, 'Success'
-
+        self.set_approval_log(by_user=by_user or SYSTEM_USER)
         is_end_node = await self.node_transation()
         if is_end_node:
             self.is_approved = True
@@ -238,7 +249,6 @@ class Ticket(db.Model):
             self.confirmed_at = datetime.now()
             return True, 'Success'
         else:
- 
             return True, 'Wait for next approval node.'
 
     def reject(self, by_user):

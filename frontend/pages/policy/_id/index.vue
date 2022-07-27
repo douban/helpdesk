@@ -1,6 +1,6 @@
 <template>
   <a-layout>
-    <a-card>
+    <a-card class="cardCenter">
       <router-link :to="{ name: 'policy' }">
         <a-icon type="left" /> <span>Return to list</span>
       </router-link>
@@ -161,5 +161,10 @@ export default {
 <style scoped>
 .whiteBackground {
   background: #fff
+}
+.cardCenter {
+ margin: auto;
+ flex: auto;
+ width: 1240px;
 }
 </style>

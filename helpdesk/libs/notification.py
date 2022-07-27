@@ -231,12 +231,13 @@ class WebhookEventNotification(Notification):
     method = 'webhook'
 
     def render(self):
-        policy = self.ticket.annotation.get("policy")
-        approvers, next_node = "", ""
-        for node in policy.get("definition").get("nodes"):
+        nodes = self.ticket.annotation.get("nodes")
+        next_node, notify_type= "", ""
+        self.ticket
+        for index, node in enumerate(nodes):
             if self.ticket.annotation.get("current_node") == node.get("name"):
-                approvers = node.get("approvers")
-                next_node = node.get("next")
+                next_node = nodes[index+1].get("name")  if (index != len(nodes)-1) else ""
+                notify_type = node.get("node_type")
         return NotifyMessage(
             phase=self.phase.value,
             title=self.ticket.title,
@@ -247,11 +248,12 @@ class WebhookEventNotification(Notification):
             params=self.ticket.params,
             request_time=self.ticket.created_at,
             reason=self.ticket.reason or "",
-            approval_flow=policy.get("name"),
+            approval_flow=self.ticket.annotation.get("policy"),
             current_node=self.ticket.annotation.get("current_node"),
-            approvers=approvers,
+            approvers=self.ticket.annotation.get("approvers"),
             next_node=next_node,
             approval_log=self.ticket.annotation.get("approval_log"),
+            notify_type=notify_type,
         )
 
     async def send(self):

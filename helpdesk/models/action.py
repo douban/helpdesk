@@ -100,21 +100,15 @@ class Action(DictSerializableClassMixin):
         if not policy:
             return None, 'Failed to get ticket flow policy'
 
-        ticket.annotate(policy=policy.to_dict())
+        ticket.annotate(nodes=policy.definition.get("nodes") or [])
+        ticket.annotate(policy=policy.name)
         ticket.annotate(current_node=policy.init_node.get("name"))
         ticket.annotate(approval_log=list())
         ticket.annotate(approvers=policy.get_node_approvers(policy.init_node.get("name")))
         
-        if policy.is_auto_approved():
-            ret, msg = await ticket.approve(auto=True)
-            if not ret:
-                return None, msg
-        
-        if len(policy.definition.get("nodes")) != 1 and policy.is_cc_node(policy.init_node.get("name")):
-            await ticket_added.notify(TicketPhase.REQUEST)
-            ticket.annotate(current_node=policy.next_node(policy.init_node.get("name")).get("name"))
-            ticket.annotate(approvers=policy.get_node_approvers(ticket.annotate.get("current_node")))
-            ticket.set_approval_log(by_user="sysadmin")
+        ret, msg = await ticket.pre_approve()
+        if not ret:
+            return None, msg
         
         id_ = await ticket.save()
         ticket_added = await Ticket.get(id_)

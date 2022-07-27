@@ -148,5 +148,7 @@ export default {
 </script>
 
 <style scoped>
-
+.whiteBackground {
+  background: #fff
+}
 </style>
