@@ -176,7 +176,7 @@ async def ticket_op(ticket_id: int, op: str,
     elif op == 'reject':
         if operate_data.reason:
             ticket.reason = operate_data.reason
-        ret, msg = ticket.reject(by_user=current_user.name)
+        ret, msg = await ticket.reject(by_user=current_user.name)
         if not ret:
             raise HTTPException(status_code=400, detail=msg)
 
@@ -184,7 +184,6 @@ async def ticket_op(ticket_id: int, op: str,
     if not id_:
         msg = 'ticket executed but failed to save state' if op == 'approve' else 'Failed to save ticket state'
         raise HTTPException(status_code=500, detail=msg)
-    await ticket.notify(TicketPhase.APPROVAL)
     return dict(msg='Success')
 
 

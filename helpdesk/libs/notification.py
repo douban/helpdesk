@@ -30,7 +30,7 @@ from helpdesk.config import (
 from helpdesk.libs.sentry import report
 from helpdesk.models.db import ticket
 from helpdesk.models.db.ticket import TicketPhase
-from helpdesk.views.api.schemas import NotifyMessage
+from helpdesk.views.api.schemas import NodeType, NotifyMessage
 
 logger = logging.getLogger(__name__)
 
@@ -233,11 +233,12 @@ class WebhookEventNotification(Notification):
     def render(self):
         nodes = self.ticket.annotation.get("nodes")
         next_node, notify_type= "", ""
-        self.ticket
         for index, node in enumerate(nodes):
             if self.ticket.annotation.get("current_node") == node.get("name"):
                 next_node = nodes[index+1].get("name")  if (index != len(nodes)-1) else ""
                 notify_type = node.get("node_type")
+        if self.phase.value == "approval":
+            notify_type = NodeType.CC
         return NotifyMessage(
             phase=self.phase.value,
             title=self.ticket.title,

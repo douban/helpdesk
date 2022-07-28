@@ -236,12 +236,13 @@ class Ticket(db.Model):
             self.annotate(approvers=policy.get_node_approvers(next_node.get("name")))
         return True, "success"
     
-    async def approve(self, by_user=None, auto=False):
+    async def approve(self, by_user=None):
         is_confirmed, msg = self.check_confirmed()
         if is_confirmed:
             return False, msg
 
         self.set_approval_log(by_user=by_user or SYSTEM_USER)
+        await self.notify(TicketPhase.APPROVAL)
         is_end_node = await self.node_transation()
         if is_end_node:
             self.is_approved = True
@@ -251,7 +252,7 @@ class Ticket(db.Model):
         else:
             return True, 'Wait for next approval node.'
 
-    def reject(self, by_user):
+    async def reject(self, by_user):
         is_confirmed, msg = self.check_confirmed()
         if is_confirmed:
             return False, msg
@@ -260,9 +261,8 @@ class Ticket(db.Model):
         self.is_approved = False
         self.confirmed_at = datetime.now()
 
-        approval_log = self.annotation.get("approval_log")
-        approval_log.append(dict(node=self.annotation.get("current_node"), approver=by_user or SYSTEM_USER, operated_type="reject", operated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-        self.annotate(approval_log=approval_log)
+        self.set_approval_log(by_user=by_user or SYSTEM_USER, operated_type="reject")
+        await self.notify(TicketPhase.APPROVAL)
         return True, 'Success'
 
     def execute(self):
