@@ -154,12 +154,12 @@ class Ticket(db.Model):
         logger.debug('Ticket.get_rule_actions(%s): %s', rule_action, ret)
         return ret
 
-    async def get_flow_policy(self, auto=False):
+    async def get_flow_policy(self):
         associates = await TicketPolicy.get_by_ticket_name(self.provider_object, desc=True)
         for associate in associates:
             if associate.match(self.params):
                 return await Policy.get(id_=associate.policy_id)
-        policy_id = await TicketPolicy.default_associate(self.provider_object, auto)
+        policy_id = await TicketPolicy.default_associate(self.provider_object)
         return await Policy.get(id_=policy_id)
 
     def annotate(self, dict_=None, **kw):

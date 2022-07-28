@@ -95,8 +95,7 @@ class Action(DictSerializableClassMixin):
             submitter=user.name,
             reason=params.get('reason'),
             created_at=datetime.now())
-        auto = True if self.target_object in AUTO_APPROVAL_TARGET_OBJECTS else False
-        policy = await ticket.get_flow_policy(auto)
+        policy = await ticket.get_flow_policy()
         if not policy:
             return None, 'Failed to get ticket flow policy'
 

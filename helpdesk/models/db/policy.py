@@ -2,7 +2,7 @@ import logging
 from helpdesk.models import db
 from helpdesk.libs.rule import Rule
 
-from helpdesk.config import AUTO_POLICY, ADMIN_POLICY
+from helpdesk.config import ADMIN_POLICY
 from helpdesk.views.api.schemas import NodeType
 logger = logging.getLogger(__name__)
 
@@ -73,10 +73,8 @@ class TicketPolicy(db.Model):
         return await cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset)
 
     @classmethod
-    async def default_associate(cls, ticket_name, auto):
+    async def default_associate(cls, ticket_name):
         policy_id = ADMIN_POLICY
-        if auto:
-            policy_id = AUTO_POLICY
         ticket_policy_form = TicketPolicy(
             policy_id=policy_id,
             ticket_name=ticket_name,
