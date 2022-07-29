@@ -1,9 +1,7 @@
-from hashlib import new
 from typing import List, Optional
 from datetime import datetime
 from fastapi import HTTPException, Depends
 from fastapi_pagination import Page, Params, paginate
-from h11 import Data
 from helpdesk.models.db.policy import Policy, TicketPolicy
 from helpdesk.models.user import User
 from helpdesk.libs.dependency import get_current_user, require_admin

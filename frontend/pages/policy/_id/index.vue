@@ -31,11 +31,7 @@
         <a-form v-for="(node, index) in nodesInfo" :key="index"
           style="margin-bottom: 24px" layout="inline" @change="changeInput">
           <a-form-item label="name" name="name">
-            <a-input v-model="node.name" placeholder="input node name" :rules="{
-              required: true,
-              message: 'node name can not be null',
-              trigger: 'change',
-            }"></a-input>
+            <a-input v-model="node.name" placeholder="input node name"></a-input>
           </a-form-item>
           <a-form-item label="approvers" name="approvers">
             <a-input v-model="node.approvers" placeholder="input node approvers"></a-input>
@@ -87,7 +83,7 @@ export default {
         return {
             filtered: {},
             policyInfo: {},
-            nodesInfo: [{name:'', approvers: '', desc: '', next: ''}],
+            nodesInfo: [{name:'', approvers: '', desc: '', node_type: ''}],
             loadingIntervalId: null,
             canSubmit: true,
             autoRefreshOn: false,
@@ -125,7 +121,7 @@ export default {
           }
         },
         addNode() {
-            this.nodesInfo.push({name:'', approvers: '', desc: '', next: ''});
+            this.nodesInfo.push({name:'', approvers: '', desc: '', node_type: ''});
         },
         removeNode(node) {
             const index = this.nodesInfo.indexOf(node);

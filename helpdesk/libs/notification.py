@@ -1,15 +1,12 @@
 # coding: utf-8
 
-from __future__ import annotations
 import logging
 import smtplib
 from email.message import EmailMessage
-from traceback import print_tb
 from typing import Tuple
 
 import requests
 from pytz import timezone
-from sqlalchemy import false
 from starlette.templating import Jinja2Templates
 
 from helpdesk.config import (
@@ -28,7 +25,6 @@ from helpdesk.config import (
     TIME_FORMAT
 )
 from helpdesk.libs.sentry import report
-from helpdesk.models.db import ticket
 from helpdesk.models.db.ticket import TicketPhase
 from helpdesk.views.api.schemas import NodeType, NotifyMessage
 
@@ -67,17 +63,12 @@ class Notification:
         content = ''.join(piece.text for piece in tree.findall('content'))
         return title, content
 
-    async def get_approvers(self):
-        policy = await self.ticket.get_flow_policy()
-        return policy.get_node_approvers(self.ticket.annotation.get("current_node"))
-
 
 class MailNotification(Notification):
     method = 'mail'
 
     async def get_mail_addrs(self):
-        approvers = await self.get_approvers()
-        email_addrs = [ADMIN_EMAIL_ADDRS] + [get_user_email(cc) for cc in self.ticket.ccs] + approvers.split(",")
+        email_addrs = [ADMIN_EMAIL_ADDRS] + [get_user_email(cc) for cc in self.ticket.ccs] + self.ticket.annotation.get("approvers").split(',')
         email_addrs += [get_user_email(approver) for approver in await self.ticket.get_rule_actions('approver')]
         if self.phase.value in ('approval', 'mark'):
             email_addrs += [get_user_email(self.ticket.submitter)]
@@ -233,12 +224,20 @@ class WebhookEventNotification(Notification):
     def render(self):
         nodes = self.ticket.annotation.get("nodes")
         next_node, notify_type= "", ""
+        approvers = self.ticket.annotation.get("approvers")
         for index, node in enumerate(nodes):
             if self.ticket.annotation.get("current_node") == node.get("name"):
                 next_node = nodes[index+1].get("name")  if (index != len(nodes)-1) else ""
                 notify_type = node.get("node_type")
-        if self.phase.value == "approval":
+
+        if self.phase.value in ("approval", "mark"):
             notify_type = NodeType.CC
+        if notify_type == NodeType.CC:
+            if self.phase.value == 'mark' or approvers == "":
+                approvers = self.ticket.submitter
+            else:
+                approvers = approvers + "," + self.ticket.submitter
+
         return NotifyMessage(
             phase=self.phase.value,
             title=self.ticket.title,
@@ -251,7 +250,7 @@ class WebhookEventNotification(Notification):
             reason=self.ticket.reason or "",
             approval_flow=self.ticket.annotation.get("policy"),
             current_node=self.ticket.annotation.get("current_node"),
-            approvers=self.ticket.annotation.get("approvers"),
+            approvers=approvers,
             next_node=next_node,
             approval_log=self.ticket.annotation.get("approval_log"),
             notify_type=notify_type,

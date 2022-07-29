@@ -4,7 +4,6 @@ import logging
 import importlib
 from enum import Enum
 from datetime import datetime
-import pstats
 from urllib.parse import urlencode, quote_plus
 
 from authlib.jose import jwt
@@ -130,7 +129,7 @@ class Ticket(db.Model):
     async def can_view(self, user):
         return (
             user.is_admin or user.name == self.submitter or user.name in self.ccs or
-            user.name in await self.get_rule_actions('approver'))
+            user.name in await self.all_flow_approvers())
 
     async def can_admin(self, user):
         policy = await self.get_flow_policy()
@@ -161,6 +160,14 @@ class Ticket(db.Model):
                 return await Policy.get(id_=associate.policy_id)
         policy_id = await TicketPolicy.default_associate(self.provider_object)
         return await Policy.get(id_=policy_id)
+
+    async def all_flow_approvers(self):
+        policy = await self.get_flow_policy()
+        nodes = policy.definition.get("nodes")
+        all_approvers = []
+        if nodes:
+            all_approvers = [approvers for node in nodes for approvers in node.get("approvers").split(',')]
+        return all_approvers
 
     def annotate(self, dict_=None, **kw):
         d = dict_ or {}
