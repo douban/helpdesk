@@ -27,7 +27,7 @@
         </a-form>
 
         <a-divider>Nodes</a-divider>
-
+        <draggable  v-model="nodesInfo">
         <a-form v-for="(node, index) in nodesInfo" :key="index"
           style="margin-bottom: 24px" layout="inline" @change="changeInput">
           <a-form-item label="name" name="name">
@@ -55,6 +55,7 @@
             <a-icon type="minus-circle" @click="removeNode(node)" />
           </a-form-item>
         </a-form>
+        </draggable>
         <div style="text-align: center; margin-top: 32px">
           <a-button type="primary" :disabled="!canSubmit" @click="handleSubmit">Submit</a-button>
             <a-modal
@@ -74,10 +75,14 @@
 </template>
 
 <script>
+import draggable from 'vuedraggable'
 import HAssociateDrawer from '../../../components/HAssociateDrawer.vue'
 import { UTCtoLcocalTime } from '@/utils/HDate'
 export default {
-    components: { HAssociateDrawer },
+    components: { 
+      HAssociateDrawer,
+      draggable, 
+      },
     data() {
         return {
             filtered: {},
