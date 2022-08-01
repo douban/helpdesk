@@ -13,6 +13,7 @@ from helpdesk.config import (
     NOTIFICATION_TITLE_PREFIX,
     WEBHOOK_URL,
     LARK_WEBHOOK_URL,
+    WEBHOOK_EVENT_URL,
     ADMIN_EMAIL_ADDRS,
     FROM_EMAIL_ADDR,
     SMTP_SERVER,
@@ -25,6 +26,7 @@ from helpdesk.config import (
 )
 from helpdesk.libs.sentry import report
 from helpdesk.models.db.ticket import TicketPhase
+from helpdesk.views.api.schemas import NodeType, NotifyMessage
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +68,7 @@ class MailNotification(Notification):
     method = 'mail'
 
     async def get_mail_addrs(self):
-        email_addrs = [ADMIN_EMAIL_ADDRS] + [get_user_email(cc) for cc in self.ticket.ccs]
+        email_addrs = [ADMIN_EMAIL_ADDRS] + [get_user_email(cc) for cc in self.ticket.ccs] + self.ticket.annotation.get("approvers").split(',')
         email_addrs += [get_user_email(approver) for approver in await self.ticket.get_rule_actions('approver')]
         if self.phase.value in ('approval', 'mark'):
             email_addrs += [get_user_email(self.ticket.submitter)]
@@ -210,6 +212,56 @@ class LarkWebhookNotification(Notification):
                 ]
             })
         r = requests.post(LARK_WEBHOOK_URL, json={"msg_type": "interactive", "card": msg})
+        if r.status_code == 200 and r.json()["StatusCode"] == 0:
+            return
+        else:
+            report()
+
+
+class WebhookEventNotification(Notification):
+    method = 'webhook'
+
+    def render(self):
+        nodes = self.ticket.annotation.get("nodes")
+        next_node, notify_type= "", ""
+        approvers = self.ticket.annotation.get("approvers")
+        for index, node in enumerate(nodes):
+            if self.ticket.annotation.get("current_node") == node.get("name"):
+                next_node = nodes[index+1].get("name")  if (index != len(nodes)-1) else ""
+                notify_type = node.get("node_type")
+
+        if self.phase.value in ("approval", "mark"):
+            notify_type = NodeType.CC
+        if notify_type == NodeType.CC:
+            if self.phase.value == 'mark' or approvers == "":
+                approvers = self.ticket.submitter
+            else:
+                approvers = approvers + "," + self.ticket.submitter
+
+        return NotifyMessage(
+            phase=self.phase.value,
+            title=self.ticket.title,
+            ticket_url=self.ticket.web_url,
+            status=self.ticket.status,
+            is_approved=self.ticket.is_approved or False,
+            submitter=self.ticket.submitter,
+            params=self.ticket.params,
+            request_time=self.ticket.created_at,
+            reason=self.ticket.reason or "",
+            approval_flow=self.ticket.annotation.get("policy"),
+            current_node=self.ticket.annotation.get("current_node"),
+            approvers=approvers,
+            next_node=next_node,
+            approval_log=self.ticket.annotation.get("approval_log"),
+            notify_type=notify_type,
+        )
+
+    async def send(self):
+        if not WEBHOOK_EVENT_URL:
+            return
+        message = self.render()
+        print(message)
+        r = requests.post(WEBHOOK_EVENT_URL, message.json())
         if r.status_code == 200 and r.json()["StatusCode"] == 0:
             return
         else:

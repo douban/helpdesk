@@ -16,7 +16,35 @@
             at {{UTCtoLcocalTime(ticketInfo.created_at)}}
           </template>
         </a-step>
-        <a-step key="1" title="Pending"/>
+        <a-step key="1">
+          <template slot="title">
+            Pending
+            <span>
+              <a-popover title="Approval detail" trigger="click">
+                <template #content>
+                  <a-divider  style="width: 2px">approval nodes</a-divider>
+                  <a-table size="small"
+                  :pagination="false"
+                  :columns="nodeColumns"
+                  :data-source="ticketAnnotation.nodes"
+                  />
+                  <a-divider  style="width: 2px">approval logs</a-divider>
+                  <a-timeline>
+                    <a-timeline-item v-for="(log, index) in ticketAnnotation.approval_log" :key="index">{{log.approver}} {{log.operated_type}} the {{log.node}} at {{log.operated_at}}</a-timeline-item>
+                  </a-timeline>
+                </template>
+                <a-button type="link" icon="question-circle" ></a-button>
+            </a-popover>
+          </span>
+          </template>
+          
+          <template slot="description">
+            <span v-if="ticketInfo.status==='pending'">
+              in {{ticketAnnotation.current_node}}<br/>
+              approvers {{ticketAnnotation.approvers}}
+            </span>
+          </template>
+        </a-step>
         <a-step v-if="ticketInfo.status==='rejected'" key="3" title="Rejected">
           <template slot="description">
             <span v-if="!ticketInfo.is_approved">
@@ -117,6 +145,7 @@ export default {
       params_in_modal: [],
       resultButtonText: 'Show results',
       resultVisible: false,
+      approvalVisible: false,
       rejectModalVisible: false,
       statusToStepStatus: {
         'created': {'status': 'finish', 'stepKey': 0},
@@ -140,6 +169,21 @@ export default {
       autoRefreshBtnText: 'Auto Refresh OFF',
       autoRefreshBtnUpdateTimer: null,
       isRefreshing: false,
+      nodeColumns: [{
+    title: 'Name',
+    dataIndex: 'name',
+  },
+  {
+    title: 'Approvers',
+    dataIndex: 'approvers',
+  },
+  {
+    title: 'Type',
+    dataIndex: 'node_type',},
+    {
+    title: 'Description',
+    dataIndex: 'desc',
+    }],
     }
   },
   computed: {
@@ -187,7 +231,7 @@ export default {
         this.statusToStepStatus.approved.stepKey) && this.ticketInfo.status !== 'rejected'
       }
       return false
-    }
+    },
   },
   watch: {
     '$route' () {

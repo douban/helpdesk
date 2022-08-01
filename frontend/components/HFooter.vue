@@ -1,6 +1,6 @@
 <template>
   <a-layout-footer style="text-align: center">
-    ©2019 Created by Douban
+    ©{{ new Date().getFullYear() }} Created by Douban
   </a-layout-footer>
 </template>
 

@@ -4,6 +4,7 @@ import logging
 from datetime import datetime
 
 from helpdesk.libs.rest import DictSerializableClassMixin
+from helpdesk.models.db import policy
 from helpdesk.models.db.ticket import Ticket, TicketPhase
 from helpdesk.config import AUTO_APPROVAL_TARGET_OBJECTS, PARAM_FILLUP, TICKET_CALLBACK_PARAMS
 
@@ -94,14 +95,20 @@ class Action(DictSerializableClassMixin):
             submitter=user.name,
             reason=params.get('reason'),
             created_at=datetime.now())
+        policy = await ticket.get_flow_policy()
+        if not policy:
+            return None, 'Failed to get ticket flow policy'
 
-        # if auto pass
-        if (self.target_object in AUTO_APPROVAL_TARGET_OBJECTS or user.is_admin or
-                await ticket.get_rule_actions('is_auto_approval')):
-            ret, msg = ticket.approve(auto=True)
-            if not ret:
-                return None, msg
-
+        ticket.annotate(nodes=policy.definition.get("nodes") or [])
+        ticket.annotate(policy=policy.name)
+        ticket.annotate(current_node=policy.init_node.get("name"))
+        ticket.annotate(approval_log=list())
+        ticket.annotate(approvers=policy.get_node_approvers(policy.init_node.get("name")))
+        
+        ret, msg = await ticket.pre_approve()
+        if not ret:
+            return None, msg
+        
         id_ = await ticket.save()
         ticket_added = await Ticket.get(id_)
 
@@ -121,3 +128,4 @@ class Action(DictSerializableClassMixin):
         return (
             ticket_added.to_dict(),
             'Success. Your request has been approved automatically, please go to ticket page for details')
+    

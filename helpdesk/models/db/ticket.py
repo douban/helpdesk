@@ -13,6 +13,8 @@ from helpdesk.libs.decorators import cached_property
 from helpdesk.libs.sentry import report
 from helpdesk.models import db
 from helpdesk.models.db.param_rule import ParamRule
+from helpdesk.models.db.policy import Policy
+from helpdesk.models.db.policy import TicketPolicy
 from helpdesk.models.provider import get_provider
 from helpdesk.config import (
     SYSTEM_USER,
@@ -21,6 +23,7 @@ from helpdesk.config import (
     TICKET_CALLBACK_PARAMS,
     NOTIFICATION_METHODS,
 )
+from helpdesk.views.api.schemas import NodeType
 
 logger = logging.getLogger(__name__)
 
@@ -126,10 +129,12 @@ class Ticket(db.Model):
     async def can_view(self, user):
         return (
             user.is_admin or user.name == self.submitter or user.name in self.ccs or
-            user.name in await self.get_rule_actions('approver'))
+            user.name in await self.all_flow_approvers())
 
     async def can_admin(self, user):
-        return user.is_admin or user.name in await self.get_rule_actions('approver')
+        policy = await self.get_flow_policy()
+        approvers = policy.get_node_approvers(self.annotation.get("current_node"))
+        return user.is_admin or user.name in approvers
 
     @cached_property
     async def rules(self):
@@ -147,6 +152,22 @@ class Ticket(db.Model):
 
         logger.debug('Ticket.get_rule_actions(%s): %s', rule_action, ret)
         return ret
+
+    async def get_flow_policy(self):
+        associates = await TicketPolicy.get_by_ticket_name(self.provider_object, desc=True)
+        for associate in associates:
+            if associate.match(self.params):
+                return await Policy.get(id_=associate.policy_id)
+        policy_id = await TicketPolicy.default_associate(self.provider_object)
+        return await Policy.get(id_=policy_id)
+
+    async def all_flow_approvers(self):
+        policy = await self.get_flow_policy()
+        nodes = policy.definition.get("nodes")
+        all_approvers = []
+        if nodes:
+            all_approvers = [approvers for node in nodes for approvers in node.get("approvers").split(',')]
+        return all_approvers
 
     def annotate(self, dict_=None, **kw):
         d = dict_ or {}
@@ -181,22 +202,64 @@ class Ticket(db.Model):
             return True, msg
         return False, 'not confirmed yet'
 
-    def approve(self, by_user=None, auto=False):
+    def set_approval_log(self, by_user=SYSTEM_USER, operated_type="approve"):
+        approval_log = self.annotation.get("approval_log")
+        approval_log.append(dict(node=self.annotation.get("current_node"), approver=by_user, operated_type=operated_type, operated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        self.annotate(approval_log=approval_log)
+
+    async def node_transation(self):
+        policy = await self.get_flow_policy()
+        current_node = self.annotation.get("current_node")
+        if policy.is_end_node(current_node):
+            return True
+        else:
+            next_node = policy.next_node(current_node)
+            self.annotate(current_node=next_node.get("name"))
+            self.annotate(approvers=policy.get_node_approvers(next_node.get("name")))
+            if next_node.get("node_type") == NodeType.CC.value:
+                self.set_approval_log(operated_type="cc")
+                await self.notify(TicketPhase.REQUEST)
+                if policy.is_end_node(next_node.get("name")):
+                    return True
+                next_again = policy.next_node(next_node.get("name"))
+                self.annotate(current_node=next_again.get("name"))
+                self.annotate(approvers=policy.get_node_approvers(next_again.get("name")))
+            return False
+
+    async def pre_approve(self):
+        policy = await self.get_flow_policy()
+        if policy.is_auto_approved():
+            self.annotate(auto_approved=True)
+            self.set_approval_log(operated_type="cc")
+            self.is_approved = True
+            self.confirmed_by = SYSTEM_USER
+            self.confirmed_at = datetime.now()
+
+        if len(policy.definition.get("nodes")) != 1 and policy.is_cc_node(policy.init_node.get("name")):
+            self.set_approval_log(operated_type="cc")
+            await self.notify(TicketPhase.REQUEST)
+            next_node = policy.next_node( self.annotation.get("current_node"))
+            self.annotate(current_node=next_node.get("name"))
+            self.annotate(approvers=policy.get_node_approvers(next_node.get("name")))
+        return True, "success"
+    
+    async def approve(self, by_user=None):
         is_confirmed, msg = self.check_confirmed()
         if is_confirmed:
             return False, msg
 
-        if auto:
-            self.annotate(auto_approved=True)
-            self.confirmed_by = SYSTEM_USER
+        self.set_approval_log(by_user=by_user or SYSTEM_USER)
+        await self.notify(TicketPhase.APPROVAL)
+        is_end_node = await self.node_transation()
+        if is_end_node:
+            self.is_approved = True
+            self.confirmed_by = by_user or SYSTEM_USER
+            self.confirmed_at = datetime.now()
+            return True, 'Success'
         else:
-            self.confirmed_by = by_user
+            return True, 'Wait for next approval node.'
 
-        self.is_approved = True
-        self.confirmed_at = datetime.now()
-        return True, 'Success'
-
-    def reject(self, by_user):
+    async def reject(self, by_user):
         is_confirmed, msg = self.check_confirmed()
         if is_confirmed:
             return False, msg
@@ -204,6 +267,9 @@ class Ticket(db.Model):
         self.confirmed_by = by_user
         self.is_approved = False
         self.confirmed_at = datetime.now()
+
+        self.set_approval_log(by_user=by_user or SYSTEM_USER, operated_type="reject")
+        await self.notify(TicketPhase.APPROVAL)
         return True, 'Success'
 
     def execute(self):
