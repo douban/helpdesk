@@ -55,6 +55,19 @@ class SpinCycleClient:
     spincycle thin wrapper:
     ref: https://square.github.io/spincycle/v1.0/api/endpoints.html#find-requests-that-match-certain-conditions
     """
+
+    status_to_emoji = {3: '✔️', 2: '🏃', 4: '❌', 6: '🛑', 5: '🔄', 7: '▶', 1: '👯', 0: '😿'}
+    status_to_color = {
+        0: '#fafafa',
+        1: '#feba3f',
+        2: '#00ff00',
+        3: 'green',
+        4: '#ff0000',
+        5: '#fecfd7',
+        6: '#6fe7db',
+        7: '#fee03f',
+    }
+
     def __init__(self, username, password, spin_rm_url=SPINCYCLE_RM_URL):
         self._username = username
         self._password = password
@@ -128,6 +141,49 @@ class SpinCycleClient:
     def get_job_chain_by_req_id(self, req_id):
         result = requests.get(url=f"{self.api_prefix}/requests/{req_id}/job-chain", auth=self._auth)
         return self._check_resp(result, SpinClientException)
+
+    @staticmethod
+    def _format_exec_status(status):
+        status_to_emoji = SpinCycleClient.status_to_emoji
+        if status not in status_to_emoji:
+            return status_to_emoji['no_status']
+        else:
+            return status_to_emoji[status]
+
+    @staticmethod
+    def _status_to_color(status):
+        status_to_color = SpinCycleClient.status_to_color
+        if status not in status_to_color:
+            return status_to_color['no_status']
+        else:
+            return status_to_color[status]
+
+    def trans_to_gojs_graph(self, api_raw_data, job_state):
+        result = {
+            'class': 'GraphLinksModel',
+            'nodeDataArray': [],
+            'linkDataArray': []
+        }
+
+        for _, j in api_raw_data.get("jobs", {}).items():
+            state = job_state[j['id']]
+            result['nodeDataArray'].append(
+                {
+                    'key': j['id'],
+                    'text': f'{self._format_exec_status(state)} {j["name"]}',
+                    'color': "#fff",
+                    'stroke': self._status_to_color(state)
+                }
+            )
+
+        for from_node, to_nodes in api_raw_data.get("adjacencyList", {}).items():
+            for node in to_nodes:
+                result['linkDataArray'].append({
+                    'to': node,
+                    'from': from_node,
+                })
+
+        return result
 
     def get_ascii_graph_of_req(self, req_id, state_number_to_note=None):
         job_chains = self.get_job_chain_by_req_id(req_id)

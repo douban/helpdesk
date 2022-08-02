@@ -186,12 +186,19 @@ class SpinCycleProvider(BaseProvider):
             'start_timestamp': execution['startedAt'],
             'web_url': self.get_result_url(execution_id),
             'result': {
-                'tasks': [self._build_graph_of_req(execution_id)],
+                'tasks': [],
                 'req_id': execution_id
             },
             'id': execution_id,
         }
         all_jobs_log = self.spin_client.get_all_job_logs_by_req(execution_id)
+        newest_state = {j['jobId']: j['state'] for j in all_jobs_log}
+
+        result['graph'] = self.spin_client.trans_to_gojs_graph(
+            self.spin_client.get_job_chain_by_req_id(execution_id),
+            newest_state
+        )
+
         filter_status_num = (self.spin_status_to_num[stat] for stat in filter_status) if filter_status else None
         for job in all_jobs_log:
             if filter_status_num and job['state'] in filter_status_num:
@@ -212,7 +219,7 @@ class SpinCycleProvider(BaseProvider):
                         'succeeded': job['state'] == self.spin_status_to_num['COMPLETE']
                     }
                 },
-                "id": job['name'],
+                "id": job['jobId'],
                 "name": f'{self.status_to_emoji[job["state"]]} {job["name"]}-{job["jobId"]}-{job["try"]}'
             })
 
