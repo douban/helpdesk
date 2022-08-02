@@ -1,6 +1,7 @@
 import logging
 from helpdesk.models import db
 from helpdesk.libs.rule import Rule
+from sqlalchemy.sql.expression import and_
 
 from helpdesk.config import ADMIN_POLICY
 from helpdesk.views.api.schemas import NodeType
@@ -68,13 +69,25 @@ class TicketPolicy(db.Model):
     link_condition = db.Column(db.String(length=1024))
 
     @classmethod
-    async def get_by_ticket_name(cls, ticket_name, desc=False, limit=None, offset=None):
+    async def get_by_ticket_name(cls, ticket_name, without_default=False, desc=False, limit=None, offset=None):
         filter_ = cls.__table__.c.ticket_name == ticket_name
+        if without_default:
+            without_filter_ = cls.__table__.c.policy_id != ADMIN_POLICY
+            filter_ = and_(filter_, without_filter_)
         return await cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset)
+
+    @classmethod
+    async def get_special_associate(cls, ticket_name, policy_id):
+        filter_name = cls.__table__.c.ticket_name == ticket_name
+        filter_policy = cls.__table__.c.policy_id == policy_id
+        return await cls.get_all(filter_=and_(filter_name, filter_policy))
 
     @classmethod
     async def default_associate(cls, ticket_name):
         policy_id = ADMIN_POLICY
+        exist_default = await cls.get_special_associate(ticket_name=ticket_name, policy_id=policy_id)
+        if exist_default:
+            return policy_id
         ticket_policy_form = TicketPolicy(
             policy_id=policy_id,
             ticket_name=ticket_name,
