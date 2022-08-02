@@ -15,3 +15,4 @@ rule==0.1.1
 Authlib<=1.0.1
 httpx==0.*
 fastapi==0.*
+fastapi_pagination==0.9.3
