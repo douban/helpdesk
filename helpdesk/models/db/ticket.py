@@ -154,7 +154,7 @@ class Ticket(db.Model):
         return ret
 
     async def get_flow_policy(self):
-        associates = await TicketPolicy.get_by_ticket_name(self.provider_object, desc=True)
+        associates = await TicketPolicy.get_by_ticket_name(self.provider_object, without_default=True, desc=True)
         for associate in associates:
             if associate.match(self.params):
                 return await Policy.get(id_=associate.policy_id)
