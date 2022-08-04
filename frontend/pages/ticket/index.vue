@@ -31,9 +31,9 @@
         <a-tag :key="status" :color="approval_color[status]">{{status}}</a-tag>
       </span>
       <span slot="action" slot-scope="text, record">
-        <span v-if="record.is_approved === undefined">
+        <span v-if="record.is_approved === undefined && record.status !== 'closed' ">
           <a-modal v-model="rejectModalVisible" title="Reject reason" ok-text="confirm" cancel-text="cancel" @ok="onConfirm(record, 'rejected', reasonModalRecord.reject_url)" @cancel="hideRejectModal">
-              <a-input v-model="rejectReason" placeholder="Reject reason" maxLength:=128 />
+              <a-input v-model="rejectReason" placeholder="Reject reason" max-length=128 />
           </a-modal>
           <a-popconfirm
             title="Sure to approve?"
@@ -47,6 +47,16 @@
             @confirm="() => showRejectModal(record)"
           >
             <a :href="record.reject_url">reject</a>
+          </a-popconfirm>
+          <a-divider type="vertical" />
+            <a-modal v-model="closeModalVisible" title="Close reason" ok-text="confirm" cancel-text="cancel" @ok="onConfirm(record, 'closed', '/api/ticket/' + record.id + '/close')" @cancel="hideCloseModal">
+              <a-input v-model="closeReason" placeholder="Close reason" max-length=128 />
+          </a-modal>
+          <a-popconfirm
+            title="Sure to close?"
+            @confirm="() => showCloseModal(record)"
+          >
+            <a :href="'/api/ticket/' + record.id + '/close'">close</a>
           </a-popconfirm>
           <a-divider type="vertical" />
         </span>
@@ -89,7 +99,8 @@ export default {
         'success': 'green',
         'submitted': 'pink',
         'submit_error': 'red',
-        'succeeded': 'green'
+        'succeeded': 'green',
+        'closed': 'blue'
       },
       param_detail_visible: false,
       loading: false,
@@ -98,7 +109,9 @@ export default {
       },
       params_in_modal: [],
       rejectModalVisible: false,
+      closeModalVisible:false,
       rejectReason: null,
+      closeReason: null,
       reasonModalRecord: null,
     }
   },
@@ -213,6 +226,14 @@ export default {
     hideRejectModal () {
       this.rejectModalVisible = false
     },
+    showCloseModal (record) {
+      this.closeModalVisible = true
+      this.closeModalRecord = record
+      this.closeReason = null
+    },
+    hideCloseModal () {
+      this.closeModalVisible = false
+    },
     showDrawer () {
       this.param_detail_visible = true
     },
@@ -283,10 +304,14 @@ export default {
       if (status === "rejected") {
         postData = {"reason": this.rejectReason}
       }
+      if (status === "closed") {
+        postData = {"reason": this.closeReason}
+      }
       this.$message.loading('Action in progress..', 2.5)
       this.$axios.post(actionUrl, postData).then(() => {
         this.$message.info('Ticket ' + status)
         this.hideRejectModal()
+        this.hideCloseModal()
       }).catch((error) => {
         const rawMsg = error.response.data.description
         const msg = rawMsg.length > 300 ? rawMsg.slice(0, 300) + '... ' : rawMsg
