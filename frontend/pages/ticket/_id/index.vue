@@ -115,12 +115,11 @@
         </a-row>
       </a-card>
       <a-row :style="{ marginTop: '16px' }">
+        <a-modal v-model="closeModalVisible" title="Close reason" ok-text="confirm" cancel-text="cancel" @ok="onClose" @cancel="hideRejectModal">
+          <a-input v-model="closeReason" placeholder="Close reason" max-length=128 />
+        </a-modal>
+        <a-button v-show="showCloseButton" :style="{ marginRight: '16px' }"  @click="showCloseModal">Close</a-button>
         <a-button-group v-show="showActionButtons">
-          <a-modal v-model="closeModalVisible" title="Close reason" ok-text="confirm" cancel-text="cancel" @ok="onClose" @cancel="hideRejectModal">
-              <a-input v-model="closeReason" placeholder="Close reason" max-length=128 />
-          </a-modal>
-          <a-button :style="{ marginRight: '16px' }"  @click="showCloseModal">Close</a-button>
-
           <a-modal v-model="rejectModalVisible" title="Reject reason" ok-text="confirm" cancel-text="cancel" @ok="onReject" @cancel="hideRejectModal">
               <a-input v-model="rejectReason" placeholder="Reject reason" max-length=128 />
           </a-modal>
@@ -234,6 +233,12 @@ export default {
     },
     showActionButtons () {
       if (this.ticketInfo.status === 'pending' && this.$store.getters.isAdmin) {
+        return true
+      }
+      return false
+    },
+    showCloseButton () {
+      if (this.ticketInfo.status === 'pending' && this.ticketInfo.submitter === this.$store.state.userProfile.name) {
         return true
       }
       return false
