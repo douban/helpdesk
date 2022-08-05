@@ -146,7 +146,7 @@ class WebhookEventNotification(Notification):
                 next_node = nodes[index+1].get("name")  if (index != len(nodes)-1) else ""
                 notify_type = node.get("node_type")
 
-        if self.phase.value in (TicketPhase.APPROVAL.value, TicketPhase.MARK.value):
+        if self.phase.value in (TicketPhase.APPROVAL.value, TicketPhase.MARK.value) or (self.phase.value == 'request' and self.ticket.status == "closed"):
             notify_type = NodeType.CC
         if notify_type == NodeType.CC:
             if self.phase.value == TicketPhase.MARK.value or approvers == "":
@@ -170,6 +170,7 @@ class WebhookEventNotification(Notification):
             next_node=next_node,
             approval_log=self.ticket.annotation.get("approval_log"),
             notify_type=notify_type,
+            comfirmed_by=self.ticket.confirmed_by or ""
         )
 
     async def send(self):

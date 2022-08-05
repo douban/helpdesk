@@ -17,6 +17,9 @@ vi local_config.py
 # init database
 python -c 'from helpdesk.libs.db import init_db; init_db()'
 
+# init default policy
+PS: the ticket related approval flow(policy), Confirm whether there is a default approval process before ticket operate
+
 # export SSL_CERT_FILE='/etc/ssl/certs/ca-certificates.crt'
 uvicorn helpdesk:app --host 0.0.0.0 --port 8123 --log-level debug
 ```

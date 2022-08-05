@@ -54,6 +54,15 @@
             </span>
           </template>
         </a-step>
+        <a-step v-else-if="ticketInfo.status==='closed'" key="6" title="Closed">
+          <template slot="description">
+            <span>
+              by {{ticketInfo.confirmed_by}}<br/>
+              at {{UTCtoLcocalTime(ticketInfo.confirmed_at)}} <br/>
+              {{ ticketInfo.reason>150 ? ticketInfo.reason.slice(0, 150) + '...' : ticketInfo.reason }}
+            </span>
+          </template>
+        </a-step>
         <a-step v-else key="2" title="Approved">
           <template slot="description">
             <span v-if="ticketInfo.is_approved">
@@ -106,11 +115,15 @@
         </a-row>
       </a-card>
       <a-row :style="{ marginTop: '16px' }">
+        <a-modal v-model="closeModalVisible" title="Close reason" ok-text="confirm" cancel-text="cancel" @ok="onClose" @cancel="hideRejectModal">
+          <a-input v-model="closeReason" placeholder="Close reason" max-length=128 />
+        </a-modal>
+        <a-button v-show="showCloseButton" :style="{ marginRight: '16px' }"  @click="showCloseModal">Close</a-button>
         <a-button-group v-show="showActionButtons">
           <a-modal v-model="rejectModalVisible" title="Reject reason" ok-text="confirm" cancel-text="cancel" @ok="onReject" @cancel="hideRejectModal">
-              <a-input v-model="rejectReason" placeholder="Reject reason" maxLength:=128 />
+              <a-input v-model="rejectReason" placeholder="Reject reason" max-length=128 />
           </a-modal>
-          <a-button @click="showRejectModal">Reject</a-button>
+          <a-button type="danger" @click="showRejectModal">Reject</a-button>
           <a-button type="primary" @click="onApprove">Approve</a-button>
         </a-button-group>
         <a-button v-show="showResultButton" :style="{ marginLeft: '16px' }" @click="toggleResult">{{resultButtonText}}</a-button>
@@ -140,13 +153,14 @@ export default {
     return {
       table_data: [{}],
       filtered: {},
-      approval_color: {'approved': 'green', 'rejected': 'red', 'pending': 'orange'},
+      approval_color: {'approved': 'green', 'rejected': 'red', 'pending': 'orange', 'closed': 'red'},
       param_detail_visible: false,
       params_in_modal: [],
       resultButtonText: 'Show results',
       resultVisible: false,
       approvalVisible: false,
       rejectModalVisible: false,
+      closeModalVisible: false,
       statusToStepStatus: {
         'created': {'status': 'finish', 'stepKey': 0},
         'approved': {'status': 'finish', 'stepKey': 2},
@@ -159,10 +173,12 @@ export default {
         'success': {'status': 'finish', 'stepKey': 5},
         'failed': {'status': 'error', 'stepKey': 4},
         'unknown': {'status': 'process', 'stepKey': 4},
-        'succeeded': {'status': 'finish', 'stepKey': 5}
+        'succeeded': {'status': 'finish', 'stepKey': 5},
+        'closed': {'status': 'error', 'stepKey': 2},
       },
-      ticketEndStatus: ['rejected', 'submit_error', 'succeed', 'success', 'succeeded', 'failed', 'unknown'],
+      ticketEndStatus: ['rejected', 'submit_error', 'succeed', 'success', 'succeeded', 'failed', 'unknown', 'closed'],
       rejectReason: null,
+      closeReason: null,
       loadingIntervalId: null,
       autoRefreshOn: false,
       autoRefreshDisabled: false,
@@ -217,6 +233,12 @@ export default {
     },
     showActionButtons () {
       if (this.ticketInfo.status === 'pending' && this.$store.getters.isAdmin) {
+        return true
+      }
+      return false
+    },
+    showCloseButton () {
+      if (this.ticketInfo.status === 'pending' && this.ticketInfo.submitter === this.$store.state.userProfile.name) {
         return true
       }
       return false
@@ -282,6 +304,12 @@ export default {
     hideRejectModal () {
       this.rejectModalVisible = false
     },
+    showCloseModal () {
+      this.closeModalVisible = true
+    },
+    hideCloseModal () {
+      this.closeModalVisible = false
+    },
     onReject () {
       if (this.ticketInfo.status !== "pending") {
         this.$message.info('Ticket has is not pending, cannot be rejected.')
@@ -314,6 +342,25 @@ export default {
       }).catch((error) => {
         this.errorAsNotification(
           "Ticket approve failed",
+          error.response.data.description
+        )
+      })
+    },
+    onClose () {
+        if (this.ticketInfo.status !== "pending") {
+        this.$message.info('Ticket has is not pending, cannot be closed.')
+        this.$router.push({ name: 'ticket-id', params: { id: this.$route.params.id }})
+        this.hideCloseModal()
+        return
+      }
+      this.$axios.post('/api/ticket/' + this.$route.params.id + '/close',  {"reason": this.closeReason}).then(() => {
+        this.updateTicket()
+        this.loadTickets()
+        this.$message.info('Ticket closed.')
+        this.hideCloseModal()
+      }).catch((error) => {
+        this.errorAsNotification(
+          "Ticket close failed",
           error.response.data.description
         )
       })

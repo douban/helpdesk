@@ -37,7 +37,8 @@ TICKET_COLORS = {
     'success': '#28a745',
     'submitted': '#007bff',
     'submit_error': '#dc3545',
-    'succeeded': '#28a745'
+    'succeeded': '#28a745',
+    'closed': '#28a745',
 }
 
 
@@ -92,12 +93,16 @@ class Ticket(db.Model):
     def status(self):
         """
         created -> pending -> rejected/approved -> submitted/submit_error -> running -> succeed/failed/unknown
+        当用户操作关闭后出现的工单状态 - closed
         :return:
         """
         annotation = self.annotation if self.annotation else {}
         execution_status = annotation.get('execution_status')
         execution_submitted = annotation.get('execution_submitted')
         execution_create_success = annotation.get('execution_creation_success')
+        ticket_close = annotation.get('closed') or False
+        if ticket_close:
+            return 'closed'
         if execution_status:
             return execution_status
         elif execution_submitted:
@@ -202,7 +207,7 @@ class Ticket(db.Model):
             return True, msg
         return False, 'not confirmed yet'
 
-    def set_approval_log(self, by_user=SYSTEM_USER, operated_type="approve"):
+    def set_approval_log(self, by_user=SYSTEM_USER, operated_type="approved"):
         approval_log = self.annotation.get("approval_log")
         approval_log.append(dict(node=self.annotation.get("current_node"), approver=by_user, operated_type=operated_type, operated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
         self.annotate(approval_log=approval_log)
@@ -268,7 +273,7 @@ class Ticket(db.Model):
         self.is_approved = False
         self.confirmed_at = datetime.now()
 
-        self.set_approval_log(by_user=by_user or SYSTEM_USER, operated_type="reject")
+        self.set_approval_log(by_user=by_user or SYSTEM_USER, operated_type="rejected")
         await self.notify(TicketPhase.APPROVAL)
         return True, 'Success'
 

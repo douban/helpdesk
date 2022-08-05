@@ -118,7 +118,8 @@ async def action(target_object: str, request: Request, current_user: User = Depe
         form = await request.form()
         ticket, msg = await action.run(provider, form, current_user)
         msg_level = 'success' if bool(ticket) else 'error'
-
+        if not bool(ticket):
+            raise HTTPException(status_code=500, detail=msg)
         return dict(ticket=ticket, msg=msg, msg_level=msg_level, debug=config.DEBUG)
 
 
@@ -150,12 +151,26 @@ async def mark_ticket(ticket_id: int, mark: MarkTickets, token: Optional[str] = 
 @router.post('/ticket/{ticket_id}/{op}')
 async def ticket_op(ticket_id: int, op: str,
                     operate_data: OperateTicket, current_user: User = Depends(get_current_user)):
-    if op not in ('approve', 'reject'):
+    if op not in ('approve', 'reject', 'close'):
         raise HTTPException(status_code=400, detail='Operation not supported')
 
     ticket = await Ticket.get(ticket_id)
     if not ticket:
         raise HTTPException(status_code=404, detail='Ticket not found')
+
+    if op == 'close':
+        "申请人才可主动关闭工单"
+        if ticket.submitter != current_user.name:
+            raise HTTPException(status_code=403, detail='Permission denied, only submitter can close')
+        ticket.annotate(closed=True)
+        ticket.confirmed_by = current_user.name
+        ticket.confirmed_at = datetime.now()
+        ticket.reason = operate_data.reason
+        id_ = await ticket.save()
+        if not id_:
+            raise HTTPException(status_code=500, detail='ticket executed closed but failed to save state')
+        await ticket.notify(TicketPhase.APPROVAL)
+        return dict(msg='Success')
 
     if not await ticket.can_admin(current_user):
         raise HTTPException(status_code=403, detail='Permission denied')
