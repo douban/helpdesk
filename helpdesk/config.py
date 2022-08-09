@@ -76,6 +76,7 @@ SPINCYCLE_RM_URL = "https://spincycle.example.com"
 SPINCYCLE_USERNAME = ''
 SPINCYCLE_PASSWORD = ''
 
+BRIDGE_URL = "https://bridge.example.com"
 
 try:
     from local_config import *  # NOQA

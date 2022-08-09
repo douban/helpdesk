@@ -150,9 +150,10 @@ class WebhookEventNotification(Notification):
             notify_type = NodeType.CC
         if notify_type == NodeType.CC:
             if self.phase.value == TicketPhase.MARK.value or approvers == "":
-                approvers = self.ticket.submitter
+                notify_people = self.ticket.submitter
             else:
-                approvers = approvers + "," + self.ticket.submitter
+                notify_people = approvers + "," + self.ticket.submitter
+            approvers = ""
 
         return NotifyMessage(
             phase=self.phase.value,
@@ -170,6 +171,7 @@ class WebhookEventNotification(Notification):
             next_node=next_node,
             approval_log=self.ticket.annotation.get("approval_log"),
             notify_type=notify_type,
+            notify_people=notify_people,
             comfirmed_by=self.ticket.confirmed_by or ""
         )
 

@@ -110,3 +110,17 @@ class TicketPolicy(db.Model):
         except Exception:
             logger.exception('Failed to match policy: %s, context: %s', self.link_condition, context)
             return False
+
+
+class GroupUser(db.Model):
+    __tablename__ = 'group_user'
+    __table_args__ = {'mysql_charset': 'utf8mb4'}
+
+    id = db.Column(db.Integer, primary_key=True)
+    group_name = db.Column(db.Integer)
+    user_str = db.Column(db.String(length=128))
+
+    @classmethod
+    async def get_by_group_name(cls, group_name, desc=False, limit=None, offset=None):
+        filter_ = cls.__table__.c.group_name == group_name
+        return await cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset)

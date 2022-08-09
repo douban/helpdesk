@@ -2,12 +2,12 @@ from typing import List, Optional
 from datetime import datetime
 from fastapi import HTTPException, Depends
 from fastapi_pagination import Page, Params, paginate
-from helpdesk.models.db.policy import Policy, TicketPolicy
+from helpdesk.models.db.policy import Policy, TicketPolicy, GroupUser
 from helpdesk.models.user import User
 from helpdesk.libs.dependency import get_current_user, require_admin
 from helpdesk.models.action_tree import action_tree
 from . import router
-from .schemas import PolicyFlowReq, PolicyFlowResp, TicketPolicyReq, TicketPolicyResp, ConfigType
+from .schemas import PolicyFlowReq, PolicyFlowResp, TicketPolicyReq, TicketPolicyResp, ConfigType, GroupUserReq, GroupUserResp
 
 
 @router.get('/policies', response_model=Page[PolicyFlowResp])
@@ -110,3 +110,42 @@ async def delete_associate(id: int, _: User = Depends(require_admin)):
     if not associate:
         raise HTTPException(status_code=404, detail='ticket and policy associate not found')
     return await TicketPolicy.delete(id)
+
+
+@router.get('/group_users', response_model=List[GroupUserResp])
+async def group_users(_: User = Depends(require_admin)):
+    return await GroupUser.get_all()
+
+
+@router.post('/group_users', response_model=GroupUserResp)
+async def add_group_users(params: GroupUserReq, _: User = Depends(require_admin)):
+    group_user_form = GroupUser(
+        group_name=params.group_name,
+        user_str=params.user_str,
+    )
+    group_user_id = await group_user_form.save()
+    group_user = await GroupUser.get(group_user_id)
+    if not group_user:
+        raise HTTPException(status_code=500, detail="add user group failed")
+    return group_user
+
+
+@router.put('/group_users/{id}', response_model=GroupUserResp)
+async def update_group_users(id: int, params: GroupUserReq, _: User = Depends(require_admin)):
+    group_user = await GroupUser.get(id)
+    if not group_user:
+        raise HTTPException(status_code=404, detail='user group not found')
+    group_user_form = params.dict()
+    await group_user.update(**group_user_form)
+    updated_group = await GroupUser.get(id)
+    if not updated_group:
+        raise HTTPException(status_code=500, detail="user group update failed")
+    return updated_group
+
+
+@router.delete('/group_users/{id}')
+async def delete_group_user(id: int, _: User = Depends(require_admin)):
+    group_user = await GroupUser.get(id)
+    if not group_user:
+        raise HTTPException(status_code=404, detail="user group not found")
+    return await GroupUser.delete(id)
