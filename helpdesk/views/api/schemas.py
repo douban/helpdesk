@@ -136,7 +136,7 @@ class NotifyMessage(BaseModel):
     next_node: Optional[str] = ""
     approval_log: List[Dict] = []
     notify_type: str
-    notify_people: List = []
+    notify_people: str = ""
     comfirmed_by: str = ""
 
 

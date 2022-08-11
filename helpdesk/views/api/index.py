@@ -162,6 +162,8 @@ async def ticket_op(ticket_id: int, op: str,
         "申请人才可主动关闭工单"
         if ticket.submitter != current_user.name:
             raise HTTPException(status_code=403, detail='Permission denied, only submitter can close')
+        if ticket.status != "pending":
+            raise HTTPException(status_code=403, detail='Permission denied, can not close in this ticket status')
         ticket.annotate(closed=True)
         ticket.confirmed_by = current_user.name
         ticket.confirmed_at = datetime.now()

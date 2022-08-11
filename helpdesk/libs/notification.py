@@ -139,8 +139,9 @@ class WebhookEventNotification(Notification):
 
     def render(self):
         nodes = self.ticket.annotation.get("nodes")
-        next_node, notify_type= "", ""
+        next_node = "",
         approvers = self.ticket.annotation.get("approvers")
+        notify_people = approvers
         for index, node in enumerate(nodes):
             if self.ticket.annotation.get("current_node") == node.get("name"):
                 next_node = nodes[index+1].get("name")  if (index != len(nodes)-1) else ""

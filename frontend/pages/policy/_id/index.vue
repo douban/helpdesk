@@ -33,16 +33,18 @@
           <a-form-item label="name" name="name">
             <a-input v-model="node.name" placeholder="input node name"></a-input>
           </a-form-item>
-          <a-form-item label="approvers" name="approvers">
-            <a-input v-model="node.approvers" placeholder="input node approvers"></a-input>
-          </a-form-item>
           <a-form-item label="node_type" name="node_type">
-            <a-select v-model="node.node_type" allow-clear placeholder="select a ticket name" style="width: 160px">
+            <a-select v-model="node.node_type" allow-clear placeholder="select a node type" style="width: 160px">
               <a-select-option v-for="item in nodeType" :key="item.value" :value="item.value" >{{ item.name }}</a-select-option>
             </a-select>
           </a-form-item>
-          <a-form-item label="desc" name="desc">
-            <a-input v-model="node.desc" placeholder="input node description"></a-input>
+          <a-form-item label="approvers" name="approvers">
+            <a-input v-model="node.approvers" placeholder="input node approvers"></a-input>
+          </a-form-item>
+          <a-form-item label="approver_type" name="approver_type">
+            <a-select v-model="node.approver_type" allow-clear placeholder="select a approver type" style="width: 160px">
+              <a-select-option v-for="item in approverType" :key="item.value" :value="item.value" >{{ item.name }}</a-select-option>
+            </a-select>
           </a-form-item>
           <a-form-item>
             <a-icon type="plus-circle" @click="addNode" />
@@ -96,6 +98,11 @@ export default {
             nodeType: [
               {"name": "抄送", "value": "cc"},
               {"name": "审批", "value": "approval"}
+            ],
+            approverType: [
+              {"name": "指定人", "value": "people"},
+              {"name": "用户组", "value": "group"},
+              {"name": "dae应用owner", "value": "app_owner"},
             ]
         };
     },

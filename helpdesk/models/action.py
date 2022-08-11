@@ -103,7 +103,8 @@ class Action(DictSerializableClassMixin):
         ticket.annotate(policy=policy.name)
         ticket.annotate(current_node=policy.init_node.get("name"))
         ticket.annotate(approval_log=list())
-        ticket.annotate(approvers=ticket.get_node_approvers(policy.init_node.get("approvers")))
+        ticket.annotate(approvers=await ticket.get_node_approvers(policy.init_node.get("name")))
+        print(ticket)
         
         ret, msg = await ticket.pre_approve()
         if not ret:

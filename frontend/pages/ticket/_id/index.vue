@@ -41,7 +41,7 @@
           <template slot="description">
             <span v-if="ticketInfo.status==='pending'">
               in {{ticketAnnotation.current_node}}<br/>
-              approvers {{ticketAnnotation.approvers}}
+              {{ticketAnnotation.approvers}}
             </span>
           </template>
         </a-step>
@@ -190,15 +190,15 @@ export default {
     dataIndex: 'name',
   },
   {
+    title: 'Type',
+    dataIndex: 'node_type',},
+  {
     title: 'Approvers',
     dataIndex: 'approvers',
   },
-  {
-    title: 'Type',
-    dataIndex: 'node_type',},
     {
-    title: 'Description',
-    dataIndex: 'desc',
+    title: 'Approver Type',
+    dataIndex: 'approver_type',
     }],
     }
   },

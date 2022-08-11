@@ -5,10 +5,6 @@ from helpdesk.models.provider.errors import InitProviderError
 
 class ApproverProvider:
     source = None
-
-    def __init__(self, approver):
-        self.approver = approver
-    
         
     async def get_approver_members(self) -> str:
         raise NotImplementedError
@@ -17,26 +13,27 @@ class ApproverProvider:
 class PeopleProvider(ApproverProvider):
     source = "people"
 
-    async def get_approver_members(self):
-        return self.approver
+    async def get_approver_members(self, approver):
+        return approver
 
 
 class GroupProvider(ApproverProvider):
     source = "group"
 
-    async def get_approver_members(self):
-        group_ids = [int(group_id) for group_id in self.approver.split(",")]
+    async def get_approver_members(self, approver):
+        group_ids = [int(group_id) for group_id in approver.split(",")]
         members = []
         group_users = await GroupUser.get_all(ids=group_ids)
         if group_users:
             members = [users for approvers in group_users for users in approvers.user_str.split(',')]
-        return members.join(",")
+        print(members)
+        return ",".join(members)
 
 
 class BridgeProvider(ApproverProvider):
     source = "app"
 
-    async def get_approver_members():
+    async def get_approver_members(self, approver):
         pass
 
 

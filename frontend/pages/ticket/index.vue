@@ -51,7 +51,7 @@
           <a-divider type="vertical" />
         </span>
 
-        <span v-if="record.status !== 'closed' && record.submitter === $store.state.userProfile.name">
+        <span v-if="record.is_approved === undefined && record.status !== 'closed' && record.submitter === $store.state.userProfile.name">
           <a-modal v-model="closeModalVisible" title="Close reason" ok-text="confirm" cancel-text="cancel" @ok="onConfirm(record, 'closed', '/api/ticket/' + record.id + '/close')" @cancel="hideCloseModal">
               <a-input v-model="closeReason" placeholder="Close reason" max-length=128 />
           </a-modal>
