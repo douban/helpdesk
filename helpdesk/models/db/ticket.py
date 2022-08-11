@@ -8,6 +8,7 @@ from urllib.parse import urlencode, quote_plus
 
 from authlib.jose import jwt
 from sqlalchemy.sql.expression import and_
+from helpdesk.libs.approver_provider import get_approver_provider
 
 from helpdesk.libs.decorators import cached_property
 from helpdesk.libs.sentry import report
@@ -165,6 +166,10 @@ class Ticket(db.Model):
                 return await Policy.get(id_=associate.policy_id)
         policy_id = await TicketPolicy.default_associate(self.provider_object)
         return await Policy.get(id_=policy_id)
+
+    async def get_node_approvers(self):
+        provider = get_approver_provider(self.approver_type)
+        return await provider.get_approver_members(self.approvers)
 
     async def all_flow_approvers(self):
         policy = await self.get_flow_policy()
