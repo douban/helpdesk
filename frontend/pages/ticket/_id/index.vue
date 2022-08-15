@@ -27,6 +27,7 @@
                   :pagination="false"
                   :columns="nodeColumns"
                   :data-source="ticketAnnotation.nodes"
+                  row-key="name"
                   />
                   <a-divider  style="width: 2px">approval logs</a-divider>
                   <a-timeline>
@@ -186,20 +187,25 @@ export default {
       autoRefreshBtnUpdateTimer: null,
       isRefreshing: false,
       nodeColumns: [{
-    title: 'Name',
-    dataIndex: 'name',
-  },
-  {
-    title: 'Type',
-    dataIndex: 'node_type',},
-  {
-    title: 'Approvers',
-    dataIndex: 'approvers',
-  },
-    {
-    title: 'Approver Type',
-    dataIndex: 'approver_type',
-    }],
+        title: 'Name',
+        key: 'name',
+        dataIndex: 'name',
+      },
+      {
+        title: 'Type',
+        key: 'node_type',
+        dataIndex: 'node_type',
+      },
+      {
+        title: 'Approvers',
+        key: 'approvers',
+        dataIndex: 'approvers',
+      },
+      {
+        title: 'Approver Type',
+        key: 'approver_type',
+        dataIndex: 'approver_type',
+      }],
     }
   },
   computed: {

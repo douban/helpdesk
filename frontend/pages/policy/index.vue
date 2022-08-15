@@ -1,27 +1,46 @@
 <template>
     <a-layout-content>
-      <div style="margin-top:16px;margin-bottom:16px">
-      <NuxtLink :to="{name: 'policy-id', params: {id: 0}}">
-        <a-button type="primary">Create</a-button>
-      </NuxtLink>
-    </div>
-    <a-table
-      :columns="columns"
-      :data-source="tableData"
-      :pagination="pagination"
-      :loading="loading"
-      row-key="id"
-      class="whiteBackground"
-      @change="handleTableChange">
-      <span slot="action" slot-scope="text, record">
-        <NuxtLink :to="{name: 'policy-id', params: {id: record.id}}">detail</NuxtLink>
-        <a-divider type="vertical" />
-        <a-popconfirm title="Sure to delete?" ok-text="Ok" cancel-text="Cancel" 
-          @confirm="delPolicy(record.id)">
-          <a>delete</a>
-        </a-popconfirm>
-      </span>
-    </a-table>
+        <div style="margin-top:16px;margin-bottom:16px">
+            <NuxtLink :to="{name: 'policy-id', params: {id: 0}}">
+                <a-button type="primary">Create</a-button>
+            </NuxtLink>
+            <a-divider type="vertical" />
+            <a-modal v-model="groupModalVisible" title="User Group" :footer="null" width="720px">
+            <a-button type="primary" style="margin-bottom:16px" @click="addGroup">add</a-button>
+            <a-table 
+                size="small" 
+                :pagination="false" 
+                :columns="usersColumns" 
+                :data-source="userGroup" 
+                row-key="id"
+                bordered>
+                <span slot="action" slot-scope="text, record">
+                <a-button v-if="record.id" type="link">edit</a-button>
+                <a-popconfirm title="Sure to delete?" ok-text="Ok" cancel-text="Cancel" @confirm="delUserGroup(record.id)">
+                    <a v-if="record.id">delete</a>
+                </a-popconfirm>
+                <a-button v-if="!record.id" type="link">save</a-button>
+                </span>
+            </a-table>
+            </a-modal>
+            <a-button type="link" icon="team" @click="showGroupModal"> UserGroup </a-button>
+        </div>
+        <a-table 
+            :columns="columns" 
+            :data-source="tableData" 
+            :pagination="pagination" 
+            :loading="loading" 
+            row-key="id"
+            class="whiteBackground" 
+            @change="handleTableChange">
+            <span slot="action" slot-scope="text, record">
+                <NuxtLink :to="{name: 'policy-id', params: {id: record.id}}">detail</NuxtLink>
+                <a-divider type="vertical" />
+                <a-popconfirm title="Sure to delete?" ok-text="Ok" cancel-text="Cancel" @confirm="delPolicy(record.id)">
+                    <a>delete</a>
+                </a-popconfirm>
+            </span>
+        </a-table>
     </a-layout-content>
 </template>
 
@@ -39,6 +58,27 @@ export default {
             pagination: {
                 pageSize: 1
             },
+            userGroup: [],
+            groupModalVisible: false,
+            usersColumns: [{
+                title: 'ID',
+                key: 'id',
+                dataIndex: 'id',
+                width: 50,
+            }, {
+                title: 'Group',
+                key: 'group_name',
+                dataIndex: 'group_name',
+            }, {
+                title: 'Users',
+                key: 'user_str',
+                dataIndex: 'user_str',
+            }, {
+                title: 'Action',
+                key: 'action',
+                width: 150,
+                scopedSlots: { customRender: "action" }
+            }],
         };
     },
     computed: {
@@ -143,7 +183,39 @@ export default {
             });
             this.loadPolicies(this.$route.params);
         },
-    },
+        loadUserGroup() {
+            this.$axios.get("/api/group_users").then((response) => {
+                this.userGroup = response.data
+            });
+        },
+        showGroupModal() {
+            this.loadUserGroup()
+            this.groupModalVisible = true
+        },
+        addGroup() {
+            this.userGroup.push({})
+        },
+        addUserGroup() {
+
+        },
+        updateUserGroup(id) {
+            const data = { "group_name": this.policyInfo.name, "user_str": this.policyInfo.display};
+            this.$axios.put("/api/group_users/" + id, data).then(res => {
+                this.$message.info("success!");
+            }).catch((error) => {
+                this.$message.warning(error);
+            });
+            this.loadUserGroup();
+        },
+        delUserGroup(id) {
+            this.$axios.delete("/api/group_users/" + id).then(res => {
+                this.$message.info("success!");
+            }).catch((error) => {
+                this.$message.warning(error);
+            });
+            this.loadUserGroup();
+        }
+    }, 
 }
 </script>
 

@@ -13,7 +13,6 @@ from helpdesk.libs.approver_provider import get_approver_provider
 from helpdesk.libs.decorators import cached_property
 from helpdesk.libs.sentry import report
 from helpdesk.models import db
-from helpdesk.models import provider
 from helpdesk.models.db.param_rule import ParamRule
 from helpdesk.models.db.policy import Policy
 from helpdesk.models.db.policy import TicketPolicy
@@ -171,7 +170,6 @@ class Ticket(db.Model):
         for node in self.annotation.get("nodes"):
             if node.get("name") == node_name:
                 provider = get_approver_provider(node.get("approver_type") or ApproverType.PEOPLE)
-                print(provider)
                 return await provider.get_approver_members(node.get("approvers"))
         return ""
 

@@ -26,7 +26,6 @@ class GroupProvider(ApproverProvider):
         group_users = await GroupUser.get_all(ids=group_ids)
         if group_users:
             members = [users for approvers in group_users for users in approvers.user_str.split(',')]
-        print(members)
         return ",".join(members)
 
 
