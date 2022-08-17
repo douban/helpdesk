@@ -21,25 +21,18 @@ class GroupProvider(ApproverProvider):
     source = "group"
 
     async def get_approver_members(self, approver):
-        group_ids = [int(group_id) for group_id in approver.split(",")]
         members = []
-        group_users = await GroupUser.get_all(ids=group_ids)
+        group_users = await GroupUser.get_by_group_name(group_name=approver)
         if group_users:
             members = [users for approvers in group_users for users in approvers.user_str.split(',')]
         return ",".join(members)
 
 
-class BridgeProvider(ApproverProvider):
-    source = "app"
-
-    async def get_approver_members(self, approver):
-        pass
-
-
+from bridge import BridgeOwnerProvider
 users_providers = {
     'people': PeopleProvider,
     'group': GroupProvider,
-    'app': BridgeProvider,
+    'app_owner': BridgeOwnerProvider,
 }
 
 

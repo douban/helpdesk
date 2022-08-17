@@ -169,8 +169,14 @@ class Ticket(db.Model):
     async def get_node_approvers(self, node_name):
         for node in self.annotation.get("nodes"):
             if node.get("name") == node_name:
-                provider = get_approver_provider(node.get("approver_type") or ApproverType.PEOPLE)
-                return await provider.get_approver_members(node.get("approvers"))
+                approver_type = node.get("approver_type") or ApproverType.PEOPLE
+                approvers = node.get("approvers")
+                # 根据参数获取 app name 从而判断取哪个应用的负责人审批 
+                if approver_type == ApproverType.APP_OWNER:
+                    if node.get("approvers") == "context":
+                        approvers = self.params.get("app")
+                provider = get_approver_provider(approver_type)
+                return await provider.get_approver_members(approvers)
         return ""
 
     async def all_flow_approvers(self):
