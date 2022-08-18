@@ -171,10 +171,9 @@ class Ticket(db.Model):
             if node.get("name") == node_name:
                 approver_type = node.get("approver_type") or ApproverType.PEOPLE
                 approvers = node.get("approvers")
-                # 根据参数获取 app name 从而判断取哪个应用的负责人审批 
-                if approver_type == ApproverType.APP_OWNER:
-                    if node.get("approvers") == "context":
-                        approvers = self.params.get("app")
+                # 如果节点approvers为空 根据参数获取 app name 从而判断取哪个应用的负责人审批 
+                if approver_type == ApproverType.APP_OWNER and node.get("approvers") == "":
+                    approvers = self.params.get("app")
                 provider = get_approver_provider(approver_type)
                 return await provider.get_approver_members(approvers)
         return ""

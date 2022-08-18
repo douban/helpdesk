@@ -75,7 +75,6 @@ class Node(BaseModel):
     节点顺序根据列表的先后顺序来
     """
     name: str
-    desc: Optional[str] = ""
     approvers: str
     approver_type: ApproverType = ApproverType.PEOPLE
     node_type: NodeType = NodeType.APPROVAL

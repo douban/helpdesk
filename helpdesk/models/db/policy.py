@@ -51,13 +51,6 @@ class Policy(db.Model):
                 return True
         return False
 
-    def get_node_approvers(self, node_name):
-        nodes = self.definition.get("nodes")
-        for node in nodes:
-            if node.get("name") == node_name:
-                return node.get("approvers")
-        return ""
-
 
 class TicketPolicy(db.Model):
     __tablename__ = 'ticket_policy'

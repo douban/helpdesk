@@ -40,7 +40,7 @@
           </template>
           
           <template slot="description">
-            <span v-if="ticketInfo.status==='pending'">
+            <span v-if="ticketInfo.status==='pending'" style="word-wrap:break-word">
               in {{ticketAnnotation.current_node}}<br/>
               {{ticketAnnotation.approvers}}
             </span>
