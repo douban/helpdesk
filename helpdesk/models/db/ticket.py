@@ -5,7 +5,7 @@ import importlib
 from enum import Enum
 from datetime import datetime
 from urllib.parse import urlencode, quote_plus
-
+from pytz import timezone
 from authlib.jose import jwt
 from sqlalchemy.sql.expression import and_
 from helpdesk.libs.approver_provider import get_approver_provider
@@ -23,6 +23,7 @@ from helpdesk.config import (
     DEFAULT_BASE_URL,
     TICKET_CALLBACK_PARAMS,
     NOTIFICATION_METHODS,
+    TIME_ZONE,
 )
 from helpdesk.views.api.schemas import ApproverType, NodeType
 
@@ -228,7 +229,8 @@ class Ticket(db.Model):
 
     def set_approval_log(self, by_user=SYSTEM_USER, operated_type="approved"):
         approval_log = self.annotation.get("approval_log")
-        approval_log.append(dict(node=self.annotation.get("current_node"), approver=by_user, operated_type=operated_type, operated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        operated_at = datetime.now().astimezone(timezone('Asia/Shanghai')).strftime("%Y-%m-%d %H:%M:%S")
+        approval_log.append(dict(node=self.annotation.get("current_node"), approver=by_user, operated_type=operated_type, operated_at=operated_at))
         self.annotate(approval_log=approval_log)
 
     async def node_transation(self):
