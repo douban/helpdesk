@@ -172,7 +172,7 @@ class Ticket(db.Model):
                 approver_type = node.get("approver_type") or ApproverType.PEOPLE
                 approvers = node.get("approvers")
                 # 如果节点approvers为空 根据参数获取 app name 从而判断取哪个应用的负责人审批 
-                if approver_type == ApproverType.APP_OWNER and node.get("approvers") == "":
+                if approver_type == ApproverType.APP_OWNER and approvers == "":
                     approvers = self.params.get("app")
                 provider = get_approver_provider(approver_type)
                 return await provider.get_approver_members(approvers)
@@ -181,8 +181,13 @@ class Ticket(db.Model):
     async def all_flow_approvers(self):
         all_approvers = []
         for node in self.annotation.get("nodes"):
-            provider = get_approver_provider(node.get("approver_type") or ApproverType.PEOPLE)
-            approvers = await provider.get_approver_members(node.get("approvers"))
+            approver_type = node.get("approver_type") or ApproverType.PEOPLE
+            node_approvers = node.get("approvers")
+            # 如果节点approvers为空 根据参数获取 app name 从而判断取哪个应用的负责人审批 
+            if approver_type == ApproverType.APP_OWNER and node_approvers == "":
+                node_approvers = self.params.get("app")
+            provider = get_approver_provider(approver_type)
+            approvers = await provider.get_approver_members(node_approvers)
             for approver in approvers.split(","):
                 if approver not in all_approvers:
                     all_approvers.append(approver)
