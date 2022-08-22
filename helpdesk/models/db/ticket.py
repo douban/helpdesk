@@ -229,8 +229,7 @@ class Ticket(db.Model):
 
     def set_approval_log(self, by_user=SYSTEM_USER, operated_type="approved"):
         approval_log = self.annotation.get("approval_log")
-        operated_at = datetime.now().astimezone(timezone('Asia/Shanghai')).strftime("%Y-%m-%d %H:%M:%S")
-        approval_log.append(dict(node=self.annotation.get("current_node"), approver=by_user, operated_type=operated_type, operated_at=operated_at))
+        approval_log.append(dict(node=self.annotation.get("current_node"), approver=by_user, operated_type=operated_type, operated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
         self.annotate(approval_log=approval_log)
 
     async def node_transation(self):
