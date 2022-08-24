@@ -139,8 +139,9 @@ class WebhookEventNotification(Notification):
 
     def render(self):
         nodes = self.ticket.annotation.get("nodes")
-        next_node, notify_type= "", ""
+        next_node = "",
         approvers = self.ticket.annotation.get("approvers")
+        notify_people = approvers
         for index, node in enumerate(nodes):
             if self.ticket.annotation.get("current_node") == node.get("name"):
                 next_node = nodes[index+1].get("name")  if (index != len(nodes)-1) else ""
@@ -150,9 +151,10 @@ class WebhookEventNotification(Notification):
             notify_type = NodeType.CC
         if notify_type == NodeType.CC:
             if self.phase.value == TicketPhase.MARK.value or approvers == "":
-                approvers = self.ticket.submitter
+                notify_people = self.ticket.submitter
             else:
-                approvers = approvers + "," + self.ticket.submitter
+                notify_people = approvers + "," + self.ticket.submitter
+            approvers = ""
 
         return NotifyMessage(
             phase=self.phase.value,
@@ -170,6 +172,7 @@ class WebhookEventNotification(Notification):
             next_node=next_node,
             approval_log=self.ticket.annotation.get("approval_log"),
             notify_type=notify_type,
+            notify_people=notify_people,
             comfirmed_by=self.ticket.confirmed_by or ""
         )
 

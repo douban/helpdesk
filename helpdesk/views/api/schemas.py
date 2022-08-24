@@ -50,21 +50,33 @@ class PolicyFlowResp(BaseModel):
 
 class NodeType(str, Enum):
     """
-    节点类型 cc 则自动同意 approval 则需要审批
+    节点类型 cc 则自动同意,抄送给approver; approval 则需要审批
     """
     CC = 'cc'
     APPROVAL = 'approval'
 
 
+class ApproverType(str, Enum):
+    """
+    审批人类型
+    app_owner: dae 应用 owner
+    group: 用户组
+    people: 指定人
+    """
+    APP_OWNER = "app_owner"
+    GROUP = "group"
+    PEOPLE = "people"
+
+
 class Node(BaseModel):
     """
     审批流的节点定义
-    approvers: "aaa,bbb,ccc"
+    approvers: "aaa,bbb,ccc", 如果是通讯组之类的则也可多个通讯组拼接str
     节点顺序根据列表的先后顺序来
     """
     name: str
-    desc: Optional[str] = ""
     approvers: str
+    approver_type: ApproverType = ApproverType.PEOPLE
     node_type: NodeType = NodeType.APPROVAL
 
 
@@ -123,9 +135,30 @@ class NotifyMessage(BaseModel):
     next_node: Optional[str] = ""
     approval_log: List[Dict] = []
     notify_type: str
+    notify_people: str = ""
     comfirmed_by: str = ""
 
 
 class ConfigType(Enum):
     ticket = "ticket"
     policy = "policy"
+
+
+class GroupUserReq(BaseModel):
+    """
+    用户组的请求体
+    """
+    group_name: str
+    user_str: str
+    
+
+class GroupUserResp(BaseModel):
+    """
+    用户组的响应体
+    """
+    id: int
+    group_name: str
+    user_str: str
+
+    class Config:
+        orm_mode = True

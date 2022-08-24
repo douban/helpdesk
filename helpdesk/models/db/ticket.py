@@ -5,9 +5,10 @@ import importlib
 from enum import Enum
 from datetime import datetime
 from urllib.parse import urlencode, quote_plus
-
+from pytz import timezone
 from authlib.jose import jwt
 from sqlalchemy.sql.expression import and_
+from helpdesk.libs.approver_provider import get_approver_provider
 
 from helpdesk.libs.decorators import cached_property
 from helpdesk.libs.sentry import report
@@ -22,8 +23,9 @@ from helpdesk.config import (
     DEFAULT_BASE_URL,
     TICKET_CALLBACK_PARAMS,
     NOTIFICATION_METHODS,
+    TIME_ZONE,
 )
-from helpdesk.views.api.schemas import NodeType
+from helpdesk.views.api.schemas import ApproverType, NodeType
 
 logger = logging.getLogger(__name__)
 
@@ -137,8 +139,7 @@ class Ticket(db.Model):
             user.name in await self.all_flow_approvers())
 
     async def can_admin(self, user):
-        policy = await self.get_flow_policy()
-        approvers = policy.get_node_approvers(self.annotation.get("current_node"))
+        approvers = self.get_node_approvers(self.annotation.get("current_node"))
         return user.is_admin or user.name in approvers
 
     @cached_property
@@ -166,12 +167,31 @@ class Ticket(db.Model):
         policy_id = await TicketPolicy.default_associate(self.provider_object)
         return await Policy.get(id_=policy_id)
 
+    async def get_node_approvers(self, node_name):
+        for node in self.annotation.get("nodes"):
+            if node.get("name") == node_name:
+                approver_type = node.get("approver_type") or ApproverType.PEOPLE
+                approvers = node.get("approvers")
+                # 如果节点approvers为空 根据参数获取 app name 从而判断取哪个应用的负责人审批 
+                if approver_type == ApproverType.APP_OWNER and approvers == "":
+                    approvers = self.params.get("app")
+                provider = get_approver_provider(approver_type)
+                return await provider.get_approver_members(approvers)
+        return ""
+
     async def all_flow_approvers(self):
-        policy = await self.get_flow_policy()
-        nodes = policy.definition.get("nodes")
         all_approvers = []
-        if nodes:
-            all_approvers = [approvers for node in nodes for approvers in node.get("approvers").split(',')]
+        for node in self.annotation.get("nodes"):
+            approver_type = node.get("approver_type") or ApproverType.PEOPLE
+            node_approvers = node.get("approvers")
+            # 如果节点approvers为空 根据参数获取 app name 从而判断取哪个应用的负责人审批 
+            if approver_type == ApproverType.APP_OWNER and node_approvers == "":
+                node_approvers = self.params.get("app")
+            provider = get_approver_provider(approver_type)
+            approvers = await provider.get_approver_members(node_approvers)
+            for approver in approvers.split(","):
+                if approver not in all_approvers:
+                    all_approvers.append(approver)
         return all_approvers
 
     def annotate(self, dict_=None, **kw):
@@ -220,7 +240,7 @@ class Ticket(db.Model):
         else:
             next_node = policy.next_node(current_node)
             self.annotate(current_node=next_node.get("name"))
-            self.annotate(approvers=policy.get_node_approvers(next_node.get("name")))
+            self.annotate(approvers=self.get_node_approvers(next_node.get("name")))
             if next_node.get("node_type") == NodeType.CC.value:
                 self.set_approval_log(operated_type="cc")
                 await self.notify(TicketPhase.REQUEST)
@@ -228,7 +248,7 @@ class Ticket(db.Model):
                     return True
                 next_again = policy.next_node(next_node.get("name"))
                 self.annotate(current_node=next_again.get("name"))
-                self.annotate(approvers=policy.get_node_approvers(next_again.get("name")))
+                self.annotate(approvers=self.get_node_approvers(next_again.get("name")))
             return False
 
     async def pre_approve(self):
@@ -245,7 +265,7 @@ class Ticket(db.Model):
             await self.notify(TicketPhase.REQUEST)
             next_node = policy.next_node( self.annotation.get("current_node"))
             self.annotate(current_node=next_node.get("name"))
-            self.annotate(approvers=policy.get_node_approvers(next_node.get("name")))
+            self.annotate(approvers=self.get_node_approvers(next_node.get("name")))
         return True, "success"
     
     async def approve(self, by_user=None):

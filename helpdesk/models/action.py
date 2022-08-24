@@ -4,7 +4,6 @@ import logging
 from datetime import datetime
 
 from helpdesk.libs.rest import DictSerializableClassMixin
-from helpdesk.models.db import policy
 from helpdesk.models.db.ticket import Ticket, TicketPhase
 from helpdesk.config import AUTO_APPROVAL_TARGET_OBJECTS, PARAM_FILLUP, TICKET_CALLBACK_PARAMS
 
@@ -103,7 +102,7 @@ class Action(DictSerializableClassMixin):
         ticket.annotate(policy=policy.name)
         ticket.annotate(current_node=policy.init_node.get("name"))
         ticket.annotate(approval_log=list())
-        ticket.annotate(approvers=policy.get_node_approvers(policy.init_node.get("name")))
+        ticket.annotate(approvers=await ticket.get_node_approvers(policy.init_node.get("name")))
         
         ret, msg = await ticket.pre_approve()
         if not ret:

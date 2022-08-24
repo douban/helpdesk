@@ -2,7 +2,7 @@
   <a-layout>
     <span>Loading...</span>
     <a-modal v-model="rejectModalVisible" title="Reject reason" ok-text="confirm" cancel-text="cancel" @ok="onReject" @cancel="hideRejectModal">
-      <a-input v-model="rejectReason" placeholder="Reject reason" max-length:=128 />
+      <a-input v-model="rejectReason" placeholder="Reject reason" max-length=128 />
     </a-modal>
   </a-layout>
 </template>
