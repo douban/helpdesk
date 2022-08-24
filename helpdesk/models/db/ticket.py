@@ -139,7 +139,7 @@ class Ticket(db.Model):
             user.name in await self.all_flow_approvers())
 
     async def can_admin(self, user):
-        approvers = self.get_node_approvers(self.annotation.get("current_node"))
+        approvers = await self.get_node_approvers(self.annotation.get("current_node"))
         return user.is_admin or user.name in approvers
 
     @cached_property
@@ -240,7 +240,7 @@ class Ticket(db.Model):
         else:
             next_node = policy.next_node(current_node)
             self.annotate(current_node=next_node.get("name"))
-            self.annotate(approvers=self.get_node_approvers(next_node.get("name")))
+            self.annotate(approvers=await self.get_node_approvers(next_node.get("name")))
             if next_node.get("node_type") == NodeType.CC.value:
                 self.set_approval_log(operated_type="cc")
                 await self.notify(TicketPhase.REQUEST)
@@ -248,7 +248,7 @@ class Ticket(db.Model):
                     return True
                 next_again = policy.next_node(next_node.get("name"))
                 self.annotate(current_node=next_again.get("name"))
-                self.annotate(approvers=self.get_node_approvers(next_again.get("name")))
+                self.annotate(approvers=await self.get_node_approvers(next_again.get("name")))
             return False
 
     async def pre_approve(self):
@@ -265,7 +265,7 @@ class Ticket(db.Model):
             await self.notify(TicketPhase.REQUEST)
             next_node = policy.next_node( self.annotation.get("current_node"))
             self.annotate(current_node=next_node.get("name"))
-            self.annotate(approvers=self.get_node_approvers(next_node.get("name")))
+            self.annotate(approvers=await self.get_node_approvers(next_node.get("name")))
         return True, "success"
     
     async def approve(self, by_user=None):

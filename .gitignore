@@ -6,6 +6,7 @@
 __pycache__/
 
 local_config.py
+bridge.py
 
 # helm chart pkgs
 /helpdesk-*.tgz
