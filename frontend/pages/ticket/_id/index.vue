@@ -31,7 +31,7 @@
                   />
                   <a-divider  style="width: 2px">approval logs</a-divider>
                   <a-timeline>
-                    <a-timeline-item v-for="(log, index) in ticketAnnotation.approval_log" :key="index">{{log.approver}} {{log.operated_type}} the {{log.node}} at {{log.operated_at}}</a-timeline-item>
+                    <a-timeline-item v-for="(log, index) in ticketAnnotation.approval_log" :key="index">{{log.approver}} {{log.operated_type}} the {{log.node}} at {{UTCtoLcocalTime(log.operated_at)}}</a-timeline-item>
                   </a-timeline>
                 </template>
                 <a-button type="link" icon="question-circle" ></a-button>

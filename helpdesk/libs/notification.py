@@ -1,5 +1,6 @@
 # coding: utf-8
 
+from datetime import datetime
 import logging
 import smtplib
 from email.message import EmailMessage
@@ -155,6 +156,9 @@ class WebhookEventNotification(Notification):
             else:
                 notify_people = approvers + "," + self.ticket.submitter
             approvers = ""
+        for log in self.ticket.annotation.get("approval_log"):
+            format = '%Y-%m-%d %H:%M:%S'
+            log["operated_at"] = timezone('Etc/UTC').localize(datetime.strptime(log.get("operated_at"), format)).astimezone(timezone(TIME_ZONE)).strftime(format)
 
         return NotifyMessage(
             phase=self.phase.value,
