@@ -5,7 +5,6 @@ import importlib
 from enum import Enum
 from datetime import datetime
 from urllib.parse import urlencode, quote_plus
-from pytz import timezone
 from authlib.jose import jwt
 from sqlalchemy.sql.expression import and_
 from helpdesk.libs.approver_provider import get_approver_provider
@@ -23,7 +22,6 @@ from helpdesk.config import (
     DEFAULT_BASE_URL,
     TICKET_CALLBACK_PARAMS,
     NOTIFICATION_METHODS,
-    TIME_ZONE,
 )
 from helpdesk.views.api.schemas import ApproverType, NodeType
 
