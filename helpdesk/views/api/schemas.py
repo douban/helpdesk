@@ -4,7 +4,7 @@
 from enum import Enum
 from datetime import datetime
 from typing import Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class MarkTickets(BaseModel):
@@ -12,6 +12,20 @@ class MarkTickets(BaseModel):
     标记工单的请求体
     """
     execution_status: str
+
+
+class QeuryKey(str, Enum):
+    """
+    ticket支持模糊匹配的key
+    时间的格式需为 2022-08-29 12:33:08(展示的时区和存储的时区不同)
+    """
+    TITLE = 'title__icontains'
+    PARAMS = 'params__icontains'
+    REASON = 'reason__icontains'
+    SUBMMITER = 'submitter__icontains'
+    CONFIRMED_BY = 'confirmed_by__icontains'
+    CREATED_AT = 'created_at__icontains'
+    EXECUTED_AT = 'executed_at__icontains'
 
 
 class ParamRule(BaseModel):

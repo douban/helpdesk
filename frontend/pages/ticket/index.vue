@@ -1,5 +1,19 @@
 <template>
   <a-layout>
+    <a-form layout="inline">
+          <div style="margin-top: 16px;margin-bottom: 16px">
+              <a-form-item label="Query key">
+                <!-- <a-input v-model="queryKey" placeholder="input query key" style="width:300px"></a-input> -->
+                <a-select v-model="queryKey" allow-clear placeholder="select a search key" style="width: 300px">
+                  <a-select-option v-for="item in queryKeyMap" :key="item.name" :value="item.value" >{{ item.name }}</a-select-option>
+                </a-select>
+              </a-form-item>
+              <a-form-item label="Query value">
+                <a-input v-model="queryValue" placeholder="input query value" style="width:300px"></a-input>
+              </a-form-item>
+              <a-button type="link" icon="search" @click="handleSearch"></a-button>
+          </div>
+        </a-form>
     <a-table
       :columns="columns"
       :data-source="tableData"
@@ -116,6 +130,17 @@ export default {
       rejectReason: null,
       closeReason: null,
       reasonModalRecord: null,
+      queryKeyMap: [
+      {"name": "Title", "value": "title"},
+      {"name": "Params", "value": "params"},
+      {"name": "Reason", "value": "reason"},
+      {"name": "Submitter", "value": "submitter"},
+      {"name": "By", "value": "confirmed_by"},
+      {"name": "Created_time", "value": "created_at"},
+      {"name": "Execute_time", "value": "executed_at"}
+      ],
+      queryKey: "",
+      queryValue: "",
     }
   },
   computed: {
@@ -325,6 +350,15 @@ export default {
           duration: 0
         })
       })
+    },
+    handleSearch() {
+      const queryParams = {page: 1, pagesize: 10}
+      if (this.queryKey !== undefined && this.queryValue !== undefined) {
+        queryParams.query_key = this.queryKey + "__icontains"
+        queryParams.query_value = this.queryValue
+      }
+      this.loading = true
+      this.loadTickets(queryParams)
     }
   }
 }
