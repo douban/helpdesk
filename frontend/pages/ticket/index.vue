@@ -136,8 +136,6 @@ export default {
       {"name": "Reason", "value": "reason"},
       {"name": "Submitter", "value": "submitter"},
       {"name": "By", "value": "confirmed_by"},
-      {"name": "Created_time", "value": "created_at"},
-      {"name": "Execute_time", "value": "executed_at"}
       ],
       queryKey: "",
       queryValue: "",

@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import copy
 from datetime import datetime
 import logging
 import smtplib
@@ -156,7 +157,8 @@ class WebhookEventNotification(Notification):
             else:
                 notify_people = approvers + "," + self.ticket.submitter
             approvers = ""
-        for log in self.ticket.annotation.get("approval_log"):
+        approval_log = copy.deepcopy(self.ticket.annotation.get("approval_log"))
+        for log in approval_log:
             format = '%Y-%m-%d %H:%M:%S'
             log["operated_at"] = timezone('Etc/UTC').localize(datetime.strptime(log.get("operated_at"), format)).astimezone(timezone(TIME_ZONE)).strftime(format)
 
@@ -168,13 +170,13 @@ class WebhookEventNotification(Notification):
             is_approved=self.ticket.is_approved or False,
             submitter=self.ticket.submitter,
             params=self.ticket.params,
-            request_time=self.ticket.created_at,
+            request_time=timezone('Etc/UTC').localize(self.ticket.created_at).astimezone(timezone(TIME_ZONE)),
             reason=self.ticket.reason or "",
             approval_flow=self.ticket.annotation.get("policy"),
             current_node=self.ticket.annotation.get("current_node"),
             approvers=approvers,
             next_node=next_node,
-            approval_log=self.ticket.annotation.get("approval_log"),
+            approval_log=approval_log,
             notify_type=notify_type,
             notify_people=notify_people,
             comfirmed_by=self.ticket.confirmed_by or ""
@@ -184,7 +186,6 @@ class WebhookEventNotification(Notification):
         if not WEBHOOK_EVENT_URL:
             return
         message = self.render()
-        print(message)
         r = requests.post(WEBHOOK_EVENT_URL, message.json())
         if r.status_code == 200:
             return

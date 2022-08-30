@@ -17,15 +17,12 @@ class MarkTickets(BaseModel):
 class QeuryKey(str, Enum):
     """
     ticket支持模糊匹配的key
-    时间的格式需为 2022-08-29 12:33:08(展示的时区和存储的时区不同)
     """
     TITLE = 'title__icontains'
     PARAMS = 'params__icontains'
     REASON = 'reason__icontains'
     SUBMMITER = 'submitter__icontains'
     CONFIRMED_BY = 'confirmed_by__icontains'
-    CREATED_AT = 'created_at__icontains'
-    EXECUTED_AT = 'executed_at__icontains'
 
 
 class ParamRule(BaseModel):
