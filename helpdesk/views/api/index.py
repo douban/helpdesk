@@ -19,7 +19,7 @@ from helpdesk.models.user import User
 from helpdesk.libs.dependency import get_current_user, require_admin
 
 from . import router
-from .schemas import MarkTickets, ParamRule as ParamRuleSchema, OperateTicket
+from .schemas import MarkTickets, ParamRule as ParamRuleSchema, OperateTicket, QeuryKey
 
 logger = logging.getLogger(__name__)
 
@@ -216,13 +216,12 @@ def extra_dict(d):
 
 @router.get('/ticket')
 async def list_ticket(page: Optional[str] = None, pagesize: Optional[str] = None,
-                      order_by: Optional[str] = None, desc: bool = False, current_user: User = Depends(get_current_user)):
-    filter_ = extract_filter_from_query_params(query_params={
-        'page': page,
-        'page_size': pagesize,
-        'order_by': order_by,
-        'desc': desc
-    }, model=Ticket)
+                      order_by: Optional[str] = None, desc: bool = False, current_user: User = Depends(get_current_user),
+                      query_key: Optional[QeuryKey] = None, query_value: Optional[str] = None):
+    query_params={'page': page, 'page_size': pagesize, 'order_by': order_by, 'desc': desc}
+    if query_key and query_value:
+        query_params[query_key] = query_value
+    filter_ = extract_filter_from_query_params(query_params=query_params, model=Ticket)
     if page and page.isdigit():
         page = max(1, int(page))
     else:

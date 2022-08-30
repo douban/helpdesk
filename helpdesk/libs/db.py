@@ -65,7 +65,7 @@ def extract_filter_from_query_params(query_params=None, model=None, exclude_keys
         try:
             if key.endswith('__icontains'):
                 key = key.split('__icontains')[0]
-                filter_ = and_(filter_, model.__table__.c[key].icontains(value))
+                filter_ = and_(filter_, model.__table__.c[key].like(f'%{value}%'))
             elif key.endswith('__in'):
                 key = key.split('__in')[0]
                 value = value.split(',')
