@@ -137,8 +137,8 @@ export default {
       {"name": "Submitter", "value": "submitter"},
       {"name": "By", "value": "confirmed_by"},
       ],
-      queryKey: "",
-      queryValue: "",
+      queryKey: undefined,
+      queryValue: undefined,
     }
   },
   computed: {
@@ -322,6 +322,10 @@ export default {
         } else {
           queryParams.desc = true
         }
+      }
+      if (this.queryKey !== undefined && this.queryValue !== undefined) {
+        queryParams.query_key = this.queryKey + "__icontains"
+        queryParams.query_value = this.queryValue
       }
       this.loadTickets(queryParams)
     },
