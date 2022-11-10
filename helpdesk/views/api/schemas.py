@@ -77,6 +77,7 @@ class ApproverType(str, Enum):
     APP_OWNER = "app_owner"
     GROUP = "group"
     PEOPLE = "people"
+    DEPARTMENT = "department"
 
 
 class Node(BaseModel):

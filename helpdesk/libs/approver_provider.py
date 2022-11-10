@@ -1,6 +1,7 @@
 import traceback
 from helpdesk.models.db.policy import GroupUser
 from helpdesk.models.provider.errors import InitProviderError
+from helpdesk.config import DEPARTMENT_OWNERS
 
 
 class ApproverProvider:
@@ -28,11 +29,20 @@ class GroupProvider(ApproverProvider):
         return ",".join(members)
 
 
+class DepartmentProvider(ApproverProvider):
+    source = "department"
+
+    async def get_approver_members(self, approver):
+        member = DEPARTMENT_OWNERS.get(approver)
+        return member or ""
+
+
 from bridge import BridgeOwnerProvider
 users_providers = {
     'people': PeopleProvider,
     'group': GroupProvider,
     'app_owner': BridgeOwnerProvider,
+    'department': DepartmentProvider,
 }
 
 

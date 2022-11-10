@@ -109,6 +109,7 @@ export default {
               {"name": "指定人", "value": "people"},
               {"name": "用户组", "value": "group"},
               {"name": "dae应用owner", "value": "app_owner"},
+              {"name": "部门负责人", "value": "department"},
             ],
             approverTips: []
         };
