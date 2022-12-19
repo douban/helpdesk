@@ -256,7 +256,7 @@ export default {
           status = 'unknown'
         }
         return (this.statusToStepStatus[status].stepKey >=
-        this.statusToStepStatus.approved.stepKey) && this.ticketInfo.status !== 'rejected'
+        this.statusToStepStatus.approved.stepKey) && this.ticketInfo.status !== 'rejected' && this.ticketInfo.status !== 'closed'
       }
       return false
     },
