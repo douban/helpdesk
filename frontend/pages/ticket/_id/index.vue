@@ -238,7 +238,7 @@ export default {
       }
     },
     showActionButtons () {
-      if (this.ticketInfo.status === 'pending' && this.$store.getters.isAdmin) {
+      if (this.ticketInfo.status === 'pending' && (this.$store.getters.isAdmin || this.ticketAnnotation.approvers.includes(this.$store.state.userProfile.name))) {
         return true
       }
       return false
