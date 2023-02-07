@@ -6,6 +6,7 @@ from datetime import datetime
 from helpdesk.libs.rest import DictSerializableClassMixin
 from helpdesk.models.db.ticket import Ticket, TicketPhase
 from helpdesk.config import AUTO_APPROVAL_TARGET_OBJECTS, PARAM_FILLUP, TICKET_CALLBACK_PARAMS
+from helpdesk.views.api.schemas import ApproverType
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +103,10 @@ class Action(DictSerializableClassMixin):
         ticket.annotate(policy=policy.name)
         ticket.annotate(current_node=policy.init_node.get("name"))
         ticket.annotate(approval_log=list())
-        ticket.annotate(approvers=await ticket.get_node_approvers(policy.init_node.get("name")))
+        approvers = await ticket.get_node_approvers(policy.init_node.get("name"))
+        if not approvers and policy.init_node.get("approver_type") == ApproverType.APP_OWNER:
+            return None, "Failed to get app approvers, please confirm that the app name is entered correctly"
+        ticket.annotate(approvers=approvers)
         
         ret, msg = await ticket.pre_approve()
         if not ret:
