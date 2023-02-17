@@ -187,7 +187,7 @@ class Ticket(db.Model):
             # 如果节点approvers为空 根据参数获取 app name 从而判断取哪个应用的负责人审批 
             if approver_type == ApproverType.APP_OWNER and node_approvers == "":
                 node_approvers = self.params.get("app")                
-            if approver_type == ApproverType.DEPARTMENT and approvers == "":
+            if approver_type == ApproverType.DEPARTMENT and node_approvers == "":
                 approvers = self.params.get("department")
             provider = get_approver_provider(approver_type)
             approvers = await provider.get_approver_members(node_approvers)
