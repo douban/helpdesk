@@ -167,16 +167,19 @@ class Ticket(db.Model):
 
     async def get_node_approvers(self, node_name):
         for node in self.annotation.get("nodes"):
-            if node.get("name") == node_name:
-                approver_type = node.get("approver_type") or ApproverType.PEOPLE
-                approvers = node.get("approvers")
-                # 如果节点approvers为空 根据参数获取 app name 从而判断取哪个应用的负责人审批 
-                if approver_type == ApproverType.APP_OWNER and approvers == "":
-                    approvers = self.params.get("app")
-                if approver_type == ApproverType.DEPARTMENT and approvers == "":
-                    approvers = self.params.get("department")
-                provider = get_approver_provider(approver_type)
-                return await provider.get_approver_members(approvers)
+            if node.get("name") != node_name:
+                continue
+            approver_type = node.get("approver_type") or ApproverType.PEOPLE
+            approvers = node.get("approvers")
+            if approvers and approver_type == ApproverType.PEOPLE:
+                return approvers
+            # 如果节点approvers为空 根据参数获取 app name 从而判断取哪个应用的负责人审批 
+            if approver_type == ApproverType.APP_OWNER:
+                approvers = self.params.get("app")
+            if approver_type == ApproverType.DEPARTMENT:
+                approvers = self.params.get("department")
+            provider = get_approver_provider(approver_type)
+            return await provider.get_approver_members(approvers)
         return ""
 
     async def all_flow_approvers(self):
@@ -188,12 +191,12 @@ class Ticket(db.Model):
             if approver_type == ApproverType.APP_OWNER and node_approvers == "":
                 node_approvers = self.params.get("app")                
             if approver_type == ApproverType.DEPARTMENT and node_approvers == "":
-                approvers = self.params.get("department")
+                node_approvers = self.params.get("department")
             provider = get_approver_provider(approver_type)
-            approvers = await provider.get_approver_members(node_approvers)
-            for approver in approvers.split(","):
-                if approver not in all_approvers:
-                    all_approvers.append(approver)
+            node_approvers = await provider.get_approver_members(node_approvers)
+            for member in node_approvers.split(","):
+                if member not in all_approvers:
+                    all_approvers.append(member)
         return all_approvers
 
     def annotate(self, dict_=None, **kw):
