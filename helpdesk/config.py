@@ -53,7 +53,10 @@ AUTHORIZED_EMAIL_DOMAINS = []
 AUTO_APPROVAL_TARGET_OBJECTS = []
 TICKETS_PER_PAGE = 50
 
-ACTION_TREE_CONFIG = ['功能导航', []]
+SUBTREE = ['账号',
+    [['申请账号', '申请账号', 'airflow', 'account_action'],]
+]
+ACTION_TREE_CONFIG = ['功能导航', [SUBTREE]]
 
 SYSTEM_USER = 'admin'
 SYSTEM_PASSWORD = 'password'
