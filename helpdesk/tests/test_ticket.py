@@ -1,6 +1,5 @@
 import pytest
 from httpx import AsyncClient
-from pytest import MonkeyPatch
 
 
 def test_admin_panel():
@@ -22,7 +21,7 @@ async def test_action(test_client: AsyncClient, test_action, mock_provider_actio
 
 
 @pytest.mark.anyio
-async def test_ticket(test_client: AsyncClient, test_action, test_associate, mock_provider_action):
+async def test_ticket(test_client: AsyncClient, test_action, test_policy, mock_provider_action):
     list_ticket = await test_client.get("/api/ticket")
     assert list_ticket.status_code == 200
     # create ticket
