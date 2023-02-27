@@ -1,8 +1,9 @@
-import datetime
+from datetime import datetime
 from unittest.mock import Mock
 import pytest
 from httpx import AsyncClient
 from pytest import MonkeyPatch
+from bridge import BridgeOwnerProvider
 from helpdesk import config
 from helpdesk.libs.auth import Validator
 from helpdesk.models.action import Action
@@ -29,7 +30,7 @@ def test_admin_user():
 
 
 @pytest.fixture
-def test_nomal_user():
+def test_user():
     return User(name='test_user', email='test_user@douban.com', roles=[])
 
 
@@ -116,6 +117,7 @@ def mock_provider_action(monkeypatch: MonkeyPatch):
     monkeypatch.setattr(AirflowProvider, "get_action", mock_get_action)
 
 
+# 构造各种审批流数据
 @pytest.fixture
 async def test_policy(test_admin_user, test_action):
     policy_config = await policy.create_policy(flow_data=PolicyFlowReq(
@@ -159,3 +161,77 @@ async def test_cc_others_policy(test_admin_user, test_action):
         link_condition=f'["=", "reason", "test_cc_policy_to_others"]',
     ))
     yield policy_config
+
+
+@pytest.fixture
+async def test_approval_policy_by_group(test_admin_user, test_action, test_group):
+    policy_config = await policy.create_policy(flow_data=PolicyFlowReq(
+        name="test_approval_policy_by_group",
+        display="test",
+        definition=NodeDefinition(nodes=[Node(name="test_approval_node", approvers=test_group.group_name, approver_type=ApproverType.GROUP, node_type=NodeType.APPROVAL)])
+    ), current_user=test_admin_user)
+    await policy.add_associate(params=TicketPolicyReq(
+        ticket_name=test_action.target_object,
+        policy_id=policy_config.id,
+        link_condition=f'["=", "reason", "test_approval_policy_by_group"]',
+    ))
+    yield policy_config
+
+
+@pytest.fixture
+async def test_approval_policy_by_app(test_admin_user, test_action):
+    policy_config = await policy.create_policy(flow_data=PolicyFlowReq(
+        name="test_approval_policy_by_app",
+        display="test",
+        definition=NodeDefinition(nodes=[Node(name="test_approval_node", approvers="", approver_type=ApproverType.APP_OWNER, node_type=NodeType.APPROVAL)])
+    ), current_user=test_admin_user)
+    await policy.add_associate(params=TicketPolicyReq(
+        ticket_name=test_action.target_object,
+        policy_id=policy_config.id,
+        link_condition=f'["=", "reason", "test_approval_policy_by_app"]',
+    ))
+    yield policy_config
+
+
+@pytest.fixture
+async def test_approval_policy_by_department(test_admin_user, test_action):
+    policy_config = await policy.create_policy(flow_data=PolicyFlowReq(
+        name="test_approval_policy_by_department",
+        display="test",
+        definition=NodeDefinition(nodes=[Node(name="test_approval_node", approvers="", approver_type=ApproverType.DEPARTMENT, node_type=NodeType.APPROVAL)])
+    ), current_user=test_admin_user)
+    await policy.add_associate(params=TicketPolicyReq(
+        ticket_name=test_action.target_object,
+        policy_id=policy_config.id,
+        link_condition=f'["=", "reason", "test_approval_policy_by_department"]',
+    ))
+    yield policy_config
+
+
+@pytest.fixture
+async def test_combined_policy(test_admin_user, test_action):
+    policy_config = await policy.create_policy(flow_data=PolicyFlowReq(
+        name="test_combined_policy",
+        display="test",
+        definition=NodeDefinition(nodes=[Node(name="test_node1", approvers="admin_user, normal_user", approver_type=ApproverType.PEOPLE, node_type=NodeType.APPROVAL),
+                                         Node(name="test_node3", approvers="test_user", approver_type=ApproverType.PEOPLE, node_type=NodeType.CC)])
+    ), current_user=test_admin_user)
+    await policy.add_associate(params=TicketPolicyReq(
+        ticket_name=test_action.target_object,
+        policy_id=policy_config.id,
+        link_condition=f'["=", "reason", "test_combined_policy"]',
+    ))
+    yield policy_config
+
+
+@pytest.fixture
+def test_all_policy(test_policy, test_cc_submitter_policy, test_cc_others_policy, test_approval_policy_by_group, 
+                    test_approval_policy_by_app, test_approval_policy_by_department, test_combined_policy):
+    yield test_policy, test_cc_submitter_policy, test_cc_others_policy, test_approval_policy_by_group, test_approval_policy_by_app, test_approval_policy_by_department, test_combined_policy
+
+
+
+@pytest.fixture
+def mock_app_approvers(monkeypatch: MonkeyPatch):
+    mock_get_members = Mock(return_value="app_user")
+    monkeypatch.setattr(BridgeOwnerProvider, "get_approver_members", mock_get_members)
