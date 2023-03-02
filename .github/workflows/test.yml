@@ -42,6 +42,9 @@ jobs:
       with: 
         python-version: '3.9'
     - uses: mirromutth/mysql-action@v1.1
+      with:
+        mysql database: 'helpdesk'
+        mysql root password: 'root'
     - name: Check out code
       uses: actions/checkout@v2
 
