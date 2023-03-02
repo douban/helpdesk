@@ -54,4 +54,4 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Run tests with pytest
-      run: pytest helpdesk/tests --junitxml=ci/ut-report.xml"
+      run: pytest helpdesk/tests --junitxml=ci/ut-report.xml
