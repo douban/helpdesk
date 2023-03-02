@@ -62,8 +62,8 @@ async def test_flow_match(test_action, test_admin_user, params, policy_name, app
     "phase, params, mail_approvers, notify_approvers, notify_type, notify_people",
     [
         pytest.param(TicketPhase.REQUEST, {}, "test_user", "test_user", NodeType.APPROVAL, "test_user"),
-        pytest.param(TicketPhase.APPROVAL, {}, "test_user,admin_user@douban.com", "", NodeType.CC, 'test_user,admin_user'),
-        pytest.param(TicketPhase.MARK, {}, "test_user,admin_user@douban.com", "", NodeType.CC, 'admin_user'),
+        pytest.param(TicketPhase.APPROVAL, {}, "test_user,admin_user@example.com", "", NodeType.CC, 'test_user,admin_user'),
+        pytest.param(TicketPhase.MARK, {}, "test_user,admin_user@example.com", "", NodeType.CC, 'admin_user'),
         pytest.param(TicketPhase.REQUEST, {"reason": "test_cc_policy_to_submitter"}, "", "", NodeType.CC, "admin_user"),
     ]
 )

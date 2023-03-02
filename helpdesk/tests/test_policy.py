@@ -1,6 +1,8 @@
 from httpx import AsyncClient
 import pytest
 
+from helpdesk.models.db.policy import TicketPolicy
+
 
 @pytest.mark.anyio
 async def test_policy(test_client: AsyncClient):
@@ -59,15 +61,17 @@ async def test_group_user(test_client: AsyncClient):
 @pytest.mark.anyio
 async def test_associates(test_client: AsyncClient, test_policy):
     # policy 和 ticket 的关联CRUD操作
-    create_response = await test_client.post("/api/associates", json={"ticket_name":"test_ticket_action", "policy_id":test_policy.id, "link_condition":'["=", 1, 1]'})
+    action_name = "test_ticket_action"
+    create_response = await test_client.post("/api/associates", json={"ticket_name":action_name, "policy_id":test_policy.id, "link_condition":'["=", 1, 1]'})
     assert create_response.status_code == 200
     assert create_response.json().get("policy_id") == test_policy.id
     associate_id = create_response.json().get("id")
-    list_by_ticket = await test_client.get("/api/associates", params={"config_type": "ticket", "ticket_name": "test_ticket_action"})
-    assert list_by_ticket.status_code == 200
-    modify_response = await test_client.put(f"/api/associates/{associate_id}", json={"ticket_name":"test_ticket_action_modify", "policy_id":test_policy.id, "link_condition":'["=", 1, 1]'})
+    list_by_ticket = await TicketPolicy.get_by_ticket_name(action_name)
+    assert len(list_by_ticket) == 1
+    modify_response = await test_client.put(f"/api/associates/{associate_id}", json={"ticket_name":action_name, "policy_id":test_policy.id, "link_condition":'["=", "name", "test"]'})
     assert modify_response.status_code == 200
-    assert modify_response.json().get("ticket_name") == "test_ticket_action_modify"
+    assert modify_response.json().get("ticket_name") == action_name
+    assert modify_response.json().get("link_condition") == '["=", "name", "test"]'
     delete_response = await test_client.delete(f"/api/associates/{associate_id}")
     assert delete_response.status_code == 200
     list_by_policy = await test_client.get("/api/associates", params={"config_type": "policy", "policy_id": test_policy.id})

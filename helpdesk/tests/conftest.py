@@ -26,12 +26,12 @@ def test_configs():
 
 @pytest.fixture
 def test_admin_user():
-    return User(name='admin_user', email='admin_user@douban.com', roles=["admin"])
+    return User(name='admin_user', email='admin_user@example.com', roles=["admin"])
 
 
 @pytest.fixture
 def test_user():
-    return User(name='test_user', email='test_user@douban.com', roles=[])
+    return User(name='test_user', email='test_user@example.com', roles=[])
 
 
 @pytest.fixture(autouse=True)
@@ -44,7 +44,7 @@ def fake_login(monkeypatch: MonkeyPatch):
     from helpdesk.libs.dependency import get_current_user
 
     def moke_admin_uer():
-        return User(name='admin_user', email='admin_user@douban.com', roles=["admin"])
+        return User(name='admin_user', email='admin_user@example.com', roles=["admin"])
 
     app.dependency_overrides[get_current_user] = moke_admin_uer
 
@@ -59,7 +59,7 @@ def fake_nomal_login(monkeypatch: MonkeyPatch):
     from helpdesk.libs.dependency import get_current_user
 
     def moke_normal_uer():
-        return User(name='test_user', email='test_user@douban.com', roles=[])
+        return User(name='test_user', email='test_user@example.com', roles=[])
 
     app.dependency_overrides[get_current_user] = moke_normal_uer
 
