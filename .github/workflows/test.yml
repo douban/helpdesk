@@ -41,7 +41,14 @@ jobs:
     - uses: actions/setup-node@v1
       with: 
         python-version: '3.9'
+    - uses: mirromutth/mysql-action@v1.1
     - name: Check out code
       uses: actions/checkout@v2
 
-    - run: pip install -r requirements.txt
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run tests with pytest
+      run: pytest helpdesk/tests --junitxml=ci/ut-report.xml"
