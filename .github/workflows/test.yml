@@ -41,15 +41,22 @@ jobs:
     - uses: actions/setup-node@v1
       with: 
         python-version: '3.9'
-    - uses: mirromutth/mysql-action@v1.1
-      with:
-        mysql database: 'helpdesk'
-        mysql root password: 'root'
+      # close default MySQL-Server
+      - name: Shutdown default mysql
+        run: sudo service mysql stop
+
+      # run mysql server
+      - name: Create mysql database auth
+        uses: icomponent/mysql-action@master
+        with:
+          VERSION: 5.7
+          CONTAINER_NAME: mysql
+          PORT_MAPPING: 3306:3306
+          ROOT_PASSWORD: root
+          DATABASE: helpdesk
+
     - name: Check out code
       uses: actions/checkout@v2
-    
-    - name: Start mysql
-      run: sudo service mysql start
 
     - name: Install dependencies
       run: |
