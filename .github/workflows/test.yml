@@ -47,6 +47,9 @@ jobs:
         mysql root password: 'root'
     - name: Check out code
       uses: actions/checkout@v2
+    
+    - name: Start mysql
+      run: sudo service mysql start
 
     - name: Install dependencies
       run: |
