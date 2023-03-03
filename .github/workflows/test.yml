@@ -37,24 +37,47 @@ jobs:
   backend:
     name: Build backend
     runs-on: ubuntu-latest
+
+    # Service containers mysql to run with `runner-job`
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: helpdesk
+        ports:
+        - 3306:3306
+        options: >-
+          --name=mysql 
+          --health-cmd="mysqladmin ping" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=5
     steps:
-    - uses: actions/setup-node@v1
-      with: 
-        python-version: '3.9'
-
-    # run mysql server
-    - name: Create mysql database auth
-      uses: icomponent/mysql-action@master
-      with:
-        VERSION: 5.7
-        CONTAINER_NAME: mysql
-        PORT_MAPPING: 3306:3306
-        ROOT_PASSWORD: root
-        DATABASE: helpdesk
-
     - name: Check out code
       uses: actions/checkout@v2
 
+    - name: SET MySQL Cnf
+      run: |
+        cat << EOF > my.cnf
+        [mysqld]
+        server-id=100
+        log_bin=ON
+        character-set-server = utf8mb4
+        collation-server = utf8mb4_general_ci
+        lower_case_table_names=1
+        default-time_zone = '+8:00'
+        [client]
+        default-character-set=utf8mb4
+        EOF
+        docker cp my.cnf mysql:/etc/mysql/conf.d/
+        docker restart mysql
+
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
