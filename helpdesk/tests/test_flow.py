@@ -1,8 +1,7 @@
 from datetime import datetime
 import pytest
 from helpdesk.models.db.ticket import Ticket, TicketPhase
-from helpdesk.models.provider import get_provider
-from helpdesk.libs.notification import MailNotification, Notification, WebhookEventNotification
+from helpdesk.libs.notification import MailNotification, WebhookEventNotification
 from helpdesk.views.api.schemas import NodeType
 
 
@@ -31,7 +30,7 @@ async def test_flow_non_match(test_action, test_admin_user):
         pytest.param({"reason": "test_cc_policy_to_submitter", }, "test_cc_policy_to_submitter", "", False),
         pytest.param({"reason": "test_cc_policy_to_others"}, "test_cc_policy_to_others", "test_user", True),
         pytest.param({"reason": "test_approval_policy_by_group"}, "test_approval_policy_by_group", "test_user", True),
-        pytest.param({"reason": "test_approval_policy_by_app", "app": "test_app"}, "test_approval_policy_by_app", "", False),
+        # pytest.param({"reason": "test_approval_policy_by_app", "app": "test_app"}, "test_approval_policy_by_app", "", False),
         pytest.param({"reason": "test_approval_policy_by_department", "department": "test_department"}, "test_approval_policy_by_department", "department_user", False),
         pytest.param({"reason": "test_combined_policy"}, "test_combined_policy", "admin_user, normal_user", True),
     ]

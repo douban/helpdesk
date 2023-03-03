@@ -1,7 +1,12 @@
+import logging
 import traceback
+from helpdesk.libs.sentry import report
 from helpdesk.models.db.policy import GroupUser
 from helpdesk.models.provider.errors import InitProviderError
 from helpdesk.config import DEPARTMENT_OWNERS
+
+
+logger = logging.getLogger(__name__)
 
 
 class ApproverProvider:
@@ -37,16 +42,24 @@ class DepartmentProvider(ApproverProvider):
         return member or ""
 
 
-from bridge import BridgeOwnerProvider
 users_providers = {
     'people': PeopleProvider,
     'group': GroupProvider,
-    'app_owner': BridgeOwnerProvider,
     'department': DepartmentProvider,
 }
 
+def check_users_providers():
+    try:
+        from bridge import BridgeOwnerProvider
+        users_providers['app_owner'] = BridgeOwnerProvider
+    except Exception as e:
+        print("check_users_providers:%s", e)
+        logger.warning('Get BridgeOwnerProvider error: %s', e)
+        report()
+
 
 def get_approver_provider(provider, **kw):
+    check_users_providers()
     try:
         return users_providers[provider](**kw)
     except Exception as e:

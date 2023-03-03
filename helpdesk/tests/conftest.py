@@ -1,18 +1,14 @@
-from datetime import datetime
 from unittest.mock import Mock
 import pytest
 from httpx import AsyncClient
 from pytest import MonkeyPatch
-from bridge import BridgeOwnerProvider
 from helpdesk import config
 from helpdesk.libs.auth import Validator
 from helpdesk.models.action import Action
 from helpdesk.models.db import Base
-from helpdesk.models.db.ticket import Ticket
 from helpdesk.models.provider.airflow import AirflowProvider
 from helpdesk.views.api import policy
 from helpdesk.models.user import User
-from helpdesk.models.action_tree import action_tree
 from helpdesk.views.api.schemas import ApproverType, GroupUserReq, Node, NodeDefinition, NodeType, PolicyFlowReq, TicketPolicyReq
 
 
@@ -225,13 +221,12 @@ async def test_combined_policy(test_admin_user, test_action):
 
 
 @pytest.fixture
-def test_all_policy(test_policy, test_cc_submitter_policy, test_cc_others_policy, test_approval_policy_by_group, 
-                    test_approval_policy_by_app, test_approval_policy_by_department, test_combined_policy):
+def test_all_policy(test_policy, test_cc_submitter_policy, test_cc_others_policy, test_approval_policy_by_group, test_approval_policy_by_app, test_approval_policy_by_department, test_combined_policy):
     yield test_policy, test_cc_submitter_policy, test_cc_others_policy, test_approval_policy_by_group, test_approval_policy_by_app, test_approval_policy_by_department, test_combined_policy
 
 
 
-@pytest.fixture
-def mock_app_approvers(monkeypatch: MonkeyPatch):
-    mock_get_members = Mock(return_value="app_user")
-    monkeypatch.setattr(BridgeOwnerProvider, "get_approver_members", mock_get_members)
+# @pytest.fixture
+# def mock_app_approvers(monkeypatch: MonkeyPatch):
+#     mock_get_members = Mock(return_value="app_user")
+#     monkeypatch.setattr(BridgeOwnerProvider, "get_approver_members", mock_get_members)
