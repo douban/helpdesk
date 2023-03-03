@@ -41,19 +41,16 @@ jobs:
     - uses: actions/setup-node@v1
       with: 
         python-version: '3.9'
-      # close default MySQL-Server
-      - name: Shutdown default mysql
-        run: sudo service mysql stop
 
-      # run mysql server
-      - name: Create mysql database auth
-        uses: icomponent/mysql-action@master
-        with:
-          VERSION: 5.7
-          CONTAINER_NAME: mysql
-          PORT_MAPPING: 3306:3306
-          ROOT_PASSWORD: root
-          DATABASE: helpdesk
+    # run mysql server
+    - name: Create mysql database auth
+      uses: icomponent/mysql-action@master
+      with:
+        VERSION: 5.7
+        CONTAINER_NAME: mysql
+        PORT_MAPPING: 3306:3306
+        ROOT_PASSWORD: root
+        DATABASE: helpdesk
 
     - name: Check out code
       uses: actions/checkout@v2
