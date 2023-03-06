@@ -20,7 +20,7 @@ avatar_url_func = lambda email: ''  # NOQA
 oauth_username_func = lambda id_token: id_token['name']  # NOQA
 get_user_email = lambda username: username + '@example.com'  # NOQA
 
-DATABASE_URL = 'mysql://root:root@localhost/helpdesk'
+DATABASE_URL = 'mysql://root:root@127.0.0.1/helpdesk'
 # postgres://user:pass@localhost/dbname
 # mysql://user:pass@localhost/dbname
 
