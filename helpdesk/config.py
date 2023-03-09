@@ -4,7 +4,8 @@ import os
 
 DEBUG = DEVELOP_MODE = False
 SENTRY_DSN = ''
-
+SESSION_SECRET_KEY = ''
+SESSION_TTL = 3600
 APP_BASE = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 TRUSTED_HOSTS = '127.0.0.1'
@@ -19,7 +20,7 @@ avatar_url_func = lambda email: ''  # NOQA
 oauth_username_func = lambda id_token: id_token['name']  # NOQA
 get_user_email = lambda username: username + '@example.com'  # NOQA
 
-DATABASE_URL = 'sqlite:///tmp/helpdesk.db'
+DATABASE_URL = 'mysql://root:root@127.0.0.1/helpdesk'
 # postgres://user:pass@localhost/dbname
 # mysql://user:pass@localhost/dbname
 
@@ -48,16 +49,22 @@ NOTIFICATION_METHODS = []
 WEBHOOK_EVENT_URL = ""
 
 OPENID_PRIVIDERS = {}
-AUTHORIZED_EMAIL_DOMAINS = []
+AUTHORIZED_EMAIL_DOMAINS = ["@example.com"]
 
 AUTO_APPROVAL_TARGET_OBJECTS = []
 TICKETS_PER_PAGE = 50
 
 ACTION_TREE_CONFIG = ['功能导航', []]
 
+ADMIN_POLICY = 1
+DEPARTMENT_OWNERS = {"test_department": "department_user"}
+
 SYSTEM_USER = 'admin'
 SYSTEM_PASSWORD = 'password'
-
+ST2_DEFAULT_PACK = ''
+ST2_WORKFLOW_RUNNER_TYPES = []
+ST2_API_KEY = ''
+ST2_CACERT = ''
 ST2_BASE_URL = 'https://st2.example.com'
 ST2_API_URL = None
 ST2_AUTH_URL = None

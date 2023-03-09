@@ -5,7 +5,7 @@ import logging
 import asyncio
 from functools import wraps
 from datetime import datetime
-from collections import Iterable
+from collections.abc import Iterable
 
 from starlette.responses import JSONResponse
 

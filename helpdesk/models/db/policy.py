@@ -110,7 +110,7 @@ class GroupUser(db.Model):
     __table_args__ = {'mysql_charset': 'utf8mb4'}
 
     id = db.Column(db.Integer, primary_key=True)
-    group_name = db.Column(db.Integer)
+    group_name = db.Column(db.String(length=64))
     user_str = db.Column(db.String(length=128))
 
     @classmethod
