@@ -83,6 +83,8 @@ SPINCYCLE_RM_URL = "https://spincycle.example.com"
 SPINCYCLE_USERNAME = ''
 SPINCYCLE_PASSWORD = ''
 
+PREPROCESS_TICKET = [{"type": "test", "actions": ["test"]}]
+
 
 try:
     from local_config import *  # NOQA
