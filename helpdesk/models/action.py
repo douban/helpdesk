@@ -2,10 +2,11 @@
 
 import logging
 from datetime import datetime
+from helpdesk.libs.preprocess import get_preprocess
 
 from helpdesk.libs.rest import DictSerializableClassMixin
 from helpdesk.models.db.ticket import Ticket, TicketPhase
-from helpdesk.config import AUTO_APPROVAL_TARGET_OBJECTS, PARAM_FILLUP, TICKET_CALLBACK_PARAMS
+from helpdesk.config import PARAM_FILLUP, TICKET_CALLBACK_PARAMS, PREPROCESS_TICKET
 from helpdesk.views.api.schemas import ApproverType
 
 logger = logging.getLogger(__name__)
@@ -84,7 +85,14 @@ class Action(DictSerializableClassMixin):
                     else:
                         live_value = False
                 params[k] = live_value
-
+        
+        # 参数预处理
+        for preprocess_info in PREPROCESS_TICKET:
+            if self.target_object in preprocess_info["actions"]:
+                params_pre = get_preprocess(preprocess_info["type"])
+                success, params = await params_pre.process(params)
+                if not success:
+                    return None, 'Failed to preprocess the params, please check ticket params'
         # create ticket
         ticket = Ticket(
             title=self.name,

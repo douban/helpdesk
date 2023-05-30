@@ -79,7 +79,7 @@ jobs:
     
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install wheel setuptools pip --upgrade
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Init Table
