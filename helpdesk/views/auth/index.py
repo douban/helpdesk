@@ -32,7 +32,7 @@ async def oauth(request: Request):
     url_path = request.app.router.url_path_for('callback', oauth_provider=oauth_provider)
     redirect_uri = url_path.make_absolute_url(base_url=DEFAULT_BASE_URL)
 
-    return await oauth_client.authorize_redirect(request, redirect_uri)
+    return await oauth_client.authorize_redirect(request, str(redirect_uri))
 
 
 @router.get('/callback/{oauth_provider}')
