@@ -51,7 +51,7 @@ class AirflowProvider(BaseProvider):
         else:
             self.airflow_client = AirflowClient(username=AIRFLOW_USERNAME, passwd=AIRFLOW_PASSWORD)
         self.default_tag = AIRFLOW_DEFAULT_DAG_TAG
-        self.default_status_filter = ('skipped',)
+        self.default_status_filter = ()
 
     def get_default_pack(self):
         return self.default_tag
