@@ -49,8 +49,10 @@ async def test_flow_match(test_action, test_admin_user, params, policy_name, app
     policy = await ticket.get_flow_policy()
     assert policy.name == policy_name
     # 测试节点 approver 获取
-    ticket.annotate(nodes=policy.definition.get("nodes") or [], policy=policy.name, current_node=policy.init_node.get("name"), approval_log=list())
-    node_approvers = await ticket.get_node_approvers(policy.init_node.get("name"))
+    ticket.annotate(nodes=policy.definition.get("nodes") or [], policy=policy.name, approval_log=list())
+    current_node = ticket.init_node.get("name")
+    ticket.annotate(current_node=current_node)
+    node_approvers = await ticket.get_node_approvers(current_node)
     assert node_approvers == approvers
     # 测试能看到 ticket 的用户
     assert await ticket.can_view(test_user) == can_view
@@ -78,8 +80,10 @@ async def test_mail_notify(test_action, test_admin_user, test_all_policy, phase,
         reason=params.get("reason"),
         created_at=datetime.now())
     policy = await ticket.get_flow_policy()
-    ticket.annotate(nodes=policy.definition.get("nodes") or [], policy=policy.name, current_node=policy.init_node.get("name"), approval_log=list())
-    approvers = await ticket.get_node_approvers(policy.init_node.get("name"))
+    ticket.annotate(nodes=policy.definition.get("nodes") or [], policy=policy.name, approval_log=list())
+    current_node = ticket.init_node.get("name")
+    ticket.annotate(current_node=current_node)
+    approvers = await ticket.get_node_approvers(current_node)
     ticket.annotate(approvers=approvers)
     mail_notify = MailNotification(phase, ticket)
     mail_addrs = await mail_notify.get_mail_addrs()
@@ -108,7 +112,9 @@ async def test_node_transfer(test_action, test_admin_user, test_combined_policy)
         created_at=datetime.now())
     policy = await ticket.get_flow_policy()
 
-    ticket.annotate(nodes=policy.definition.get("nodes") or [], policy=policy.name, current_node=policy.init_node.get("name"), approval_log=list())
+    ticket.annotate(nodes=policy.definition.get("nodes") or [], policy=policy.name, approval_log=list())
+    current_node = ticket.init_node.get("name")
+    ticket.annotate(current_node=current_node)
     ret, msg = await ticket.approve()
     assert ret == True
     assert msg == 'Success'
