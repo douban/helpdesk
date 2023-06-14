@@ -22,35 +22,6 @@ class Policy(db.Model):
     updated_by = db.Column(db.String(length=32))
     updated_at = db.Column(db.DateTime)
 
-    @property
-    def init_node(self):
-        nodes = self.definition.get("nodes")
-        if not nodes or len(nodes) == 0:
-            return None
-        return nodes[0]
-
-    def next_node(self, node_name):
-        nodes = self.definition.get("nodes")
-        for index, node in enumerate(nodes):
-            if node.get("name") == node_name:
-                return nodes[index+1] if (index != len(nodes)-1) else None
-        
-
-    def is_end_node(self, node_name):
-        nodes = self.definition.get("nodes")
-        for index, node in enumerate(nodes):
-            if node.get("name") == node_name:
-                return index == len(nodes)-1
-
-    def is_auto_approved(self):
-        return len(self.definition.get("nodes")) == 1 and self.init_node.get("node_type")  == NodeType.CC.value
-
-    def is_cc_node(self, node_name):
-        for node in self.definition.get("nodes"):
-            if node.get("name") == node_name and node.get("node_type") == NodeType.CC.value:
-                return True
-        return False
-
 
 class TicketPolicy(db.Model):
     __tablename__ = 'ticket_policy'

@@ -165,6 +165,36 @@ class Ticket(db.Model):
         policy_id = await TicketPolicy.default_associate(self.provider_object)
         return await Policy.get(id_=policy_id)
 
+    # 节点流转依据创建时 annotation 记录的节点信息, 若是节点变更前有未审批的工单则以原记录方式流转，否则需重提
+    @property
+    def init_node(self):
+        nodes = self.annotation.get("nodes")
+        if not nodes or len(nodes) == 0:
+            return None
+        return nodes[0]
+
+    def next_node(self, node_name):
+        nodes = self.annotation.get("nodes")
+        for index, node in enumerate(nodes):
+            if node.get("name") == node_name:
+                return nodes[index+1] if (index != len(nodes)-1) else None
+        
+    def is_end_node(self, node_name):
+        nodes = self.annotation.get("nodes")
+        for index, node in enumerate(nodes):
+            if node.get("name") == node_name:
+                return index == len(nodes)-1
+        return False
+
+    def policy_auto_approved(self):
+        return len(self.annotation.get("nodes")) == 1 and self.init_node.get("node_type")  == NodeType.CC.value
+
+    def is_cc_node(self, node_name):
+        for node in self.annotation.get("nodes"):
+            if node.get("name") == node_name and node.get("node_type") == NodeType.CC.value:
+                return True
+        return False
+
     async def get_node_approvers(self, node_name):
         for node in self.annotation.get("nodes"):
             if node.get("name") != node_name:
@@ -238,37 +268,35 @@ class Ticket(db.Model):
         self.annotate(approval_log=approval_log)
 
     async def node_transation(self):
-        policy = await self.get_flow_policy()
         current_node = self.annotation.get("current_node")
-        if policy.is_end_node(current_node):
+        if self.is_end_node(current_node):
             return True
         else:
-            next_node = policy.next_node(current_node)
+            next_node = self.next_node(current_node)
             self.annotate(current_node=next_node.get("name"))
             self.annotate(approvers=await self.get_node_approvers(next_node.get("name")))
             if next_node.get("node_type") == NodeType.CC.value:
                 self.set_approval_log(operated_type="cc")
                 await self.notify(TicketPhase.REQUEST)
-                if policy.is_end_node(next_node.get("name")):
+                if self.is_end_node(next_node.get("name")):
                     return True
-                next_again = policy.next_node(next_node.get("name"))
+                next_again = self.next_node(next_node.get("name"))
                 self.annotate(current_node=next_again.get("name"))
                 self.annotate(approvers=await self.get_node_approvers(next_again.get("name")))
             return False
 
     async def pre_approve(self):
-        policy = await self.get_flow_policy()
-        if policy.is_auto_approved():
+        if self.policy_auto_approved():
             self.annotate(auto_approved=True)
             self.set_approval_log(operated_type="cc")
             self.is_approved = True
             self.confirmed_by = SYSTEM_USER
             self.confirmed_at = datetime.now()
 
-        if len(policy.definition.get("nodes")) != 1 and policy.is_cc_node(policy.init_node.get("name")):
+        if len(self.annotation.get("nodes")) != 1 and self.is_cc_node(self.init_node.get("name")):
             self.set_approval_log(operated_type="cc")
             await self.notify(TicketPhase.REQUEST)
-            next_node = policy.next_node( self.annotation.get("current_node"))
+            next_node = self.next_node( self.annotation.get("current_node"))
             self.annotate(current_node=next_node.get("name"))
             self.annotate(approvers=await self.get_node_approvers(next_node.get("name")))
         return True, "success"
