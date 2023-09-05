@@ -45,7 +45,7 @@
         <a-tag :key="status" :color="approval_color[status]">{{status}}</a-tag>
       </span>
       <span slot="action" slot-scope="text, record">
-        <span v-if="record.is_approved === undefined && record.status !== 'closed' ">
+        <span v-if="record.status === 'pending' ">
           <a-modal v-model="rejectModalVisible" title="Reject reason" ok-text="confirm" cancel-text="cancel" @ok="onConfirm(record, 'rejected', reasonModalRecord.reject_url)" @cancel="hideRejectModal">
               <a-input v-model="rejectReason" placeholder="Reject reason" max-length=128 />
           </a-modal>
@@ -65,7 +65,7 @@
           <a-divider type="vertical" />
         </span>
 
-        <span v-if="record.is_approved === undefined && record.status !== 'closed' && record.submitter === $store.state.userProfile.name">
+        <span v-if="record.status === 'pending' && record.submitter === $store.state.userProfile.name">
           <a-modal v-model="closeModalVisible" title="Close reason" ok-text="confirm" cancel-text="cancel" @ok="onConfirm(record, 'closed', '/api/ticket/' + record.id + '/close')" @cancel="hideCloseModal">
               <a-input v-model="closeReason" placeholder="Close reason" max-length=128 />
           </a-modal>
@@ -342,6 +342,7 @@ export default {
         this.$message.info('Ticket ' + status)
         this.hideRejectModal()
         this.hideCloseModal()
+        this.loadTickets({page: 1, pagesize: 10})
       }).catch((error) => {
         const rawMsg = error.response.data.description
         const msg = rawMsg.length > 300 ? rawMsg.slice(0, 300) + '... ' : rawMsg

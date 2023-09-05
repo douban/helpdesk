@@ -30,7 +30,7 @@ async def index():
 
 
 @router.get('/user/me')
-async def user(current_user: User = Depends(get_current_user)) -> dict:
+async def user(current_user: User = Depends(get_current_user)):
     return current_user
 
 
