@@ -1,7 +1,7 @@
 <template>
   <a-form-item
     :label="label"
-    :label-col="{ span: 5 }"
+    :label-col="{ span: 7 }"
     :wrapper-col="{ span: 12 }"
   >
     <a-input

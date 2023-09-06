@@ -23,7 +23,7 @@
             @input="handleInput">
           </dynamic-form>
           <a-form-item
-            :wrapper-col="{ span: 12, offset: 5 }"
+            :wrapper-col="{ span: 12, offset: 7 }"
           >
             <a-button type="primary" :disabled="!canSubmit" @click="handleSubmit">Submit</a-button>
             <a-modal

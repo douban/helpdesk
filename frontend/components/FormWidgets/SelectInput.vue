@@ -2,7 +2,7 @@
   <a-form-item
     :label="label || name"
     :extra="extra"
-    :label-col="{ span: 5 }"
+    :label-col="{ span: 7 }"
     :wrapper-col="{ span: 12 }"
   >
     <v-select
