@@ -128,7 +128,7 @@ class BearerAuthMiddleware(BaseHTTPMiddleware):
                     access = id_token.get('resource_access', {})
                     roles = access.get(validator.client_id, {}).get('roles', [])
 
-                    user = User(name=username, email=email, roles=roles, avatar=id_token.get('picture'))
+                    user = User(name=username, email=email, roles=roles, avatar=id_token.get('picture', ''))
 
                     request.session['user'] = user.json()
                     break
