@@ -26,19 +26,19 @@ class QeuryKey(str, Enum):
 
 
 class ParamRule(BaseModel):
-    id: Optional[int]
-    title: Optional[str]
-    provider_object: Optional[str]
-    rule: Optional[str]
-    is_auto_approval: Optional[bool]
-    approver: Optional[str]
+    id: Optional[int] = None
+    title: Optional[str] = None
+    provider_object: Optional[str] = None
+    rule: Optional[str] = None
+    is_auto_approval: Optional[bool] = None
+    approver: Optional[str] = None
 
 
 class OperateTicket(BaseModel):
     """
     操作工单的请求体
     """
-    reason: Optional[str]
+    reason: Optional[str] = None
 
 
 class PolicyFlowResp(BaseModel):

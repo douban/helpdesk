@@ -69,7 +69,8 @@ class MailNotification(Notification):
     method = 'mail'
 
     async def get_mail_addrs(self):
-        email_addrs = [ADMIN_EMAIL_ADDRS] + [get_user_email(cc) for cc in self.ticket.ccs] + self.ticket.annotation.get("approvers").split(',')
+        email_addrs = [ADMIN_EMAIL_ADDRS] + [get_user_email(cc) for cc in self.ticket.ccs] + self.ticket.annotation.get(
+            "approvers").split(',')
         email_addrs += [get_user_email(approver) for approver in await self.ticket.get_rule_actions('approver')]
         if self.phase.value in ('approval', 'mark'):
             email_addrs += [get_user_email(self.ticket.submitter)]
@@ -146,10 +147,11 @@ class WebhookEventNotification(Notification):
         notify_people = approvers
         for index, node in enumerate(nodes):
             if self.ticket.annotation.get("current_node") == node.get("name"):
-                next_node = nodes[index+1].get("name")  if (index != len(nodes)-1) else ""
+                next_node = nodes[index + 1].get("name") if (index != len(nodes) - 1) else ""
                 notify_type = node.get("node_type")
 
-        if self.phase.value in (TicketPhase.APPROVAL.value, TicketPhase.MARK.value) or (self.phase.value == 'request' and self.ticket.status == "closed"):
+        if self.phase.value in (TicketPhase.APPROVAL.value, TicketPhase.MARK.value) or (
+                self.phase.value == 'request' and self.ticket.status == "closed"):
             notify_type = NodeType.CC
         if notify_type == NodeType.CC:
             if self.phase.value == TicketPhase.MARK.value or approvers == "":
@@ -160,33 +162,34 @@ class WebhookEventNotification(Notification):
         approval_log = copy.deepcopy(self.ticket.annotation.get("approval_log"))
         for log in approval_log:
             format = '%Y-%m-%d %H:%M:%S'
-            log["operated_at"] = timezone('Etc/UTC').localize(datetime.strptime(log.get("operated_at"), format)).astimezone(timezone(TIME_ZONE)).strftime(format)
+            log["operated_at"] = timezone('Etc/UTC').localize(
+                datetime.strptime(log.get("operated_at"), format)).astimezone(timezone(TIME_ZONE)).strftime(format)
 
-        return NotifyMessage(
-            phase=self.phase.value,
-            title=self.ticket.title,
-            ticket_url=self.ticket.web_url,
-            status=self.ticket.status,
-            is_approved=self.ticket.is_approved or False,
-            submitter=self.ticket.submitter,
-            params=self.ticket.params,
-            request_time=timezone('Etc/UTC').localize(self.ticket.created_at).astimezone(timezone(TIME_ZONE)),
-            reason=self.ticket.reason or "",
-            approval_flow=self.ticket.annotation.get("policy"),
-            current_node=self.ticket.annotation.get("current_node"),
-            approvers=approvers,
-            next_node=next_node,
-            approval_log=approval_log,
-            notify_type=notify_type,
-            notify_people=notify_people,
-            comfirmed_by=self.ticket.confirmed_by or ""
-        )
+        return NotifyMessage.model_validate({
+            "phase": self.phase.value,
+            "title": self.ticket.title,
+            "ticket_url": self.ticket.web_url,
+            "status": self.ticket.status,
+            "is_approved": self.ticket.is_approved or False,
+            "submitter": self.ticket.submitter,
+            "params": self.ticket.params,
+            "request_time": timezone('Etc/UTC').localize(self.ticket.created_at).astimezone(timezone(TIME_ZONE)),
+            "reason": self.ticket.reason or "",
+            "approval_flow": self.ticket.annotation.get("policy"),
+            "current_node": self.ticket.annotation.get("current_node"),
+            "approvers": approvers,
+            "next_node": next_node,
+            "approval_log": approval_log,
+            "notify_type": notify_type,
+            "notify_people": notify_people,
+            "comfirmed_by": self.ticket.confirmed_by or "",
+        })
 
     async def send(self):
         if not WEBHOOK_EVENT_URL:
             return
         message = self.render()
-        r = requests.post(WEBHOOK_EVENT_URL, message.json())
+        r = requests.post(WEBHOOK_EVENT_URL, message.model_dump_json())
         if r.status_code == 200:
             return
         else:
