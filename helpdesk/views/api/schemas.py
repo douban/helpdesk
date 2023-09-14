@@ -26,19 +26,19 @@ class QeuryKey(str, Enum):
 
 
 class ParamRule(BaseModel):
-    id: Optional[int]
-    title: Optional[str]
-    provider_object: Optional[str]
-    rule: Optional[str]
-    is_auto_approval: Optional[bool]
-    approver: Optional[str]
+    id: Optional[int] = None
+    title: Optional[str] = None
+    provider_object: Optional[str] = None
+    rule: Optional[str] = None
+    is_auto_approval: Optional[bool] = None
+    approver: Optional[str] = None
 
 
 class OperateTicket(BaseModel):
     """
     操作工单的请求体
     """
-    reason: Optional[str]
+    reason: Optional[str] = None
 
 
 class PolicyFlowResp(BaseModel):
@@ -48,12 +48,12 @@ class PolicyFlowResp(BaseModel):
     id: int
     name: str
     display: str
-    definition: Optional[dict]
+    definition: Optional[dict] = None
 
     created_at: datetime
-    created_by: Optional[str]
+    created_by: Optional[str] = None
     updated_at: datetime
-    updated_by: Optional[str]
+    updated_by: Optional[str] = None
 
     class Config:
         orm_mode = True
@@ -120,9 +120,9 @@ class TicketPolicyResp(BaseModel):
     工单和审批流关联的响应体
     """
     id: int
-    ticket_name: Optional[str]
-    policy_id: Optional[int]
-    link_condition: Optional[str]
+    ticket_name: Optional[str] = None
+    policy_id: Optional[int] = None
+    link_condition: Optional[str] = None
 
     class Config:
         orm_mode = True
