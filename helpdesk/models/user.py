@@ -1,7 +1,7 @@
 # coding: utf-8
 
 import logging
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, validator
 
 
@@ -14,7 +14,7 @@ class User(BaseModel):
     name: str
     email: str
     roles: List[str] = []
-    avatar: str = None
+    avatar: Optional[str] = None
 
     @property
     def is_authenticated(self) -> bool:
