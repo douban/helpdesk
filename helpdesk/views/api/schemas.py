@@ -48,12 +48,12 @@ class PolicyFlowResp(BaseModel):
     id: int
     name: str
     display: str
-    definition: Optional[dict] = None
+    definition: Optional[dict]
 
     created_at: datetime
-    created_by: Optional[str] = None
+    created_by: Optional[str]
     updated_at: datetime
-    updated_by: Optional[str] = None
+    updated_by: Optional[str]
 
     class Config:
         orm_mode = True
@@ -120,9 +120,9 @@ class TicketPolicyResp(BaseModel):
     工单和审批流关联的响应体
     """
     id: int
-    ticket_name: Optional[str] = None
-    policy_id: Optional[int] = None
-    link_condition: Optional[str] = None
+    ticket_name: Optional[str]
+    policy_id: Optional[int]
+    link_condition: Optional[str]
 
     class Config:
         orm_mode = True
