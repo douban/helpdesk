@@ -3,7 +3,7 @@
 """
 from enum import Enum
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import List, Optional
 from pydantic import BaseModel
 
 
@@ -138,14 +138,14 @@ class NotifyMessage(BaseModel):
     status: str
     is_approved: bool
     submitter: str
-    params: Dict[str, str]
+    params: dict
     request_time: datetime
     reason: str = ""
     approval_flow: str = ""
     current_node: str = ""
     approvers: str = ""
     next_node: Optional[str] = ""
-    approval_log: List[Dict] = []
+    approval_log: List[dict] = []
     notify_type: str
     notify_people: str = ""
     comfirmed_by: str = ""
