@@ -157,13 +157,13 @@ async def ticket_op(ticket_id: int, op: str,
     ticket = await Ticket.get(ticket_id)
     if not ticket:
         raise HTTPException(status_code=404, detail='Ticket not found')
+    if ticket.status != "pending":
+        raise HTTPException(status_code=400, detail='Ticket not pending, can not be operated')
 
     if op == 'close':
         "申请人才可主动关闭工单"
         if ticket.submitter != current_user.name:
             raise HTTPException(status_code=403, detail='Permission denied, only submitter can close')
-        if ticket.status != "pending":
-            raise HTTPException(status_code=400, detail='Ticket not pending, can not be closed')
         ticket.annotate(closed=True)
         ticket.confirmed_by = current_user.name
         ticket.confirmed_at = datetime.now()
