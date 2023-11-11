@@ -16,7 +16,7 @@
     "ant-design-vue": "^1.7.8",
     "core-js": "^3.15.1",
     "gojs": "^2.1.53",
-    "nuxt": "^2.15.7",
+    "nuxt": "^3.0.0",
     "qs": "^6.10.1",
     "vue-select": "^3.16.0",
     "vue-text-highlight": "^2.0.10",
