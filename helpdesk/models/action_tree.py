@@ -73,7 +73,7 @@ class ActionTree:
             report()
 
         for a in actions:
-            obj = '.'.join([a.get('pack'), a.get('name')])
+            obj = a.get('name')
             desc = a.get('description')
             sub_actions.append([obj, desc, provider_type, a['id']])
         return [name, sub_actions]
