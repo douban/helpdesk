@@ -25,7 +25,11 @@ export default {
   },
   methods: {
     updateForm (fieldName, v) {
-      this.$set(this.formData, fieldName, v)
+      if (!v) {
+        this.$delete(this.formData, fieldName)
+      } else {
+        this.$set(this.formData, fieldName, v)
+      }
       this.$emit('input', this.formData)
     },
     getComponent(field) {
