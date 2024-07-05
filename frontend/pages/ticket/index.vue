@@ -1,19 +1,19 @@
 <template>
   <a-layout>
     <a-form layout="inline">
-          <div style="margin-top: 16px;margin-bottom: 16px">
-              <a-form-item label="Query key">
-                <!-- <a-input v-model="queryKey" placeholder="input query key" style="width:300px"></a-input> -->
-                <a-select v-model="queryKey" allow-clear placeholder="select a search key" style="width: 300px">
-                  <a-select-option v-for="item in queryKeyMap" :key="item.name" :value="item.value" >{{ item.name }}</a-select-option>
-                </a-select>
-              </a-form-item>
-              <a-form-item label="Query value">
-                <a-input v-model="queryValue" placeholder="input query value" style="width:300px"></a-input>
-              </a-form-item>
-              <a-button type="link" icon="search" @click="handleSearch"></a-button>
-          </div>
-        </a-form>
+      <div style="margin-top: 16px;margin-bottom: 16px">
+        <a-checkbox v-if="$store.getters.isAdmin" v-model="showAll">Show All</a-checkbox>
+        <a-form-item label="Query key">
+          <a-select v-model="queryKey" allow-clear placeholder="select a search key" style="width: 300px">
+            <a-select-option v-for="item in queryKeyMap" :key="item.name" :value="item.value" >{{ item.name }}</a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="Query value">
+          <a-input v-model="queryValue" placeholder="input query value" style="width:300px"></a-input>
+        </a-form-item>
+        <a-button type="link" icon="search" @click="handleSearch"></a-button>
+      </div>
+    </a-form>
     <a-table
       :columns="columns"
       :data-source="tableData"
@@ -137,6 +137,7 @@ export default {
       {"name": "Submitter", "value": "submitter"},
       {"name": "By", "value": "confirmed_by"},
       ],
+      showAll: false,
       queryKey: undefined,
       queryValue: undefined,
     }
@@ -231,6 +232,13 @@ export default {
       ]
     }
   },
+  watch: {
+    showAll () {
+      const queryParams = {page: 1, pagesize: 10}
+      this.loading = true
+      this.loadTickets(queryParams)
+    }
+  },
   mounted () {
     const queryParams = this.$route.query
     if (queryParams.page === undefined) {
@@ -279,6 +287,9 @@ export default {
     loadTickets (params) {
       this.pagination.current = params.page
       this.loading = true
+      if (this.showAll) {
+        params.show_all = true
+      }
       this.$axios.get('/api/ticket', {params}).then(
         (response) => {
           this.handleTicketList(response)
