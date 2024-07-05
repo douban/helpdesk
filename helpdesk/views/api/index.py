@@ -217,7 +217,7 @@ def extra_dict(d):
 @router.get('/ticket')
 async def list_ticket(page: Optional[str] = None, pagesize: Optional[str] = None,
                       order_by: Optional[str] = None, desc: bool = False, current_user: User = Depends(get_current_user),
-                      query_key: Optional[QeuryKey] = None, query_value: Optional[str] = None):
+                      query_key: Optional[QeuryKey] = None, query_value: Optional[str] = None, show_all: Optional[bool] = False):
     query_params={'page': page, 'page_size': pagesize, 'order_by': order_by, 'desc': desc}
     if query_key and query_value:
         query_params[query_key] = query_value
@@ -237,11 +237,11 @@ async def list_ticket(page: Optional[str] = None, pagesize: Optional[str] = None
         desc = True
     kw = dict(filter_=filter_, order_by=order_by, desc=desc, limit=pagesize, offset=(page - 1) * pagesize)
 
-    if current_user.is_admin:
+    if current_user.is_admin and show_all:
         tickets = await Ticket.get_all(**kw)
         total = await Ticket.count(filter_=filter_)
     else:
-        # only show self tickets if not admin
+        # only show self tickets if not admin or admin without show_all
         tickets = await Ticket.get_all_by_submitter(submitter=current_user.name, **kw)
         total = await Ticket.count_by_submitter(submitter=current_user.name, filter_=filter_)
 
