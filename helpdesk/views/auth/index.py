@@ -40,16 +40,16 @@ async def callback(oauth_provider: str, request: Request):
     oauth_client = oauth_clients[oauth_provider]
 
     token = await oauth_client.authorize_access_token(request)
-    id_token = await oauth_client.parse_id_token(request, token)
-    logger.debug("auth succeed %s", id_token)
+    userinfo = token['userinfo']
+    logger.debug("auth succeed %s", userinfo)
 
-    username = oauth_username_func(id_token)
-    email = id_token['email']
+    username = oauth_username_func(userinfo)
+    email = userinfo['email']
 
-    access = id_token.get('resource_access', {})
+    access = userinfo.get('resource_access', {})
     roles = access.get(oauth_client.client_id, {}).get('roles', [])
 
-    user = User(name=username, email=email, roles=roles, avatar=id_token.get('picture'))
+    user = User(name=username, email=email, roles=roles, avatar=userinfo.get('picture', ''))
 
     request.session['user'] = user.json()
 
