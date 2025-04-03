@@ -54,7 +54,8 @@
       </template>
       <template slot="status" slot-scope="text">
         <span v-if="text==='Success'"><a-tag color="green">Success</a-tag></span>
-        <span v-else><a-tag color="red">Failed</a-tag></span>
+        <span v-else-if="text==='Failed'"><a-tag color="red">Failed</a-tag></span>
+        <span v-else><a-tag color="blue">{{ text }}</a-tag></span>
       </template>
     </a-table>
   </div>
@@ -146,17 +147,14 @@ export default {
         count += 1
         el.id = count
         el.name = property
-        if (el.succeeded || !el.failed) {
+        if (el.succeeded) {
           successCount += 1
           el.status = 'Success'
-        } else if (el.failed || !el.succeeded) {
-          failedCount += 1
-          el.status = 'Failed'
-        } else {
-          // Unknown count as failed
+        } else if (el.failed) {
           failedCount += 1
           el.status = 'Failed'
         }
+        el.status = el.status ? el.status : "-"
         listData.push(el)
 
         if (el.highlight_queries) {

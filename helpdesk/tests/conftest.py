@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from pytest import MonkeyPatch
 from helpdesk import config
 from helpdesk.libs.auth import Validator
@@ -76,7 +76,8 @@ def anyio_backend():
 @pytest.fixture(scope="session")
 async def test_client():
     from helpdesk import app, config
-    async with AsyncClient(app=app, base_url="http://test", headers={"host": config.TRUSTED_HOSTS[0]}) as test_client:
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers={"host": config.TRUSTED_HOSTS[0]}) as test_client:
         print("Client is ready")
         yield test_client
 
