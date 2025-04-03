@@ -274,18 +274,23 @@ class AirflowProvider(BaseProvider):
                 # fake task instance
                 task_instance = AIRFLOW_FAKE_TI
             # do not show specific status node
-            if status_filter and task_instance['state'] in status_filter:
+
+            task_status = task_instance['state'] or '-'
+
+            if status_filter and task_status in status_filter:
                 continue
-            is_task_success = task_instance['state'] == 'success'
+            is_task_success = task_status == 'success'
             tasks_result = {}
             task_tried_times = task_instance['try_number'] - 1
+            is_task_failed = task_status in ('failed',)
 
             # check log result return
             if task_tried_times <= 0:
                 tasks_result = {
                     task_id: {
-                        'failed': True,
-                        'stderr': task_instance['state'],
+                        'status': task_status,
+                        'failed': is_task_failed,
+                        'stderr': task_status,
                         'return_code': 1,
                         'succeeded': False,
                         'stdout': ''
@@ -299,8 +304,9 @@ class AirflowProvider(BaseProvider):
                         'query_string': f'?exec_output_id={dag_id}|{output_execution_date}|{task_id}|{tries_time+1}'
                     }
                     is_success_try = tries_time + 1 == task_tried_times and is_task_success
-                    tasks_result[f'{task_id} -> [{tries_time+1}/{task_tried_times}]'] = {
-                        'failed': tries_time + 1 != task_tried_times or not is_task_success,
+                    tasks_result[f'{task_id} [{tries_time+1}/{task_tried_times}]'] = {
+                        'status': 'Failed' if tries_time + 1 != task_tried_times else task_status,
+                        'failed': tries_time + 1 != task_tried_times or is_task_failed,
                         'stderr': msg if not is_success_try else '',
                         'return_code': int(not is_success_try),
                         'succeeded': is_success_try,
