@@ -76,7 +76,7 @@ def anyio_backend():
 @pytest.fixture(scope="session")
 async def test_client():
     from helpdesk import app, config
-    async with AsyncClient(app=app, base_url="http://test", headers={"host": config.TRUSTED_HOSTS[0]}) as test_client:
+    async with AsyncClient(base_url="http://test", headers={"host": config.TRUSTED_HOSTS[0]}) as test_client:
         print("Client is ready")
         yield test_client
 
