@@ -88,7 +88,7 @@ class SpinCycleProvider(BaseProvider):
 
     def get_actions(self, pack=None):
         """
-        :param pack: In st2 pack -> spin cycle requests
+        :param pack: spin cycle requests
         :return: a list of
         <Action name=view_organizations,pack=trello,enabled=True,runner_type=python-script>
         to dict

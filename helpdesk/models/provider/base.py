@@ -1,6 +1,9 @@
-# coding: utf-8
-
+from type import List, Dict, Optional, Any, Tuple
 from datetime import datetime
+
+from helpdesk.libs.types import TicketExecResultInfo, TicketSummary, \
+    TicketSchema, TicketExecInfo, TicketExecInfo, TicketExecResultInfo, \
+    TicketTaskLog
 
 
 class BaseProvider:
@@ -24,22 +27,20 @@ class BaseProvider:
     def get_default_pack(self):
         raise NotImplementedError()
 
-    def get_actions(self, pack=None):
-        '''
-        return a list of action dict,
-        should follow st2 specs.
-        '''
+    def get_tickets_summary(self, pack: Optional[str]) -> List[TicketSummary]:
         raise NotImplementedError()
 
-    # TODO: cache result, ttl
-    def get_action(self, ref):
+    def get_tickets_schema(self, ticket_name: str) -> List[TicketSchema]:
         raise NotImplementedError()
 
-    def run_action(self, ref, parameters):
+    def run_ticket(self, ticket_name: str, parameters: Dict[str, Any]) -> TicketExecInfo:
         raise NotImplementedError()
 
-    def get_execution(self, execution_id):
+    def generate_annotation(self, execution: TicketExecInfo) -> Dict[str, str]:
         raise NotImplementedError()
 
-    def get_execution_output(self, execution_output_id):
-        return self.get_execution(execution_output_id)
+    def get_execution(self, execution_id: str) -> (Optional[TicketExecResultInfo], str):
+        raise NotImplementedError()
+
+    def get_execution_output(self, execution_id: str) -> TicketTaskLog:
+        raise NotImplementedError()

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class Action(DictSerializableClassMixin):
-    """action name, description/tips, st2 pack/action
+    """action name, description/tips
     """
     def __init__(self, name, desc, provider_name, provider_object):
         self.name = name
@@ -58,7 +58,6 @@ class Action(DictSerializableClassMixin):
         return action_d
 
     async def run(self, provider, form, user):
-        # too many st2 details, make this as the standard
         params = {}
         extra_params = {}
         for k, v in self.parameters(provider, user).items():
@@ -85,7 +84,7 @@ class Action(DictSerializableClassMixin):
                     else:
                         live_value = False
                 params[k] = live_value
-        
+
         # 参数预处理
         for preprocess_info in PREPROCESS_TICKET:
             if self.target_object in preprocess_info["actions"]:
@@ -116,11 +115,11 @@ class Action(DictSerializableClassMixin):
         if not approvers and current_node.get("approver_type") == ApproverType.APP_OWNER:
             return None, "Failed to get app approvers, please confirm that the app name is entered correctly"
         ticket.annotate(approvers=approvers)
-        
+
         ret, msg = await ticket.pre_approve()
         if not ret:
             return None, msg
-        
+
         id_ = await ticket.save()
         ticket_added = await Ticket.get(id_)
 
@@ -140,4 +139,3 @@ class Action(DictSerializableClassMixin):
         return (
             ticket_added.to_dict(),
             'Success. Your request has been approved automatically, please go to ticket page for details')
-    

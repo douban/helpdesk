@@ -72,10 +72,8 @@ class ActionTree:
             # and frontend can check children empty to notify user
             report()
 
-        for a in actions:
-            obj = a.get('name')
-            desc = a.get('description')
-            sub_actions.append([obj, desc, provider_type, a['id']])
+        for dag in actions:
+            sub_actions.append([dag.name, dag.description, provider_type, dag.dag_id])
         return [name, sub_actions]
 
     @cached_property_with_ttl(300)

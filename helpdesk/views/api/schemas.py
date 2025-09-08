@@ -56,7 +56,7 @@ class PolicyFlowResp(BaseModel):
     updated_by: Optional[str]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class NodeType(str, Enum):
@@ -113,7 +113,7 @@ class TicketPolicyReq(BaseModel):
     ticket_name: str
     policy_id: int
     link_condition: str
-    
+
 
 class TicketPolicyResp(BaseModel):
     """
@@ -125,7 +125,7 @@ class TicketPolicyResp(BaseModel):
     link_condition: Optional[str]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class NotifyMessage(BaseModel):
@@ -162,7 +162,7 @@ class GroupUserReq(BaseModel):
     """
     group_name: str
     user_str: str
-    
+
 
 class GroupUserResp(BaseModel):
     """
@@ -173,4 +173,4 @@ class GroupUserResp(BaseModel):
     user_str: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True

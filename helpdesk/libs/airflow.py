@@ -1,30 +1,25 @@
 import time
-import datetime
 import json
 import logging
-import uuid
-from functools import wraps
 from urllib.parse import quote
 
 import requests
+from airflow_client.client import ApiClient, Configuration
+from airflow_client.client.api import DAGApi, DagRunApi, TaskInstanceApi
+from airflow_client.client.models.trigger_dag_run_post_body import TriggerDAGRunPostBody
 
-from helpdesk.config import AIRFLOW_SERVER_URL
+from pydantic import BaseModel
+
+from helpdesk.config import AIRFLOW_SERVER_URL, AIRFLOW_JWT_EXPIRATION_TIME
 from helpdesk.libs.decorators import timed_cache
 
 logger = logging.getLogger(__name__)
 
 
-def auto_refresh_token(func):
-    @wraps(func)
-    def refresh_token(*args, **kwargs):
-        cls_self = args[0]
-        assert isinstance(cls_self, AirflowClient), \
-            'This wrapper can only be apply to AirflowClient method, got: {}'.format(type(cls_self))
-        if time.time() > cls_self.expire_time:
-            cls_self.refresh_access_token()
-        return func(*args, **kwargs)
-
-    return refresh_token
+# What we expect back from auth/token
+class AirflowAccessTokenResponse(BaseModel):
+    access_token: str
+    expire_time: int
 
 
 class AirflowClientException(Exception):
@@ -56,176 +51,94 @@ class AirflowClientGetUserRolesException(AirflowClientException):
 
 
 class AirflowClient:
-    def __init__(self, refresh_token=None, username=None, passwd=None, server_url=AIRFLOW_SERVER_URL):
+    def __init__(
+            self, username=None, passwd=None,
+            server_url=AIRFLOW_SERVER_URL,
+            jwt_expire_seconds=AIRFLOW_JWT_EXPIRATION_TIME):
         self.server_url = server_url
-        self.expire_time = self._gen_expire_time()
-        if refresh_token:
-            self._refresh_token = refresh_token
-            self._access_token = self.refresh_access_token()
-        elif username and passwd:
-            resp = self.generate_token(username, passwd)
-            self._refresh_token = resp['refresh_token']
-            self._access_token = resp['access_token']
-        else:
-            raise AirflowClientException('Need one of refresh_token or (username/passwd) as init params at least!')
+        self.airflow_jwt_expire_seconds = jwt_expire_seconds
+        self.expire_time = self._gen_expire_time(self.airflow_jwt_expire_seconds)
+        self.username = username
+        self.password = passwd
+        self.api_client = None
 
-    def refresh_access_token(self):
-        expire_time = self._gen_expire_time()
-        access_token_refresh = requests.post(
-            url='{}/api/v1/security/refresh'.format(self.server_url),
-            headers={'Authorization': 'Bearer {}'.format(self._refresh_token)})
-        access_token_refresh.raise_for_status()
-        if access_token_refresh.status_code == 200:
-            access_token = access_token_refresh.json()['access_token']
-            self._access_token = access_token
-            self.expire_time = expire_time
-            return access_token
-        raise Exception('refresh token error: {}'.format(access_token_refresh.json()))
+    def get_api_client(self):
+        if self.api_client is None or time.time() > self.expire_time:
+            self.expire_time = self._gen_expire_time(self.airflow_jwt_expire_seconds)
+            token = self.generate_token()
+            conf = Configuration(
+                host=self.server_url,
+                access_token=token.access_token
+            )
 
-    def generate_token(self, username, passwd):
-        now = datetime.datetime.now()
-        expire_time = now + datetime.timedelta(days=30)
+            if self.api_client is not None:
+                self.api_client.__exit__(None, None, None)
+
+            self.api_client = ApiClient(configuration=conf)
+            self.expire_time = token.expire_time
+
+        return self.api_client
+
+    def generate_token(self):
+        expire_time = self._gen_expire_time(self.airflow_jwt_expire_seconds)
         resp = requests.post(
-            '{}/api/v1/security/login'.format(self.server_url),
+            '{}/auth/token'.format(self.server_url),
             json={
-                "username": username,
-                "password": passwd,
-                "refresh": True,
-                "provider": "ldap"
-            })
+                "username": self.username,
+                "password": self.password
+            }
+        )
         resp.raise_for_status()
-        if resp.status_code == 200:
+        if resp.status_code == 201:
             result = resp.json()
-            result['expire_time'] = expire_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-            return result
+            result['expire_time'] = expire_time
+            return AirflowAccessTokenResponse(**result)
         raise Exception('get token by username/passwd error: {}'.format(resp.json()))
 
     @staticmethod
-    def _gen_expire_time(mins=12):
-        return time.time() + mins * 60
-
-    @staticmethod
-    def _check_resp(resp, exception=AirflowClientException, msg='request error: {}'):
-        resp.raise_for_status()
-        resp_json = resp.json()
-        if resp_json.get('success', 1):
-            return resp_json
-        raise exception(msg.format(resp_json))
-
-    @auto_refresh_token
-    def _build_headers(self):
-        return {
-            'Authorization': 'Bearer {}'.format(self._access_token),
-            'Cache-Control': 'no-cache',
-            'Content-Type': 'application/json'
-        }
+    def _gen_expire_time(seconds=86400):
+        return time.time() + seconds
 
     def get_dags(self, tags=('helpdesk',)):
-        resp = requests.get(
-            url=f'{self.server_url}/admin/helpdesk/api/tags/schemas',
-            params={'tag': tags},
-            headers=self._build_headers())
-        return self._check_resp(resp, AirflowClientDagsException, msg='Get dags schema by tag error: {}')
+        dag_api = DAGApi(self.get_api_client())
+        return dag_api.get_dags(tags=list(tags), tags_match_mode='all')
 
     def get_schema_by_dag_id(self, dag_id):
-        resp = requests.get(
-            url=f'{self.server_url}/admin/helpdesk/api/dags/{dag_id}/schema',
-            headers=self._build_headers())
-        return self._check_resp(
-            resp, AirflowClientDagSchemaException, msg='Get dag schema by dag id [{}] error: {{}}'.format(dag_id))
+        dag_api = DAGApi(self.get_api_client())
+        return dag_api.get_dag_details(dag_id)
 
-    def trigger_dag(self, dag_id, conf=None, run_id=None, execution_date=None):
-        data = {}
-        if conf:
-            data['conf'] = conf
-        if run_id:
-            data['run_id'] = run_id
-        if execution_date:
-            data['execution_date'] = execution_date
+    def trigger_dag(self, dag_id, conf=None, extra_info=None):
+        dag_run_api = DagRunApi(self.get_api_client())
+        return dag_run_api.trigger_dag_run(dag_id, TriggerDAGRunPostBody(conf=conf, note=extra_info))
 
-        resp = requests.post(
-            url=f'{self.server_url}/api/v1/dags/{dag_id}/dagRuns',
-            headers=self._build_headers(),
-            data=json.dumps(data) if data else None)
-        return self._check_resp(resp, AirflowClientTriggerDagException, msg=f'Trigger dag {dag_id} error: {{}}')
-
-    def get_dag_result(self, dag_id, execution_date, state=None, dag_run_id=None):
-        api_headers = self._build_headers()
-        # get dags info
-        dag_info = self.get_schema_by_dag_id(dag_id)
-
-        if dag_run_id is None:
-            # get dag run result by experimental api
-            dag_run = requests.get(
-                url=f'{self.server_url}/api/experimental/dags/{dag_id}/dag_runs/{execution_date}', headers=api_headers)
-        else:
-            dag_run = requests.get(
-                url=f'{self.server_url}/api/v1/dags/{dag_id}/dagRuns/{dag_run_id}', headers=api_headers)
-        dag_run = self._check_resp(
-            dag_run, AirflowClientDagResultException, f'Get dag {dag_id}-{execution_date} result error: {{}}')
-
-        # get task status
-        task_instances = requests.get(
-            url=f'{self.server_url}/admin/helpdesk/api/task_instances',
-            headers=api_headers,
-            params={
-                'dag_id': dag_id,
-                'execution_date': execution_date,
-                'state': state
-            })
-        task_instances = self._check_resp(
-            task_instances, AirflowClientException, f'Get dag {dag_id}-{execution_date} result error: {{}}')
-        return {'dag_info': dag_info, 'status': dag_run['state'], 'task_instances': task_instances['task_instances']}
-
-    def get_task_result(self, dag_id, execution_date, task_id, try_number=None):
-        api_headers = self._build_headers()
-        all_task_result = {}
-        task_result = requests.get(
-            url=f'{self.server_url}/admin/helpdesk/api/dags/{dag_id}/dag_runs/{execution_date}/tasks/{task_id}',
-            headers=api_headers,
-            params={'try_number': try_number})
-        try:
-            all_task_result[task_id] = self._check_resp(
-                task_result, AirflowClientTaskResultException, 'Get task result {} error: {{}}'.format(task_id))
-            if try_number:
-                all_task_result[task_id]['message'] = [all_task_result[task_id]['message'][0][1]]
-                all_task_result[task_id]['pretty_log'] = [all_task_result[task_id]['pretty_log']]
-        except AirflowClientTaskResultException as e:
-            logger.error(f'Get {task_id} @ {execution_date} of {dag_id} error: {str(e)}')
-            all_task_result[task_id] = {'message': [str(e)], 'metadata': {'end_of_log': True}, 'success': 1}
-        return {'dag_id': dag_id, 'execution_date': execution_date, 'task_id': task_id, 'result': all_task_result}
-
-    @auto_refresh_token
-    def get_dag_graph(self, dag_id):
-        api_headers = self._build_headers()
-        task_result = requests.get(
-            url=f'{self.server_url}/admin/helpdesk/api/dags/{dag_id}/graph',
-            headers=api_headers
+    def get_dag_result(self, dag_id: str, dag_run_id: str):
+        dag_run_api = DagRunApi(self.get_api_client())
+        dag_run_status = dag_run_api.get_dag_run(
+            dag_id, dag_run_id
         )
-        try:
-            result = self._check_resp(
-                task_result, AirflowClientTaskResultException, 'Get dag graph error: {}'.format(dag_id))
-            return result
-        except AirflowClientTaskResultException as e:
-            logger.error(f'Get {dag_id} graph error: {str(e)}')
+
+        task_instance_api = TaskInstanceApi(self.get_api_client())
+        dag_instances = task_instance_api.get_task_instances(dag_id, dag_run_id)
+
+        return dag_run_status, dag_instances
+
+    def get_task_log(self, dag_id, dag_run_id, task_id, try_number):
+        task_instance_api = TaskInstanceApi(self.get_api_client())
+        return task_instance_api.get_log_without_preload_content(
+            dag_id, dag_run_id, task_id, try_number
+        )
+
+    def get_dag_graph(self, dag_id: str, version: int = 1):
+        api_client = self.get_api_client()
+        graph_def_resp = api_client.call_api(
+            "GET",
+            f"/ui/structure/structure_data?dag_id={dag_id}&external_dependencies=false&version_number={version}"
+        )
+        if graph_def_resp.status != 200:
+            logger.error("get dag_id %s graph info version %d err: %s", dag_id, version, graph_def_resp.read())
             return {}
+        else:
+            return json.loads(graph_def_resp.read())
 
-    @timed_cache(minutes=15)
-    def get_user_roles(self, username):
-        resp = requests.get(
-            url=f'{self.server_url}/admin/helpdesk/api/user/roles', headers=self._build_headers(), params={'username': username})
-        result = self._check_resp(resp, AirflowClientGetUserRolesException, f"Get user {username}'s roles error: {{}}")
-        return result
-
-    def build_graph_url(self, dag_id, execution_date):
-        execution_date = quote(execution_date).replace('T', '+')
-        return f'{self.server_url}/graph?dag_id={dag_id}&execution_date={execution_date}'
-
-    @staticmethod
-    def get_out_put_id_date(execution_date):
-        return quote(execution_date).replace('T', '+')
-
-
-if __name__ == '__main__':
-    client = AirflowClient(refresh_token='token')
-    print(client.get_schema_by_dag_id('view_user_ssh_key'))
+    def build_graph_url(self, dag_id, dag_run_id):
+        return f'{self.server_url}/dags/{dag_id}/runs/{dag_run_id}'
