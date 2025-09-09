@@ -3,7 +3,7 @@
 import traceback
 
 from helpdesk.libs.decorators import timed_cache
-from helpdesk.models.provider.errors import InitProviderError, ResolvePackageError
+from helpdesk.models.provider.errors import InitProviderError
 from helpdesk.models.provider.airflow import AirflowProvider
 
 _providers = {

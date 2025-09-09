@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # What we expect back from auth/token
 class AirflowAccessTokenResponse(BaseModel):
     access_token: str
-    expire_time: int
+    expire_at_ts: float
 
 
 class AirflowClientException(Exception):
@@ -57,14 +57,14 @@ class AirflowClient:
             jwt_expire_seconds=AIRFLOW_JWT_EXPIRATION_TIME):
         self.server_url = server_url
         self.airflow_jwt_expire_seconds = jwt_expire_seconds
-        self.expire_time = self._gen_expire_time(self.airflow_jwt_expire_seconds)
+        self.expire_at_ts = self._gen_expire_at_ts(self.airflow_jwt_expire_seconds)
         self.username = username
         self.password = passwd
         self.api_client = None
 
     def get_api_client(self):
-        if self.api_client is None or time.time() > self.expire_time:
-            self.expire_time = self._gen_expire_time(self.airflow_jwt_expire_seconds)
+        if self.api_client is None or time.time() > self.expire_at_ts:
+            self.expire_at_ts = self._gen_expire_at_ts(self.airflow_jwt_expire_seconds)
             token = self.generate_token()
             conf = Configuration(
                 host=self.server_url,
@@ -75,12 +75,12 @@ class AirflowClient:
                 self.api_client.__exit__(None, None, None)
 
             self.api_client = ApiClient(configuration=conf)
-            self.expire_time = token.expire_time
+            self.expire_at_ts = token.expire_at_ts
 
         return self.api_client
 
     def generate_token(self):
-        expire_time = self._gen_expire_time(self.airflow_jwt_expire_seconds)
+        expire_at_ts = self._gen_expire_at_ts(self.airflow_jwt_expire_seconds)
         resp = requests.post(
             '{}/auth/token'.format(self.server_url),
             json={
@@ -91,12 +91,12 @@ class AirflowClient:
         resp.raise_for_status()
         if resp.status_code == 201:
             result = resp.json()
-            result['expire_time'] = expire_time
+            result['expire_at_ts'] = expire_at_ts
             return AirflowAccessTokenResponse(**result)
         raise Exception('get token by username/passwd error: {}'.format(resp.json()))
 
     @staticmethod
-    def _gen_expire_time(seconds=86400):
+    def _gen_expire_at_ts(seconds=86400):
         return time.time() + seconds
 
     def get_dags(self, tags=('helpdesk',)):

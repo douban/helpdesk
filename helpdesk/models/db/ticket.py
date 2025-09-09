@@ -335,8 +335,8 @@ class Ticket(db.Model):
 
         logger.info('run action %s, params: %s', self.provider_object, self.handle_extra_params())
         self.annotate(execution_submitted=True)
-        execution, msg = provider.run_action(self.provider_object, self.handle_extra_params())
-        annotate = provider.generate_annotation(execution)
+        execution, msg = provider.exec_ticket(self.provider_object, self.handle_extra_params())
+        annotate = provider.get_exec_annotation(execution)
         if not execution:
             self.annotate(execution_creation_success=False, execution_creation_msg=msg)
             return execution, msg
@@ -352,9 +352,9 @@ class Ticket(db.Model):
         execution_id = self.annotation.get('execution', {}).get('id')
 
         if execution_output_id:
-            execution, msg = provider.get_execution_output(execution_output_id)
+            execution, msg = provider.get_exec_log(execution_output_id)
         else:
-            execution, msg = provider.get_execution(execution_id)
+            execution, msg = provider.get_exec_result(execution_id)
         return execution, msg
 
     async def notify(self, phase):

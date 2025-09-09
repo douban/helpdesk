@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 class ParamType(Enum):
     STRING = "string"
-    BOOL = "bool"
+    BOOL = "boolean"
     INTEGER = "integer"
 
 
@@ -40,12 +40,12 @@ class StatusEmoji(Enum):
 
 
 class Param(BaseModel):
-    description: str
+    description: Optional[str]
     type: ParamType
-    enum: Optional[List[str]] = None
+    enum: Optional[List[str | int | float]] = None
     required: bool = False
     immutable: bool = False
-    default: str = None
+    default: Optional[str] = None
 
 
 class FormParams(BaseModel):
@@ -53,12 +53,13 @@ class FormParams(BaseModel):
     json_schema: Dict[str, Any]
 
 
-class TicketSummary(BaseModel):
+class ActionInfo(BaseModel):
     name: str
     description: str
+    action_id: str
 
 
-class TicketSchema(BaseModel):
+class ActionSchema(BaseModel):
     id: str
     name: str
     parameters: Dict[str, Param]

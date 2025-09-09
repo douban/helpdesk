@@ -2,60 +2,73 @@
 
 import logging
 from datetime import datetime
-from helpdesk.libs.preprocess import get_preprocess
+from typing import Dict, Any
 
+from helpdesk.libs.decorators import timed_cache
+from helpdesk.libs.preprocess import get_preprocess
 from helpdesk.libs.rest import DictSerializableClassMixin
+from helpdesk.libs.types import ActionSchema
 from helpdesk.models.db.ticket import Ticket, TicketPhase
 from helpdesk.config import PARAM_FILLUP, TICKET_CALLBACK_PARAMS, PREPROCESS_TICKET
 from helpdesk.views.api.schemas import ApproverType
+from helpdesk.models.provider.base import BaseProvider
 
 logger = logging.getLogger(__name__)
+
+
+class ActionResolveError(Exception):
+    pass
 
 
 class Action(DictSerializableClassMixin):
     """action name, description/tips
     """
-    def __init__(self, name, desc, provider_name, provider_object):
+    def __init__(self, name: str, desc: str, provider_type: str, target_object: str):
         self.name = name
         self.desc = desc
-        self.target_object = provider_object
-        self.provider_type = provider_name
+        self.target_object = target_object
+        self.provider_type = provider_type
 
     def __repr__(self):
         return 'Action(%s, %s, %s, %s)' % (self.name, self.desc, self.target_object, self.provider_type)
 
     __str__ = __repr__
 
-    def get_action(self, provider):
+    @timed_cache(seconds=60)
+    def resolve_action(self, provider: BaseProvider) -> ActionSchema:
         """
         return detailed action infos from the provider
         """
-        return provider.get_action(self.target_object) or {}
+        action_info = provider.get_action_schema(self.target_object)
+        if not action_info:
+            raise ActionResolveError(f"resolve action {self.target_object} failed")
+        return action_info
 
     def description(self, provider):
-        return self.get_action(provider).get('description')
+        return self.resolve_action(provider).description
 
     def params_json_schema(self, provider):
-        return self.get_action(provider).get('params_json_schema')
+        return self.resolve_action(provider).params_json_schema
 
-    def parameters(self, provider, user):
-        parameters = self.get_action(provider).get('parameters', {})
-        for k, v in parameters.items():
+    def parameters(self, provider: BaseProvider, user) -> Dict[str, Any]:
+        parameters = self.resolve_action(provider).parameters
+        for k in parameters:
             if k in TICKET_CALLBACK_PARAMS:
-                parameters[k].update({"immutable": True})
+                parameters[k].immutable = True
             if k in PARAM_FILLUP:
                 fill = PARAM_FILLUP[k]
                 if callable(fill):
                     fill = fill(user)
-                parameters[k].update(dict(default=fill, immutable=True))
-        return parameters
+                parameters[k].default = fill
+                parameters[k].immutable = True
+        return {k:v.dict() for k, v in parameters.items()}
 
     def to_dict(self, provider=None, user=None, **kw):
         action_d = super(Action, self).to_dict(**kw)
         if provider and user:
             action_d['params'] = self.parameters(provider, user)
-            action = self.get_action(provider)
-            action_d['params_json_schema'] = action.get('params_json_schema')
+            action = self.resolve_action(provider)
+            action_d['params_json_schema'] = action.params_json_schema
         return action_d
 
     async def run(self, provider, form, user):
@@ -102,7 +115,8 @@ class Action(DictSerializableClassMixin):
             extra_params=extra_params,
             submitter=user.name,
             reason=params.get('reason'),
-            created_at=datetime.now())
+            created_at=datetime.now()
+        )
         policy = await ticket.get_flow_policy()
         if not policy:
             return None, 'Failed to get ticket flow policy'

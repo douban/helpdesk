@@ -11,8 +11,6 @@ from helpdesk.libs.sentry import report
 
 logger = logging.getLogger(__name__)
 
-# objs = {}
-
 
 class ActionTree:
     def __init__(self, tree_config, level=0):
@@ -64,7 +62,7 @@ class ActionTree:
 
         try:
             system_provider = get_provider(provider_type)
-            actions = system_provider.get_actions(pack=pack)
+            actions = system_provider.get_actions_info(pack=pack)
         except (InitProviderError, ResolvePackageError) as e:
             logger.error(f"Resolve pack {name} error:\n{e.tb}")
             # insert a empty children to failed action tree
@@ -72,8 +70,8 @@ class ActionTree:
             # and frontend can check children empty to notify user
             report()
 
-        for dag in actions:
-            sub_actions.append([dag.name, dag.description, provider_type, dag.dag_id])
+        for action in actions:
+            sub_actions.append([action.name, action.description, provider_type, action.action_id])
         return [name, sub_actions]
 
     @cached_property_with_ttl(300)

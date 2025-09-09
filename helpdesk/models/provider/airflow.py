@@ -4,11 +4,13 @@ import logging
 import json
 import traceback
 import re
+import datetime
 
 from airflow_client.client.models.dag_run_response import DAGRunResponse
 from airflow_client.client.models.task_instance_collection_response import TaskInstanceCollectionResponse
 from airflow_client.client.models.task_instance_state import TaskInstanceState
-from type import List, Dict, Optional, Any, Tuple
+from pydantic import BaseModel
+from typing import List, Dict, Optional, Any, Tuple, Self
 
 from helpdesk.config import (
     AIRFLOW_SERVER_URL,
@@ -17,33 +19,37 @@ from helpdesk.config import (
     AIRFLOW_DEFAULT_DAG_TAG,
 )
 from helpdesk.libs.airflow import AirflowClient
-from helpdesk.libs.types import *
+from helpdesk.libs.types import TicketExecResultInfo, ActionInfo, \
+    ActionSchema, TicketExecInfo, TicketTaskLog, TicketExecStatus, \
+    TicketExecTaskInfo, TicketExecTaskDetails, Param, ParamType, \
+    TicketGraphNode, TicketGraphLink, TicketGraph, TicketExecTaskStatus, \
+    TicketExecTasksResult, RunnerType
 from helpdesk.models.provider.errors import ResolvePackageError
 from helpdesk.models.provider.base import BaseProvider
 
 logger = logging.getLogger(__name__)
 
 
-class FakeTaskInstance:
-    """ Fake task instance for
-    if new dag def update node in the dag, old result will not contain this node
-    """
-    def __init__(self):
-        self.state = 'no_status'
-        self.try_number = 0
+class AirflowExecAnnotation(BaseModel):
+    dag_id: str = ""
+    dag_run_id: str = ""
+    result_url: str = ""
 
-    def __getitem__(self, item):
-        return getattr(self, item, None)
+    def __repr__(self) -> str:
+        return f"<dag {self.dag_id} with dag run {self.dag_run_id}>"
 
-
-class AirflowExecId:
-    def __init__(self, dag_id, exec_date, run_id=None):
-        self.dag_id = dag_id
-        self.exec_date = exec_date
-        self.run_id = run_id
-
-
-AIRFLOW_FAKE_TI = FakeTaskInstance()
+    def from_annotation(self, annotation: Dict[str, str]) -> Self:
+        if "id" in annotation:
+            _id = annotation["id"]
+            if _id.count("|") == 1:
+                self.dag_id, self.dag_run_id = _id.split("|")
+            else:
+                self.dag_id, _, self.dag_run_id = _id.split("|")
+        else:
+            self.dag_id = annotation["dag_id"]
+            self.dag_run_id = annotation["dag_run_id"]
+        self.result_url = annotation["result_url"]
+        return self
 
 
 class AirflowProvider(BaseProvider):
@@ -79,11 +85,11 @@ class AirflowProvider(BaseProvider):
 
         for param_name, schema_def in airflow_param.items():
             field_schema = schema_def["schema"]
-            extra_json_info = AirflowProvider.EXTRA_INFO_RE.match(field_schema["description_md"])
+            extra_json_info = AirflowProvider.EXTRA_INFO_RE.match(field_schema.get("description_md", ""))
 
             immutable = False
             if extra_json_info:
-                extra_info = json.loads(extra_json_info)
+                extra_info = json.loads(extra_json_info.groups()[0])
                 immutable = extra_info.get("immutable", False)
                 json_schema["properties"][param_name] = {
                     "type": field_schema["type"]
@@ -95,10 +101,20 @@ class AirflowProvider(BaseProvider):
                 if "pretty_task_log_formatter" in extra_info:
                     extra_attrs['pretty_task_log_formatter'] = extra_info["pretty_task_log_formatter"]
 
+            ftype = field_schema["type"]
+            helpdesk_param_type = ParamType.STRING
+            airflow_param_type = ftype if not isinstance(ftype, list) else ftype[-1]
+            if airflow_param_type != 'array':
+                helpdesk_param_type = ParamType(airflow_param_type)
+
+            param_desc = schema_def.get("description")
+            if param_desc is None:
+                param_desc = field_schema.get("description_md", "").split('```helpdesk')[0].strip()
+
             params_schema[param_name] = Param(
-                description=schema_def.get('description', ''),
-                type=ParamType(field_schema['type']),
-                required=not isinstance(field_schema["type"], list),
+                description=param_desc,
+                type=helpdesk_param_type,
+                required=not isinstance(ftype, list),
                 enum=field_schema.get("enum"),
                 immutable=immutable,
                 default=field_schema.get("value")
@@ -112,12 +128,12 @@ class AirflowProvider(BaseProvider):
         :return:
         """
         params_schema, json_schema, extra_attrs = self.airflow_schema_to_helpdesk(dag_details.params)
-        return TicketSchema(
+        return ActionSchema(
             id=dag_details.dag_id,
             name=dag_details.dag_display_name,
             parameters=params_schema,
             tags=[self.default_tag] if tag is None else [self.default_tag, tag],
-            description=dag_details.description,
+            description=dag_details.description or dag_details.dag_display_name,
             params_json_schema=json_schema,
             pack=tag,
             runner_type=self.provider_type,
@@ -126,21 +142,38 @@ class AirflowProvider(BaseProvider):
             status_filter=extra_attrs.get("status_filter")
         )
 
-    def get_tickets_summary(self, tag: Optional[str]=None) -> List[TicketSummary]:
+    def get_actions_info(self, pack: Optional[str] = None) -> List[ActionInfo]:
         """
         获取所有pack tag的dag的简单信息
         """
         try:
-            dags = self.airflow_client.get_dags(tags=(self.default_tag if not tag else tag,))
-            return [TicketSummary(name=d.dag_display_name, description=d.description) for d in dags]
+            dags = self.airflow_client.get_dags(tags=(self.default_tag if not pack else pack,)).dags
+            return [
+                ActionInfo(
+                    name=d.dag_display_name,
+                    description=d.description if d.description else d.dag_display_name,
+                    action_id=d.dag_id
+                ) for d in dags
+            ]
         except Exception as e:
-            if tag:
-                raise ResolvePackageError(e, traceback.format_exc(), f"Resolve pack {tag} error")
+            if pack:
+                raise ResolvePackageError(e, traceback.format_exc(), f"Resolve pack {pack} error")
             raise e
 
-    def get_tickets_schema(self, ref: str) -> List(TicketSchema):
+    def get_action_schema(self, dag_id: str) -> Optional[ActionSchema]:
+        try:
+            return self._build_action_from_dag_details(
+                self.airflow_client.get_schema_by_dag_id(dag_id),
+                dag_id
+            )
+        except Exception as e:
+            logger.error('get dag(id or tag) %s schema failed', dag_id)
+            logger.exception(e)
+            return None
+
+    def get_actions_schema_by_pack(self, ref: str) -> List[ActionSchema]:
         """
-        根据dag_id获取dag的细节
+        根据dag tag获取dags schema list
         """
         try:
             dag_ids = [ref]
@@ -154,7 +187,8 @@ class AirflowProvider(BaseProvider):
             for d in dag_ids:
                 hform_schemas.append(
                     self._build_action_from_dag_details(
-                        self.airflow_client.get_schema_by_dag_id(d.dag_id)
+                        self.airflow_client.get_schema_by_dag_id(d.dag_id),
+                        ref
                     )
                 )
             return hform_schemas
@@ -175,19 +209,16 @@ class AirflowProvider(BaseProvider):
             web_url=self.get_result_url(trigger_resp.dag_run_id)
         )
 
-    def run_ticket(self, ticket_name: str, parameters: Dict[str, Any], extra_info: str=None) -> TicketExecInfo:
+    def exec_ticket(self, ticket_name: str, parameters: Dict[str, Any], extra_info: str=None) -> TicketExecInfo:
         trigger_result = self.airflow_client.trigger_dag(ticket_name, conf=parameters, extra_info=extra_info)
         return self._build_execution_from_dag(trigger_result, ticket_name) if trigger_result else None
 
-    def generate_annotation(self, execution):
-        if not execution:
-            return {}
-
-        return {
-            'provider': self.provider_type,
-            'id': execution.exec_id,
-            'result_url': self.get_result_url(execution.exec_id)
-        }
+    def get_exec_annotation(self, execution: TicketExecInfo) -> Dict[str, str]:
+        return AirflowExecAnnotation(
+            exec_id=execution.exec_id,
+            result_url=execution.result_url,
+            provider=self.provider_type
+        ).dict()
 
     def _dag_graph_to_gojs_flow(self, dag_id, execution):
         dag_version = execution.version()
@@ -231,7 +262,7 @@ class AirflowProvider(BaseProvider):
             task_info_results: Dict[str, TicketExecTaskDetails] = {}
             task_info = TicketExecTaskInfo(
                 name=task_id,
-                execution_id=f"{dag_run.dag_run_id}|{task_id}",
+                execution_id=dag_run.dag_run_id,
                 task_id=task_id,
                 created_at=None,
                 updated_at=None,
@@ -286,17 +317,17 @@ class AirflowProvider(BaseProvider):
             id=dag_run.dag_run_id
         )
 
-    def get_execution(self, execution_id):
-        exec_id = self._parse_execution_id(execution_id)
+    def get_exec_result(self, annotation: Dict[str, str]):
+        exec_annotation = AirflowExecAnnotation().from_annotation(annotation)
         try:
             dag_run, dag_instances = self.airflow_client.get_dag_result(
-                exec_id.dag_id, exec_id.dag_run_id
+                exec_annotation.dag_id, exec_annotation.dag_run_id
             )
             result = self._build_result_from_dag_exec(dag_run, dag_instances)
-            graph = self._dag_graph_to_gojs_flow(exec_id.dag_id, dag_run)
-            web_url = self.get_result_url(exec_id.dag_id, dag_run.dag_run_id)
+            graph = self._dag_graph_to_gojs_flow(exec_annotation.dag_id, dag_run)
+            web_url = self.get_result_url(exec_annotation.dag_id, dag_run.dag_run_id)
             return TicketExecResultInfo(
-                ticket_id=exec_id.dag_id,
+                ticket_id=exec_annotation.dag_id,
                 status=TicketExecStatus(str(dag_run.state)),
                 start_timestamp=dag_run.start_date,
                 web_url=web_url,
@@ -304,10 +335,10 @@ class AirflowProvider(BaseProvider):
                 graph=graph
             ), ''
         except Exception as e:
-            logger.error(f'get execution from {execution_id}, error: {traceback.format_exc()}')
+            logger.error(f'get execution result from {exec_annotation}, error: {traceback.format_exc()}')
             return None, str(e)
 
-    def get_execution_output(self, execution_output_id: str) -> TicketTaskLog:
+    def get_exec_log(self, execution_output_id: str) -> TicketTaskLog:
         dag_id, dag_run_id, task_id, try_number = execution_output_id.split('|')
         std_out = self.airflow_client.get_task_result(dag_id, dag_run_id, task_id, try_number)
 
@@ -331,11 +362,6 @@ class AirflowProvider(BaseProvider):
                                 "or contact sa for help"
                             )
                             break
-                return TicketTaskLog(
-                    message="\n".join(m),
-                    load_success=True
-                )
+                return TicketTaskLog(message="\n".join(m), load_success=True)
         except Exception as e:
-            return TicketTaskLog(
-                messge=f"Load log from airflow failed: {str(e)}"
-            )
+            return TicketTaskLog(messge=f"Load log from airflow failed: {str(e)}")
