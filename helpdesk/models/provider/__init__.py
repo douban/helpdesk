@@ -4,12 +4,10 @@ import traceback
 
 from helpdesk.libs.decorators import timed_cache
 from helpdesk.models.provider.errors import InitProviderError, ResolvePackageError
-from .airflow import AirflowProvider
-from .spincycle import SpinCycleProvider
+from helpdesk.models.provider.airflow import AirflowProvider
 
 _providers = {
-    'airflow': AirflowProvider,
-    'spincycle': SpinCycleProvider,
+    'airflow': AirflowProvider
 }
 
 

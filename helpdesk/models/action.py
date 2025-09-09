@@ -27,7 +27,8 @@ class Action(DictSerializableClassMixin):
     __str__ = __repr__
 
     def get_action(self, provider):
-        """return detailed action infos from the provider
+        """
+        return detailed action infos from the provider
         """
         return provider.get_action(self.target_object) or {}
 
