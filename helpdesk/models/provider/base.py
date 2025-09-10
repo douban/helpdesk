@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Tuple
 from datetime import datetime
 
 from helpdesk.libs.types import TicketExecResultInfo, ActionInfo, \
@@ -43,15 +43,15 @@ class BaseProvider:
     def get_action_schema(self, action_name: str) -> Optional[ActionSchema]:
         raise NotImplementedError()
 
-    def exec_ticket(self, ticket_name: str, parameters: Dict[str, Any]) -> TicketExecInfo:
+    def exec_ticket(self, ticket_name: str, parameters: Dict[str, Any]) -> Tuple[TicketExecInfo, str]:
         "run action with parameters"
         raise NotImplementedError()
 
-    def get_exec_annotation(self, execution: TicketExecInfo) -> Dict[str, str]:
+    def get_exec_annotation(self, execution: TicketExecInfo) -> Dict[str, Any]:
         "generate execution metadata"
         raise NotImplementedError()
 
-    def get_exec_result(self, execution_annotation: Dict[str, str]) -> (Optional[TicketExecResultInfo], str):
+    def get_exec_result(self, execution_annotation: Dict[str, Any]) -> (Optional[TicketExecResultInfo], str):
         "get execution details with annotation metadata"
         raise NotImplementedError()
 

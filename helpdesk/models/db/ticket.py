@@ -178,7 +178,7 @@ class Ticket(db.Model):
         for index, node in enumerate(nodes):
             if node.get("name") == node_name:
                 return nodes[index+1] if (index != len(nodes)-1) else None
-        
+
     def is_end_node(self, node_name):
         nodes = self.annotation.get("nodes")
         for index, node in enumerate(nodes):
@@ -203,7 +203,7 @@ class Ticket(db.Model):
             approvers = node.get("approvers")
             if approvers and approver_type == ApproverType.PEOPLE:
                 return approvers
-            # 如果节点approvers为空 根据参数获取 app name 从而判断取哪个应用的负责人审批 
+            # 如果节点approvers为空 根据参数获取 app name 从而判断取哪个应用的负责人审批
             if approver_type == ApproverType.APP_OWNER:
                 approvers = self.params.get("app")
             if approver_type == ApproverType.DEPARTMENT:
@@ -217,9 +217,9 @@ class Ticket(db.Model):
         for node in self.annotation.get("nodes"):
             approver_type = node.get("approver_type") or ApproverType.PEOPLE
             node_approvers = node.get("approvers")
-            # 如果节点approvers为空 根据参数获取 app name 从而判断取哪个应用的负责人审批 
+            # 如果节点approvers为空 根据参数获取 app name 从而判断取哪个应用的负责人审批
             if approver_type == ApproverType.APP_OWNER and node_approvers == "":
-                node_approvers = self.params.get("app")                
+                node_approvers = self.params.get("app")
             if approver_type == ApproverType.DEPARTMENT and node_approvers == "":
                 node_approvers = self.params.get("department")
             provider = get_approver_provider(approver_type)
@@ -300,7 +300,7 @@ class Ticket(db.Model):
             self.annotate(current_node=next_node.get("name"))
             self.annotate(approvers=await self.get_node_approvers(next_node.get("name")))
         return True, "success"
-    
+
     async def approve(self, by_user=None):
         is_confirmed, msg = self.check_confirmed()
         if is_confirmed:
@@ -345,17 +345,16 @@ class Ticket(db.Model):
         self.annotate(execution=annotate, execution_creation_success=True, execution_creation_msg=msg)
 
         # we don't save the ticket here, we leave it outside
-        return execution, 'Success. <a href="%s" target="_blank">result</a>' % (execution['web_url'],)
+        return execution, 'Success. <a href="%s" target="_blank">result</a>' % (execution.result_url,)
 
-    def get_result(self, execution_output_id=None):
+    def get_result(self):
         provider = get_provider(self.provider_type)
-        execution_id = self.annotation.get('execution', {}).get('id')
+        exec_annotation = self.annotation.get('execution', {})
+        return provider.get_exec_result(exec_annotation)
 
-        if execution_output_id:
-            execution, msg = provider.get_exec_log(execution_output_id)
-        else:
-            execution, msg = provider.get_exec_result(execution_id)
-        return execution, msg
+    def get_result_log(self, output_id):
+        provider = get_provider(self.provider_type)
+        return provider.get_exec_log(output_id)
 
     async def notify(self, phase):
         logger.info('Ticket notify: %s: %s', phase, self)

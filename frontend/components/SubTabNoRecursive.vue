@@ -1,16 +1,16 @@
 <template>
   <div>
     <a-modal id="prettyLogModal" :visible="prettyLogVisible" title="log" ok-text="confirm" cancel-text="cancel" width="85%" @ok="onConfirm" @cancel="onCancel">
-      <result-host-table :data-loaded="prettyLogLoaded" :result-data="prettyLogResult" 
+      <result-host-table :data-loaded="prettyLogLoaded" :result-data="prettyLogResult"
           :ticket-id="ticketId"></result-host-table>
     </a-modal>
 
     <a-tabs type="card" :tab-position="'left'" :active-key="resultActiveKey" @tabClick='tabClickHandler'>
-      <a-tab-pane v-for="value of resultData.tasks" :key="value.id">
+      <a-tab-pane v-for="value of resultData.tasks" :key="value.task_id">
         <template slot="tab">
           {{ value.name.length > 30 ? value.name.slice(0, 30) + '...': value.name }}
         </template>
-        <result-host-table :data-loaded="dataLoaded" :result-data="value.result" 
+        <result-host-table :data-loaded="dataLoaded" :result-data="value.result"
         :ticket-id="ticketId" @showPrettyLog="showPrettyLog"></result-host-table>
       </a-tab-pane>
     </a-tabs>

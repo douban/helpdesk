@@ -132,7 +132,8 @@ class AirflowClient:
         api_client = self.get_api_client()
         graph_def_resp = api_client.call_api(
             "GET",
-            f"/ui/structure/structure_data?dag_id={dag_id}&external_dependencies=false&version_number={version}"
+            f"{api_client.configuration.host}/ui/structure/structure_data?dag_id={dag_id}&external_dependencies=false&version_number={version}",
+            header_params={"Authorization": f"Bearer {api_client.configuration.access_token}"}
         )
         if graph_def_resp.status != 200:
             logger.error("get dag_id %s graph info version %d err: %s", dag_id, version, graph_def_resp.read())

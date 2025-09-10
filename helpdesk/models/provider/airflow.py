@@ -5,6 +5,7 @@ import json
 import traceback
 import re
 import datetime
+from urllib.parse import quote
 
 from airflow_client.client.models.dag_run_response import DAGRunResponse
 from airflow_client.client.models.task_instance_collection_response import TaskInstanceCollectionResponse
@@ -19,11 +20,11 @@ from helpdesk.config import (
     AIRFLOW_DEFAULT_DAG_TAG,
 )
 from helpdesk.libs.airflow import AirflowClient
-from helpdesk.libs.types import TicketExecResultInfo, ActionInfo, \
+from helpdesk.libs.types import StatusColor, TicketExecResultInfo, ActionInfo, \
     ActionSchema, TicketExecInfo, TicketTaskLog, TicketExecStatus, \
     TicketExecTaskInfo, TicketExecTaskDetails, Param, ParamType, \
     TicketGraphNode, TicketGraphLink, TicketGraph, TicketExecTaskStatus, \
-    TicketExecTasksResult, RunnerType
+    TicketExecTasksResult, RunnerType, StatusEmoji
 from helpdesk.models.provider.errors import ResolvePackageError
 from helpdesk.models.provider.base import BaseProvider
 
@@ -33,12 +34,13 @@ logger = logging.getLogger(__name__)
 class AirflowExecAnnotation(BaseModel):
     dag_id: str = ""
     dag_run_id: str = ""
+    dag_version: int = 1
     result_url: str = ""
 
     def __repr__(self) -> str:
         return f"<dag {self.dag_id} with dag run {self.dag_run_id}>"
 
-    def from_annotation(self, annotation: Dict[str, str]) -> Self:
+    def from_annotation(self, annotation: Dict[str, Any]) -> Self:
         if "id" in annotation:
             _id = annotation["id"]
             if _id.count("|") == 1:
@@ -49,6 +51,7 @@ class AirflowExecAnnotation(BaseModel):
             self.dag_id = annotation["dag_id"]
             self.dag_run_id = annotation["dag_run_id"]
         self.result_url = annotation["result_url"]
+        self.dag_version = annotation["dag_version"]
         return self
 
 
@@ -88,24 +91,27 @@ class AirflowProvider(BaseProvider):
             extra_json_info = AirflowProvider.EXTRA_INFO_RE.match(field_schema.get("description_md", ""))
 
             immutable = False
-            if extra_json_info:
-                extra_info = json.loads(extra_json_info.groups()[0])
-                immutable = extra_info.get("immutable", False)
-                json_schema["properties"][param_name] = {
-                    "type": field_schema["type"]
-                }.update(extra_info.get("json_schema", {}))
-
-                if "schema" in extra_info:
-                    json_schema.update(extra_info["schema"])
-
-                if "pretty_task_log_formatter" in extra_info:
-                    extra_attrs['pretty_task_log_formatter'] = extra_info["pretty_task_log_formatter"]
-
             ftype = field_schema["type"]
             helpdesk_param_type = ParamType.STRING
             airflow_param_type = ftype if not isinstance(ftype, list) else ftype[-1]
             if airflow_param_type != 'array':
                 helpdesk_param_type = ParamType(airflow_param_type)
+
+            if extra_json_info:
+                extra_info = json.loads(extra_json_info.groups()[0])
+                logger.info("extra info %s", extra_info)
+                immutable = extra_info.get("immutable", False)
+                json_schema["properties"][param_name] = {
+                    "type": airflow_param_type
+                }
+                json_schema["properties"][param_name].update(extra_info.get("json_schema", {}))
+                logger.info("json schema after merge: %s", json.dumps(json_schema, indent=2))
+                if "schema" in extra_info:
+                    json_schema.update(extra_info["schema"])
+                    logger.info("json schema after merge with schema: %s", json.dumps(json_schema, indent=2))
+
+                if "pretty_task_log_formatter" in extra_info:
+                    extra_attrs['pretty_task_log_formatter'] = extra_info["pretty_task_log_formatter"]
 
             param_desc = schema_def.get("description")
             if param_desc is None:
@@ -202,37 +208,63 @@ class AirflowProvider(BaseProvider):
     def _build_execution_from_dag(self, trigger_resp, dag_id):
         return TicketExecInfo(
             exec_id=trigger_resp.dag_run_id,
-            execution_date=trigger_resp.start_date,
-            msg=str(trigger_resp.state),
+            execution_date=trigger_resp.start_date or datetime.datetime.now(),
+            msg=trigger_resp.state.value,
             ticket_name=trigger_resp.dag_id,
-            runner_type=RunnerType.AIRFLOW,
-            web_url=self.get_result_url(trigger_resp.dag_run_id)
+            runner=RunnerType.AIRFLOW,
+            result_url=self.get_result_url(trigger_resp.dag_id, trigger_resp.dag_run_id),
+            annotation={
+                "dag_version": trigger_resp.dag_versions[-1].version_number
+            }
         )
 
-    def exec_ticket(self, ticket_name: str, parameters: Dict[str, Any], extra_info: str=None) -> TicketExecInfo:
-        trigger_result = self.airflow_client.trigger_dag(ticket_name, conf=parameters, extra_info=extra_info)
-        return self._build_execution_from_dag(trigger_result, ticket_name) if trigger_result else None
+    def exec_ticket(self, ticket_name: str, parameters: Dict[str, Any], extra_info: str=None) -> Tuple[TicketExecInfo, str]:
+        try:
+            trigger_result = self.airflow_client.trigger_dag(ticket_name, conf=parameters, extra_info=extra_info)
+            if trigger_result:
+                return self._build_execution_from_dag(trigger_result, ticket_name), ''
+        except Exception as e:
+            logger.exception(e)
+            return None, f'exec ticket {ticket_name} failed, error: {str(e)}'
 
-    def get_exec_annotation(self, execution: TicketExecInfo) -> Dict[str, str]:
+    def get_exec_annotation(self, execution: TicketExecInfo) -> Dict[str, Any]:
         return AirflowExecAnnotation(
-            exec_id=execution.exec_id,
+            dag_id=execution.ticket_name,
+            dag_run_id=execution.exec_id,
             result_url=execution.result_url,
-            provider=self.provider_type
+            dag_version=execution.annotation["dag_version"]
         ).dict()
 
-    def _dag_graph_to_gojs_flow(self, dag_id, execution):
-        dag_version = execution.version()
+    def _dag_graph_to_gojs_flow(self, dag_id: str, dag_version: int, task_result: TicketExecResultInfo) -> TicketGraph:
         airflow_graph = self.airflow_client.get_dag_graph(dag_id, dag_version)
         result = TicketGraph()
+        tasks_status: Dict[str, TicketExecTaskStatus] = {
+            t.task_id: TicketExecTaskStatus[t.state.value.upper()] if t.state else TicketExecTaskStatus.NO_STATUS \
+            for t in task_result.tasks
+        }
         if airflow_graph:
             result.nodes = []
             result.edges = []
 
             for node in airflow_graph['nodes']:
+                nid = node["id"]
+                tstats = tasks_status[nid]
+
+                # fill stroke color and text by status of task
+                try:
+                    status_emoji = StatusEmoji[tstats.value.upper()].value
+                    status_stroke = StatusColor[tstats.value.upper()]
+                except Exception as e:
+                    logger.error("unknown task status %s for node %s, set to NO_STATUS", tstats, nid)
+                    logger.exception(e)
+                    status_emoji = StatusEmoji.NO_STATUS.value
+                    status_stroke = StatusColor.NO_STATUS
+
                 result.nodes.append(
                     TicketGraphNode(
-                        key=node["id"],
-                        text=node["label"],
+                        key=nid,
+                        text=f"{status_emoji} {node['label']}",
+                        stroke=status_stroke
                     )
                 )
 
@@ -250,44 +282,40 @@ class AirflowProvider(BaseProvider):
         tasks_info: List[TicketExecTaskInfo] = []
 
         # 把执行结果按task_id分类（里面会包含多次retry）的结果
-        task_result_ins = {}
+        task_ins = {}
         for task_instance in tis.task_instances:
             task_id = task_instance.task_id
-            if task_id in task_result_ins:
-                task_result_ins[task_id].append(task_instance)
+            if task_id in task_ins:
+                task_ins[task_id].append(task_instance)
             else:
-                task_result_ins[task_id] = [task_instance]
+                task_ins[task_id] = [task_instance]
 
-        for task_id, task_instance_list in task_result_ins.items():
-            task_info_results: Dict[str, TicketExecTaskDetails] = {}
+        for task_id, task_instance_list in task_ins.items():
             task_info = TicketExecTaskInfo(
                 name=task_id,
-                execution_id=dag_run.dag_run_id,
+                exec_id=dag_run.dag_run_id,
                 task_id=task_id,
                 created_at=None,
                 updated_at=None,
-                state=None,
                 result=None
             )
 
+            task_info_results: Dict[str, TicketExecTaskDetails] = {}
             for task_instance in task_instance_list:
-                task_status = TicketExecTaskStatus(str(task_instance.state))
+                logger.debug(task_instance)
+                task_status = TicketExecTaskStatus(task_instance.state.value) if task_instance.state else TicketExecTaskStatus.NO_STATUS
                 if task_info.created_at is None or task_info.created_at > task_instance.start_date:
                     task_info.created_at = task_instance.start_date
 
                 if task_info.updated_at is None or task_info.updated_at < task_instance.end_date:
-                    task_info.created_at = task_instance.end_date
+                    task_info.updated_at = task_instance.end_date
 
-                is_final_try = task_instance.try_number + 1 == task_instance.max_tries
-                if is_final_try:
-                    task_info.state = task_status
-
-                task_uniq_id = f"{dag_run.dag_id}|{dag_run.dag_run_id}|{task_id}|{task_instance.try_number+1}"
-
+                task_info.state = task_status
+                task_uniq_id = quote(f"{dag_run.dag_id}|{dag_run.dag_run_id}|{task_id}|{task_instance.try_number}")
                 task_details = TicketExecTaskDetails(
                     status=task_status,
                     failed=task_instance.state == TaskInstanceState.FAILED,
-                    stderr=str(task_instance.state),
+                    stderr=task_status.value,
                     return_code=1,
                     succeeded=False,
                     stdout="",
@@ -295,42 +323,44 @@ class AirflowProvider(BaseProvider):
                 )
 
                 if task_instance.try_number > 0:
-                    is_task_succ = task_instance.state == TaskInstanceState.SUCCESS
-                    is_success_try = is_task_succ and is_final_try
                     log_query_info = {
                         'output_load': True,
                         'query_string': f'?exec_output_id={task_uniq_id}'
                     }
-                    task_details.stderr = log_query_info if not is_success_try else ''
-                    task_details.return_code = int(not is_success_try)
-                    task_details.succeeded = is_success_try
-                    task_details.stdout = log_query_info if not is_success_try else ''
+                    is_task_succ = task_status == TicketExecTaskStatus.SUCCESS
+                    task_details.stderr = ''
+                    task_details.return_code = 0 if is_task_succ else 1
+                    task_details.succeeded = is_task_succ
+                    task_details.stdout = log_query_info
 
-                task_info_results[f"{task_id} [{task_instance.try_number+1}/{task_instance.max_tries}]"] = task_details
+                task_info_results[f"{task_id} [{task_instance.try_number}]"] = task_details
 
             task_info.result = task_info_results
-
-        tasks_info.append(task_info)
+            tasks_info.append(task_info)
 
         return TicketExecTasksResult(
             tasks=tasks_info,
             id=dag_run.dag_run_id
         )
 
-    def get_exec_result(self, annotation: Dict[str, str]):
+    def get_exec_result(self, annotation: Dict[str, Any]):
         exec_annotation = AirflowExecAnnotation().from_annotation(annotation)
         try:
             dag_run, dag_instances = self.airflow_client.get_dag_result(
                 exec_annotation.dag_id, exec_annotation.dag_run_id
             )
+            logger.debug("dag_run: %s\n dag_ins: %s", dag_run, dag_instances)
             result = self._build_result_from_dag_exec(dag_run, dag_instances)
-            graph = self._dag_graph_to_gojs_flow(exec_annotation.dag_id, dag_run)
-            web_url = self.get_result_url(exec_annotation.dag_id, dag_run.dag_run_id)
+            graph = self._dag_graph_to_gojs_flow(
+                exec_annotation.dag_id,
+                exec_annotation.dag_version,
+                result
+            )
             return TicketExecResultInfo(
                 ticket_id=exec_annotation.dag_id,
-                status=TicketExecStatus(str(dag_run.state)),
+                status=TicketExecStatus(dag_run.state.value),
                 start_timestamp=dag_run.start_date,
-                web_url=web_url,
+                result_url=exec_annotation.result_url,
                 result=result,
                 graph=graph
             ), ''
@@ -339,29 +369,33 @@ class AirflowProvider(BaseProvider):
             return None, str(e)
 
     def get_exec_log(self, execution_output_id: str) -> TicketTaskLog:
-        dag_id, dag_run_id, task_id, try_number = execution_output_id.split('|')
-        std_out = self.airflow_client.get_task_result(dag_id, dag_run_id, task_id, try_number)
-
         try:
-            data = json.loads(std_out)
+            dag_id, dag_run_id, task_id, try_number = execution_output_id.split('|')
+            std_out = self.airflow_client.get_task_log(dag_id, dag_run_id, task_id, int(try_number))
+            data = json.loads(std_out.read())
+            logger.debug("log for %s: %s", execution_output_id, data)
             if 'content' not in data:
                 return TicketTaskLog(
                     message="Load log from airflow failed, no content found"
                 )
             else:
                 m = []
-                for e in data['content']:
+                content = data["content"]
+                is_truncated = len(content) > self.MAX_LOG_LINES
+
+                for e in content[-1 * self.MAX_LOG_LINES:]:
                     if 'level' not in e or 'timestamp' not in e or 'event' not in e:
                         continue
                     else:
                         m.append(f"level={e['level']} time={e['timestamp']} msg=\"{e['event']}\"")
-                        if len(m) > self.MAX_LOG_LINES:
-                            m.append(
-                                f"level=fatal, time={datetime.datetime.now()},"
-                                f" msg=\"MAX LOG LINES({self.MAX_LOG_LINES}), please go to airflow see more logs, \""
-                                "or contact sa for help"
-                            )
-                            break
+
+                if is_truncated:
+                    m.append(
+                        f"level=fatal, time={datetime.datetime.now()}, "
+                        f"msg=\"MAX LOG LINES({self.MAX_LOG_LINES}) reached, log truncated from head, like `tail -n`\""
+                    )
+
                 return TicketTaskLog(message="\n".join(m), load_success=True)
         except Exception as e:
-            return TicketTaskLog(messge=f"Load log from airflow failed: {str(e)}")
+            logger.exception(e)
+            return TicketTaskLog(message="Load log from airflow failed, contact admin for help", load_success=False)

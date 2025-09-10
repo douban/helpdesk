@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List, Optional, Dict, Any, Tuple
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ParamType(Enum):
@@ -19,6 +19,7 @@ class RunnerType(Enum):
 class StatusColor(Enum):
     SUCCESS = 'green'
     RUNNING = '#00ff00'
+    FAILED = 'red'
     SKIPPED = '#fecfd7'
     UPSTREAM_FAILED = '#feba3f'
     UP_FOR_RESCHEDULE = '#6fe7db'
@@ -79,7 +80,8 @@ class TicketExecInfo(BaseModel):
     msg: str
     ticket_name: str
     runner: RunnerType
-    web_url: Optional[str] = None
+    result_url: Optional[str] = None
+    annotation: Optional[Dict[str, Any]] = None
 
 
 class TicketExecTaskStatus(Enum):
@@ -109,22 +111,22 @@ class TicketExecStatus(Enum):
 class TicketExecTaskDetails(BaseModel):
     status: TicketExecTaskStatus
     failed: bool
-    stderr: str
     return_code: int
     succeeded: bool
-    stdout: str
+    stdout: str | Dict[str, Any]
+    stderr: str | Dict[str, Any]
     highlight_queries: str
 
 
 class TicketExecTaskInfo(BaseModel):
     name: str
-    execution_id: str
+    exec_id: str
     task_id: str
-    created_at: datetime = None
-    updated_at: datetime = None
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
     state: TicketExecTaskStatus = TicketExecTaskStatus.NO_STATUS
     # 结果包含多次retry
-    result: Dict[str, TicketExecTaskDetails] = None
+    result: Optional[Dict[str, TicketExecTaskDetails]]
 
 
 class TicketExecTasksResult(BaseModel):
@@ -141,20 +143,20 @@ class TicketGraphNode(BaseModel):
 
 class TicketGraphLink(BaseModel):
     to: str
-    from_: str
+    from_: str = Field(serialization_alias='from')
 
 
 class TicketGraph(BaseModel):
-    class_: str = "GraphLinksModel"
-    nodes: List[TicketGraphNode] = None
-    edges: List[TicketGraphLink] = None
+    class_: str = Field(default="GraphLinksModel", serialization_alias="class")
+    nodes: List[TicketGraphNode] = Field(default=None, serialization_alias="nodeDataArray")
+    edges: List[TicketGraphLink] = Field(default=None, serialization_alias="linkDataArray")
 
 
 class TicketExecResultInfo(BaseModel):
     ticket_id: str
     status: TicketExecStatus
     start_timestamp: datetime
-    web_url: str
+    result_url: str
     result: TicketExecTasksResult
     graph: TicketGraph
 

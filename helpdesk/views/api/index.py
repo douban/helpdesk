@@ -270,24 +270,36 @@ async def get_ticket(ticket_id: int, current_user: User = Depends(get_current_us
 
 
 @router.get('/ticket/{ticket_id}/result')
-async def ticket_result(ticket_id: int, exec_output_id: Optional[str] = None, _: User = Depends(get_current_user)):
+async def ticket_result(ticket_id: int,  _: User = Depends(get_current_user)):
     ticket = await Ticket.get(ticket_id)
     if not ticket:
         raise HTTPException(status_code=404, detail="ticket not found")
 
-    execution, msg = ticket.get_result(execution_output_id=exec_output_id)
+    execution, msg = ticket.get_result()
     if not execution:
         raise HTTPException(status_code=404, detail=msg)
+
     # update ticket status by result
-    if not exec_output_id:
-        annotation_execution_status = ticket.annotation.get('execution_status')
-        final_exec_status = ticket.annotation.get('final_exec_status')
-        try:
-            exec_status = execution.get('status')
-            if exec_status and annotation_execution_status != exec_status \
-                    and not final_exec_status:
-                ticket.annotate(execution_status=exec_status)
-                await ticket.save()
-        except AttributeError as e:
-            logger.warning(f"can not get status from execution, error: {str(e)}")
+    annotation_execution_status = ticket.annotation.get('execution_status')
+    final_exec_status = ticket.annotation.get('final_exec_status')
+    try:
+        exec_status = execution.status.value
+        if exec_status and annotation_execution_status != exec_status \
+           and not final_exec_status:
+            ticket.annotate(execution_status=exec_status)
+            await ticket.save()
+    except AttributeError as e:
+        logger.warning(f"can not get status from execution, error: {str(e)}")
     return execution
+
+
+@router.get('/ticket/{ticket_id}/result_log')
+async def ticket_result_log(ticket_id: int, exec_output_id: str, _: User = Depends(get_current_user)):
+    ticket = await Ticket.get(ticket_id)
+    if not ticket:
+        raise HTTPException(status_code=404, detail="ticket not found")
+
+    ticket_log = ticket.get_result_log(exec_output_id)
+    if not ticket_log.load_success:
+        raise HTTPException(status_code=500, detail=ticket_log.message)
+    return ticket_log
