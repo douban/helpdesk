@@ -32,7 +32,7 @@
         >Reset</a-button>
       </div>
       <a-icon slot="filterIcon" slot-scope="filtered" type='search' :style="{ color: filtered ? '#108ee9' : undefined }" />
-      <template slot="expandedRowRender" slot-scope="record" style="margin: 0">
+      <template slot="expandedRowRender" slot-scope="record" style="margin: 0;">
         <a-spin :spinning="spinning">
           <span v-show="record.traceback !== '' && record.traceback !== undefined">
             <h3><b>traceback:</b></h3>
@@ -84,7 +84,7 @@ export default {
       },
       columns: [
         {
-          title: 'Host',
+          title: 'Task',
           dataIndex: 'name',
           key: 'name',
           scopedSlots: {

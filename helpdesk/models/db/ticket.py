@@ -334,13 +334,14 @@ class Ticket(db.Model):
         provider = get_provider(self.provider_type)
 
         logger.info('run action %s, params: %s', self.provider_object, self.handle_extra_params())
-        self.annotate(execution_submitted=True)
         execution, msg = provider.exec_ticket(self.provider_object, self.handle_extra_params())
-        annotate = provider.get_exec_annotation(execution)
+        self.annotate(execution_submitted=True)
         if not execution:
+            logger.info('exec action failed: %s', msg)
             self.annotate(execution_creation_success=False, execution_creation_msg=msg)
-            return execution, msg
+            return execution, msg[:500]
 
+        annotate = provider.get_exec_annotation(execution)
         self.executed_at = datetime.now()
         self.annotate(execution=annotate, execution_creation_success=True, execution_creation_msg=msg)
 

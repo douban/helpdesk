@@ -3,6 +3,9 @@
 import logging
 from datetime import datetime
 from typing import Dict, Any
+from fastapi import HTTPException
+
+from httpx import HTTPError
 
 from helpdesk.libs.decorators import timed_cache
 from helpdesk.libs.preprocess import get_preprocess
@@ -146,11 +149,13 @@ class Action(DictSerializableClassMixin):
             return ticket_added.to_dict(), 'Success. Your request has been submitted, please wait for approval.'
 
         # if this ticket is auto approved, execute it immediately
-        execution, _ = ticket_added.execute()
+        execution, msg = ticket_added.execute()
         if execution:
             await ticket_added.notify(TicketPhase.REQUEST)
         await ticket_added.save()
 
+        if not execution:
+            raise HTTPException(status_code=400, detail=f'Ticket execute failed: {msg[:100]}')
         return (
             ticket_added.to_dict(),
             'Success. Your request has been approved automatically, please go to ticket page for details')

@@ -104,6 +104,7 @@ export default {
             // SelectInput
             fieldDefinition.fieldType = 'SelectInput'
             fieldDefinition.options = param.enum
+            fieldDefinition.multiple = param.type === 'array'
           } else {
             // Normal TextInput
             fieldDefinition.fieldType = 'TextInput'
@@ -221,7 +222,7 @@ export default {
 
               // trans hacked form data to json schema data and validate them
               if (fieldType === 'array') {
-                jsonFormData[name] = data.split(',')
+                jsonFormData[name] = data
               } else if (fieldType === "integer") {
                 jsonFormData[name] = parseInt(data)
               } else if (fieldType === "number") {
@@ -249,6 +250,8 @@ export default {
           this.$axios(options).then((response) => {
             this.handleSubmitResult(response)
             this.showSubmitOK = true
+          }).catch((error) => {
+              this.errorAsNotification("Submit/exec ticket error", error.response.data.detail)
           }).finally(() => {
             this.canSubmit = true
           })

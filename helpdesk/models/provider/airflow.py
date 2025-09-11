@@ -92,23 +92,22 @@ class AirflowProvider(BaseProvider):
 
             immutable = False
             ftype = field_schema["type"]
-            helpdesk_param_type = ParamType.STRING
+
             airflow_param_type = ftype if not isinstance(ftype, list) else ftype[-1]
-            if airflow_param_type != 'array':
-                helpdesk_param_type = ParamType(airflow_param_type)
+            helpdesk_param_type = ParamType(airflow_param_type)
 
             if extra_json_info:
                 extra_info = json.loads(extra_json_info.groups()[0])
-                logger.info("extra info %s", extra_info)
+                logger.debug("extra info %s", extra_info)
                 immutable = extra_info.get("immutable", False)
                 json_schema["properties"][param_name] = {
                     "type": airflow_param_type
                 }
                 json_schema["properties"][param_name].update(extra_info.get("json_schema", {}))
-                logger.info("json schema after merge: %s", json.dumps(json_schema, indent=2))
+                logger.debug("json schema after merge: %s", json.dumps(json_schema, indent=2))
                 if "schema" in extra_info:
                     json_schema.update(extra_info["schema"])
-                    logger.info("json schema after merge with schema: %s", json.dumps(json_schema, indent=2))
+                    logger.debug("json schema after merge with schema: %s", json.dumps(json_schema, indent=2))
 
                 if "pretty_task_log_formatter" in extra_info:
                     extra_attrs['pretty_task_log_formatter'] = extra_info["pretty_task_log_formatter"]
@@ -223,6 +222,7 @@ class AirflowProvider(BaseProvider):
             trigger_result = self.airflow_client.trigger_dag(ticket_name, conf=parameters, extra_info=extra_info)
             if trigger_result:
                 return self._build_execution_from_dag(trigger_result, ticket_name), ''
+            raise Exception(f"trigger dag {ticket_name} failed")
         except Exception as e:
             logger.exception(e)
             return None, f'exec ticket {ticket_name} failed, error: {str(e)}'

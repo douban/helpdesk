@@ -8,7 +8,7 @@
     <v-select
       :name="name"
       :options="options"
-      :multiple="true"
+      :multiple="multiple"
       :clearable="true"
       :searchable="true"
       :filterable="true"
@@ -24,7 +24,7 @@
 <script>
 export default {
   name: 'SelectInput',
-  props: ['placeholder', 'label', 'name', 'value', 'options', 'required', 'extra'],
+  props: ['placeholder', 'label', 'name', 'value', 'options', 'required', 'extra', 'multiple'],
   data () {
     return {
       selectedValues: []
@@ -32,16 +32,21 @@ export default {
   },
   watch: {
     value () {
+      console.log(`watch value: ${this.value}`)
       if (!this.value) {
         this.selectedValues = []
-      } else if (this.selectedValues.join(',') !== this.value) {
-        this.selectedValues = this.value.split(',')
+      } else if (!Array.isArray(this.value)){
+          this.selectedValues = [this.value]
       }
     }
   },
   methods: {
     handleInput (event) {
-      const realValue = event.join()
+      console.log(event)
+      let realValue;
+      if (!Array.isArray(event)) {
+        realValue = [event]
+      }
       this.selectedValues = event
       this.$emit('input', realValue)
     },

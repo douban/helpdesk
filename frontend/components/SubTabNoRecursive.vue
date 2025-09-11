@@ -5,7 +5,7 @@
           :ticket-id="ticketId"></result-host-table>
     </a-modal>
 
-    <a-tabs type="card" :tab-position="'left'" :active-key="resultActiveKey" @tabClick='tabClickHandler'>
+    <a-tabs type="card" :tab-position="top" :active-key="resultActiveKey" @tabClick='tabClickHandler'>
       <a-tab-pane v-for="value of resultData.tasks" :key="value.task_id">
         <template slot="tab">
           {{ value.name.length > 30 ? value.name.slice(0, 30) + '...': value.name }}

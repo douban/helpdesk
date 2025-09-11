@@ -9,6 +9,7 @@ class ParamType(Enum):
     STRING = "string"
     BOOL = "boolean"
     INTEGER = "integer"
+    ARRAY = "array"
 
 
 class RunnerType(Enum):
