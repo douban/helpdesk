@@ -8,23 +8,41 @@ import datetime
 from urllib.parse import quote
 
 from airflow_client.client.models.dag_run_response import DAGRunResponse
-from airflow_client.client.models.task_instance_collection_response import TaskInstanceCollectionResponse
+from airflow_client.client.models.task_instance_collection_response import (
+    TaskInstanceCollectionResponse,
+)
 from airflow_client.client.models.task_instance_state import TaskInstanceState
 from pydantic import BaseModel
 from typing import List, Dict, Optional, Any, Tuple, Self
 
 from helpdesk.config import (
     AIRFLOW_SERVER_URL,
+    AIRFLOW_JWT_EXPIRATION_TIME,
     AIRFLOW_USERNAME,
     AIRFLOW_PASSWORD,
     AIRFLOW_DEFAULT_DAG_TAG,
 )
 from helpdesk.libs.airflow import AirflowClient
-from helpdesk.libs.types import StatusColor, TicketExecResultInfo, ActionInfo, \
-    ActionSchema, TicketExecInfo, TicketTaskLog, TicketExecStatus, \
-    TicketExecTaskInfo, TicketExecTaskDetails, Param, ParamType, \
-    TicketGraphNode, TicketGraphLink, TicketGraph, TicketExecTaskStatus, \
-    TicketExecTasksResult, RunnerType, StatusEmoji
+from helpdesk.libs.types import (
+    StatusColor,
+    TicketExecResultInfo,
+    ActionInfo,
+    ActionSchema,
+    TicketExecInfo,
+    TicketTaskLog,
+    TicketExecStatus,
+    TicketExecTaskInfo,
+    TicketExecTaskDetails,
+    Param,
+    ParamType,
+    TicketGraphNode,
+    TicketGraphLink,
+    TicketGraph,
+    TicketExecTaskStatus,
+    TicketExecTasksResult,
+    RunnerType,
+    StatusEmoji,
+)
 from helpdesk.models.provider.errors import ResolvePackageError
 from helpdesk.models.provider.base import BaseProvider
 
@@ -56,17 +74,19 @@ class AirflowExecAnnotation(BaseModel):
 
 
 class AirflowProvider(BaseProvider):
-    provider_type = 'airflow'
-    EXTRA_INFO_RE = re.compile(r'.*```helpdesk(.+)```.*', re.DOTALL)
+    provider_type = "airflow"
+    EXTRA_INFO_RE = re.compile(r".*```helpdesk(.+)```.*", re.DOTALL)
     MAX_LOG_LINES = 100000
 
-    def __init__(self, token=None, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.airflow_url = AIRFLOW_SERVER_URL
-        if token:
-            self.airflow_client = AirflowClient(refresh_token=token)
-        else:
-            self.airflow_client = AirflowClient(username=AIRFLOW_USERNAME, passwd=AIRFLOW_PASSWORD)
+        self.airflow_client = AirflowClient(
+            username=AIRFLOW_USERNAME,
+            passwd=AIRFLOW_PASSWORD,
+            server_url=AIRFLOW_SERVER_URL,
+            jwt_expire_seconds=AIRFLOW_JWT_EXPIRATION_TIME,
+        )
         self.default_tag = AIRFLOW_DEFAULT_DAG_TAG
         self.default_status_filter = ()
 
@@ -93,7 +113,9 @@ class AirflowProvider(BaseProvider):
         for param_name, schema_def in airflow_param.items():
             field_schema = schema_def["schema"]
             logger.debug("field %s schema: %s", param_name, schema_def)
-            extra_json_info = AirflowProvider.EXTRA_INFO_RE.match(field_schema.get("description_md", ""))
+            extra_json_info = AirflowProvider.EXTRA_INFO_RE.match(
+                field_schema.get("description_md", "")
+            )
 
             immutable = False
             ftype = field_schema["type"]
@@ -102,30 +124,43 @@ class AirflowProvider(BaseProvider):
             helpdesk_param_type = ParamType(airflow_param_type)
 
             # 这是helpdesk的单选，helpdesk只关心是否有enum类型, 有就是选择，如果array那就是多选，string那就单选
-            if helpdesk_param_type == ParamType.ARRAY and \
-               field_schema.get("enum") and \
-               not field_schema.get("examples"):
+            if (
+                helpdesk_param_type == ParamType.ARRAY
+                and field_schema.get("enum")
+                and not field_schema.get("examples")
+            ):
                 helpdesk_param_type = ParamType.STRING
 
             if extra_json_info:
                 extra_info = json.loads(extra_json_info.groups()[0])
                 logger.debug("extra info %s", extra_info)
                 immutable = extra_info.get("immutable", False)
-                json_schema["properties"][param_name] = {
-                    "type": airflow_param_type
-                }
-                json_schema["properties"][param_name].update(extra_info.get("json_schema", {}))
-                logger.debug("json schema after merge: %s", json.dumps(json_schema, indent=2))
+                json_schema["properties"][param_name] = {"type": airflow_param_type}
+                json_schema["properties"][param_name].update(
+                    extra_info.get("json_schema", {})
+                )
+                logger.debug(
+                    "json schema after merge: %s", json.dumps(json_schema, indent=2)
+                )
                 if "schema" in extra_info:
                     json_schema.update(extra_info["schema"])
-                    logger.debug("json schema after merge with schema: %s", json.dumps(json_schema, indent=2))
+                    logger.debug(
+                        "json schema after merge with schema: %s",
+                        json.dumps(json_schema, indent=2),
+                    )
 
                 if "pretty_task_log_formatter" in extra_info:
-                    extra_attrs['pretty_task_log_formatter'] = extra_info["pretty_task_log_formatter"]
+                    extra_attrs["pretty_task_log_formatter"] = extra_info[
+                        "pretty_task_log_formatter"
+                    ]
 
             param_desc = schema_def.get("description")
             if param_desc is None:
-                param_desc = field_schema.get("description_md", "").split('```helpdesk')[0].strip()
+                param_desc = (
+                    field_schema.get("description_md", "")
+                    .split("```helpdesk")[0]
+                    .strip()
+                )
 
             params_schema[param_name] = Param(
                 description=param_desc,
@@ -133,7 +168,7 @@ class AirflowProvider(BaseProvider):
                 required=not isinstance(ftype, list),
                 enum=field_schema.get("enum", field_schema.get("examples")),
                 immutable=immutable,
-                default=field_schema.get("value")
+                default=field_schema.get("value"),
             )
         return params_schema, json_schema, extra_attrs
 
@@ -143,7 +178,9 @@ class AirflowProvider(BaseProvider):
         :param dags: airflow client get_dags
         :return:
         """
-        params_schema, json_schema, extra_attrs = self.airflow_schema_to_helpdesk(dag_details.params)
+        params_schema, json_schema, extra_attrs = self.airflow_schema_to_helpdesk(
+            dag_details.params
+        )
         return ActionSchema(
             id=dag_details.dag_id,
             name=dag_details.dag_display_name,
@@ -155,7 +192,7 @@ class AirflowProvider(BaseProvider):
             runner_type=self.provider_type,
             highlight_queries=extra_attrs.get("highlight_queries"),
             pretty_log_formatter=extra_attrs.get("pretty_task_log_formatter"),
-            status_filter=extra_attrs.get("status_filter")
+            status_filter=extra_attrs.get("status_filter"),
         )
 
     def get_actions_info(self, pack: Optional[str] = None) -> List[ActionInfo]:
@@ -163,27 +200,31 @@ class AirflowProvider(BaseProvider):
         获取所有pack tag的dag的简单信息
         """
         try:
-            dags = self.airflow_client.get_dags(tags=(self.default_tag if not pack else pack,)).dags
+            dags = self.airflow_client.get_dags(
+                tags=(self.default_tag if not pack else pack,)
+            ).dags
             return [
                 ActionInfo(
                     name=d.dag_display_name,
                     description=d.description if d.description else d.dag_display_name,
-                    action_id=d.dag_id
-                ) for d in dags
+                    action_id=d.dag_id,
+                )
+                for d in dags
             ]
         except Exception as e:
             if pack:
-                raise ResolvePackageError(e, traceback.format_exc(), f"Resolve pack {pack} error")
+                raise ResolvePackageError(
+                    e, traceback.format_exc(), f"Resolve pack {pack} error"
+                )
             raise e
 
     def get_action_schema(self, dag_id: str) -> Optional[ActionSchema]:
         try:
             return self._build_action_from_dag_details(
-                self.airflow_client.get_schema_by_dag_id(dag_id),
-                dag_id
+                self.airflow_client.get_schema_by_dag_id(dag_id), dag_id
             )
         except Exception as e:
-            logger.error('get dag(id or tag) %s schema failed', dag_id)
+            logger.error("get dag(id or tag) %s schema failed", dag_id)
             logger.exception(e)
             return None
 
@@ -194,8 +235,8 @@ class AirflowProvider(BaseProvider):
         try:
             dag_ids = [ref]
             # 如果是.结尾表示是tag查询
-            if '.' in ref:
-                ref = ref.split('.')[-1]
+            if "." in ref:
+                ref = ref.split(".")[-1]
                 ref_to_dags = self.airflow_client.get_dags(tags=[ref, self.default_tag])
                 dag_ids = [d.dag_id for d in ref_to_dags]
 
@@ -203,13 +244,12 @@ class AirflowProvider(BaseProvider):
             for d in dag_ids:
                 hform_schemas.append(
                     self._build_action_from_dag_details(
-                        self.airflow_client.get_schema_by_dag_id(d.dag_id),
-                        ref
+                        self.airflow_client.get_schema_by_dag_id(d.dag_id), ref
                     )
                 )
             return hform_schemas
         except Exception as e:
-            logging.error('get dag(id or tag) %s schema error: %s', ref, str(e))
+            logging.error("get dag(id or tag) %s schema error: %s", ref, str(e))
             return []
 
     def get_result_url(self, ticket_name, dag_run_id):
@@ -222,43 +262,53 @@ class AirflowProvider(BaseProvider):
             msg=trigger_resp.state.value,
             ticket_name=trigger_resp.dag_id,
             runner=RunnerType.AIRFLOW,
-            result_url=self.get_result_url(trigger_resp.dag_id, trigger_resp.dag_run_id),
-            annotation={
-                "dag_version": trigger_resp.dag_versions[-1].version_number
-            }
+            result_url=self.get_result_url(
+                trigger_resp.dag_id, trigger_resp.dag_run_id
+            ),
+            annotation={"dag_version": trigger_resp.dag_versions[-1].version_number},
         )
 
-    def exec_ticket(self, ticket_name: str, parameters: Dict[str, Any], extra_info: str=None) -> Tuple[TicketExecInfo, str]:
+    def exec_ticket(
+        self, ticket_name: str, parameters: Dict[str, Any], extra_info: str = None
+    ) -> Tuple[TicketExecInfo, str]:
         logger.info("exec airflow dag %s with conf: %s", ticket_name, parameters)
         try:
-            trigger_result = self.airflow_client.trigger_dag(ticket_name, conf=parameters, extra_info=extra_info)
+            trigger_result = self.airflow_client.trigger_dag(
+                ticket_name, conf=parameters, extra_info=extra_info
+            )
             if trigger_result:
-                return self._build_execution_from_dag(trigger_result, ticket_name), ''
+                return self._build_execution_from_dag(trigger_result, ticket_name), ""
             raise Exception(f"trigger dag {ticket_name} failed")
         except Exception as e:
             logger.exception(e)
-            return None, f'exec ticket {ticket_name} failed, error: {str(e)}'
+            return None, f"exec ticket {ticket_name} failed, error: {str(e)}"
 
     def get_exec_annotation(self, execution: TicketExecInfo) -> Dict[str, Any]:
         return AirflowExecAnnotation(
             dag_id=execution.ticket_name,
             dag_run_id=execution.exec_id,
             result_url=execution.result_url,
-            dag_version=execution.annotation["dag_version"]
+            dag_version=execution.annotation["dag_version"],
         ).dict()
 
-    def _dag_graph_to_gojs_flow(self, dag_id: str, dag_version: int, task_result: TicketExecResultInfo) -> TicketGraph:
+    def _dag_graph_to_gojs_flow(
+        self, dag_id: str, dag_version: int, task_result: TicketExecResultInfo
+    ) -> TicketGraph:
         airflow_graph = self.airflow_client.get_dag_graph(dag_id, dag_version)
         result = TicketGraph()
         tasks_status: Dict[str, TicketExecTaskStatus] = {
-            t.task_id: TicketExecTaskStatus[t.state.value.upper()] if t.state else TicketExecTaskStatus.NO_STATUS \
+            t.task_id: (
+                TicketExecTaskStatus[t.state.value.upper()]
+                if t.state
+                else TicketExecTaskStatus.NO_STATUS
+            )
             for t in task_result.tasks
         }
         if airflow_graph:
             result.nodes = []
             result.edges = []
 
-            for node in airflow_graph['nodes']:
+            for node in airflow_graph["nodes"]:
                 nid = node["id"]
                 tstats = tasks_status[nid]
 
@@ -267,7 +317,11 @@ class AirflowProvider(BaseProvider):
                     status_emoji = StatusEmoji[tstats.value.upper()].value
                     status_stroke = StatusColor[tstats.value.upper()]
                 except Exception as e:
-                    logger.error("unknown task status %s for node %s, set to NO_STATUS", tstats, nid)
+                    logger.error(
+                        "unknown task status %s for node %s, set to NO_STATUS",
+                        tstats,
+                        nid,
+                    )
                     logger.exception(e)
                     status_emoji = StatusEmoji.NO_STATUS.value
                     status_stroke = StatusColor.NO_STATUS
@@ -276,20 +330,19 @@ class AirflowProvider(BaseProvider):
                     TicketGraphNode(
                         key=nid,
                         text=f"{status_emoji} {node['label']}",
-                        stroke=status_stroke
+                        stroke=status_stroke,
                     )
                 )
 
-            for edge in airflow_graph['edges']:
+            for edge in airflow_graph["edges"]:
                 result.edges.append(
-                    TicketGraphLink(
-                        to=edge["target_id"],
-                        from_=edge["source_id"]
-                    )
+                    TicketGraphLink(to=edge["target_id"], from_=edge["source_id"])
                 )
         return result
 
-    def _build_result_from_dag_exec(self, dag_run: DAGRunResponse, tis: TaskInstanceCollectionResponse) -> TicketExecResultInfo:
+    def _build_result_from_dag_exec(
+        self, dag_run: DAGRunResponse, tis: TaskInstanceCollectionResponse
+    ) -> TicketExecResultInfo:
         # 准备任务信息列表
         tasks_info: List[TicketExecTaskInfo] = []
 
@@ -309,21 +362,33 @@ class AirflowProvider(BaseProvider):
                 task_id=task_id,
                 created_at=None,
                 updated_at=None,
-                result=None
+                result=None,
             )
 
             task_info_results: Dict[str, TicketExecTaskDetails] = {}
             for task_instance in task_instance_list:
                 logger.debug(task_instance)
-                task_status = TicketExecTaskStatus(task_instance.state.value) if task_instance.state else TicketExecTaskStatus.NO_STATUS
-                if task_info.created_at is None or task_info.created_at > task_instance.start_date:
+                task_status = (
+                    TicketExecTaskStatus(task_instance.state.value)
+                    if task_instance.state
+                    else TicketExecTaskStatus.NO_STATUS
+                )
+                if (
+                    task_info.created_at is None
+                    or task_info.created_at > task_instance.start_date
+                ):
                     task_info.created_at = task_instance.start_date
 
-                if task_info.updated_at is None or task_info.updated_at < task_instance.end_date:
+                if (
+                    task_info.updated_at is None
+                    or task_info.updated_at < task_instance.end_date
+                ):
                     task_info.updated_at = task_instance.end_date
 
                 task_info.state = task_status
-                task_uniq_id = quote(f"{dag_run.dag_id}|{dag_run.dag_run_id}|{task_id}|{task_instance.try_number}")
+                task_uniq_id = quote(
+                    f"{dag_run.dag_id}|{dag_run.dag_run_id}|{task_id}|{task_instance.try_number}"
+                )
                 task_details = TicketExecTaskDetails(
                     status=task_status,
                     failed=task_instance.state == TaskInstanceState.FAILED,
@@ -331,29 +396,28 @@ class AirflowProvider(BaseProvider):
                     return_code=1,
                     succeeded=False,
                     stdout="",
-                    highlight_queries=""  # TODO: extract hq from dag schema info
+                    highlight_queries="",  # TODO: extract hq from dag schema info
                 )
 
                 if task_instance.try_number > 0:
                     log_query_info = {
-                        'output_load': True,
-                        'query_string': f'?exec_output_id={task_uniq_id}'
+                        "output_load": True,
+                        "query_string": f"?exec_output_id={task_uniq_id}",
                     }
                     is_task_succ = task_status == TicketExecTaskStatus.SUCCESS
-                    task_details.stderr = ''
+                    task_details.stderr = ""
                     task_details.return_code = 0 if is_task_succ else 1
                     task_details.succeeded = is_task_succ
                     task_details.stdout = log_query_info
 
-                task_info_results[f"{task_id} [{task_instance.try_number}]"] = task_details
+                task_info_results[f"{task_id} [{task_instance.try_number}]"] = (
+                    task_details
+                )
 
             task_info.result = task_info_results
             tasks_info.append(task_info)
 
-        return TicketExecTasksResult(
-            tasks=tasks_info,
-            id=dag_run.dag_run_id
-        )
+        return TicketExecTasksResult(tasks=tasks_info, id=dag_run.dag_run_id)
 
     def get_exec_result(self, annotation: Dict[str, Any]):
         exec_annotation = AirflowExecAnnotation().from_annotation(annotation)
@@ -364,29 +428,34 @@ class AirflowProvider(BaseProvider):
             logger.debug("dag_run: %s\n dag_ins: %s", dag_run, dag_instances)
             result = self._build_result_from_dag_exec(dag_run, dag_instances)
             graph = self._dag_graph_to_gojs_flow(
-                exec_annotation.dag_id,
-                exec_annotation.dag_version,
-                result
+                exec_annotation.dag_id, exec_annotation.dag_version, result
             )
-            return TicketExecResultInfo(
-                ticket_id=exec_annotation.dag_id,
-                status=TicketExecStatus(dag_run.state.value),
-                start_timestamp=dag_run.start_date,
-                result_url=exec_annotation.result_url,
-                result=result,
-                graph=graph
-            ), ''
+            return (
+                TicketExecResultInfo(
+                    ticket_id=exec_annotation.dag_id,
+                    status=TicketExecStatus(dag_run.state.value),
+                    start_timestamp=dag_run.start_date,
+                    result_url=exec_annotation.result_url,
+                    result=result,
+                    graph=graph,
+                ),
+                "",
+            )
         except Exception as e:
-            logger.error(f'get execution result from {exec_annotation}, error: {traceback.format_exc()}')
+            logger.error(
+                f"get execution result from {exec_annotation}, error: {traceback.format_exc()}"
+            )
             return None, str(e)
 
     def get_exec_log(self, execution_output_id: str) -> TicketTaskLog:
         try:
-            dag_id, dag_run_id, task_id, try_number = execution_output_id.split('|')
-            std_out = self.airflow_client.get_task_log(dag_id, dag_run_id, task_id, int(try_number))
+            dag_id, dag_run_id, task_id, try_number = execution_output_id.split("|")
+            std_out = self.airflow_client.get_task_log(
+                dag_id, dag_run_id, task_id, int(try_number)
+            )
             data = json.loads(std_out.read())
             logger.debug("log for %s: %s", execution_output_id, data)
-            if 'content' not in data:
+            if "content" not in data:
                 return TicketTaskLog(
                     message="Load log from airflow failed, no content found"
                 )
@@ -395,19 +464,24 @@ class AirflowProvider(BaseProvider):
                 content = data["content"]
                 is_truncated = len(content) > self.MAX_LOG_LINES
 
-                for e in content[-1 * self.MAX_LOG_LINES:]:
-                    if 'level' not in e or 'timestamp' not in e or 'event' not in e:
+                for e in content[-1 * self.MAX_LOG_LINES :]:
+                    if "level" not in e or "timestamp" not in e or "event" not in e:
                         continue
                     else:
-                        m.append(f"level={e['level']} time={e['timestamp']} msg=\"{e['event']}\"")
+                        m.append(
+                            f"level={e['level']} time={e['timestamp']} msg=\"{e['event']}\""
+                        )
 
                 if is_truncated:
                     m.append(
                         f"level=fatal, time={datetime.datetime.now()}, "
-                        f"msg=\"MAX LOG LINES({self.MAX_LOG_LINES}) reached, log truncated from head, like `tail -n`\""
+                        f'msg="MAX LOG LINES({self.MAX_LOG_LINES}) reached, log truncated from head, like `tail -n`"'
                     )
 
                 return TicketTaskLog(message="\n".join(m), load_success=True)
         except Exception as e:
             logger.exception(e)
-            return TicketTaskLog(message="Load log from airflow failed, contact admin for help", load_success=False)
+            return TicketTaskLog(
+                message="Load log from airflow failed, contact admin for help",
+                load_success=False,
+            )

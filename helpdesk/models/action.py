@@ -22,8 +22,8 @@ class ActionResolveError(Exception):
 
 
 class Action(DictSerializableClassMixin):
-    """action name, description/tips
-    """
+    """action name, description/tips"""
+
     def __init__(self, name: str, desc: str, provider_type: str, target_object: str):
         self.name = name
         self.desc = desc
@@ -31,7 +31,12 @@ class Action(DictSerializableClassMixin):
         self.provider_type = provider_type
 
     def __repr__(self):
-        return 'Action(%s, %s, %s, %s)' % (self.name, self.desc, self.target_object, self.provider_type)
+        return "Action(%s, %s, %s, %s)" % (
+            self.name,
+            self.desc,
+            self.target_object,
+            self.provider_type,
+        )
 
     __str__ = __repr__
 
@@ -62,14 +67,14 @@ class Action(DictSerializableClassMixin):
                     fill = fill(user)
                 parameters[k].default = fill
                 parameters[k].immutable = True
-        return {k:v.dict() for k, v in parameters.items()}
+        return {k: v.dict() for k, v in parameters.items()}
 
     def to_dict(self, provider=None, user=None, **kw):
         action_d = super(Action, self).to_dict(**kw)
         if provider and user:
-            action_d['params'] = self.parameters(provider, user)
+            action_d["params"] = self.parameters(provider, user)
             action = self.resolve_action(provider)
-            action_d['params_json_schema'] = action.params_json_schema
+            action_d["params_json_schema"] = action.params_json_schema
         return action_d
 
     async def run(self, provider, form, user):
@@ -77,23 +82,23 @@ class Action(DictSerializableClassMixin):
         extra_params = {}
         for k, v in self.parameters(provider, user).items():
             if k in TICKET_CALLBACK_PARAMS:
-                extra_params[k] = '-'
+                extra_params[k] = "-"
             if k in PARAM_FILLUP:
-                logger.debug('filling up parameter: %s, by value: %s', k, v['default'])
-                params[k] = v['default']
+                logger.debug("filling up parameter: %s, by value: %s", k, v["default"])
+                params[k] = v["default"]
                 continue
             live_value = form.get(k)
-            logger.debug('k: %s, v: %s, live_value: %s', k, v, live_value)
-            if v.get('immutable'):
+            logger.debug("k: %s, v: %s, live_value: %s", k, v, live_value)
+            if v.get("immutable"):
                 if live_value is not None:
-                    logger.warn('get a value for an immutable parameter, ignoring.')
+                    logger.warn("get a value for an immutable parameter, ignoring.")
                 continue
-            if v.get('required') and v.get('default') is None and not live_value:
-                msg = 'miss a value for a required parameter, aborting.'
+            if v.get("required") and v.get("default") is None and not live_value:
+                msg = "miss a value for a required parameter, aborting."
                 logger.error(msg)
                 return None, msg
             if live_value is not None:
-                if v.get('type') == 'boolean':
+                if v.get("type") == "boolean":
                     if live_value in ("true", "True", "TRUE", True):
                         live_value = True
                     else:
@@ -106,7 +111,10 @@ class Action(DictSerializableClassMixin):
                 params_pre = get_preprocess(preprocess_info["type"])
                 success, params = await params_pre.process(params)
                 if not success:
-                    return None, 'Failed to preprocess the params, please check ticket params'
+                    return (
+                        None,
+                        "Failed to preprocess the params, please check ticket params",
+                    )
         # create ticket
         ticket = Ticket(
             title=self.name,
@@ -115,12 +123,12 @@ class Action(DictSerializableClassMixin):
             params=params,
             extra_params=extra_params,
             submitter=user.name,
-            reason=params.get('reason'),
-            created_at=datetime.now()
+            reason=params.get("reason"),
+            created_at=datetime.now(),
         )
         policy = await ticket.get_flow_policy()
         if not policy:
-            return None, 'Failed to get ticket flow policy'
+            return None, "Failed to get ticket flow policy"
 
         ticket.annotate(nodes=policy.definition.get("nodes") or [])
         ticket.annotate(policy=policy.name)
@@ -128,8 +136,14 @@ class Action(DictSerializableClassMixin):
         current_node = ticket.init_node
         ticket.annotate(current_node=current_node.get("name"))
         approvers = await ticket.get_node_approvers(current_node.get("name"))
-        if not approvers and current_node.get("approver_type") == ApproverType.APP_OWNER:
-            return None, "Failed to get app approvers, please confirm that the app name is entered correctly"
+        if (
+            not approvers
+            and current_node.get("approver_type") == ApproverType.APP_OWNER
+        ):
+            return (
+                None,
+                "Failed to get app approvers, please confirm that the app name is entered correctly",
+            )
         ticket.annotate(approvers=approvers)
 
         ret, msg = await ticket.pre_approve()
@@ -140,11 +154,14 @@ class Action(DictSerializableClassMixin):
         ticket_added = await Ticket.get(id_)
 
         if ticket_added is None:
-            return ticket_added, 'Failed to create ticket.'
+            return ticket_added, "Failed to create ticket."
 
         if not ticket_added.is_approved:
             await ticket_added.notify(TicketPhase.REQUEST)
-            return ticket_added.to_dict(), 'Success. Your request has been submitted, please wait for approval.'
+            return (
+                ticket_added.to_dict(),
+                "Success. Your request has been submitted, please wait for approval.",
+            )
 
         # if this ticket is auto approved, execute it immediately
         execution, msg = ticket_added.execute()
@@ -153,7 +170,10 @@ class Action(DictSerializableClassMixin):
         await ticket_added.save()
 
         if not execution:
-            raise HTTPException(status_code=400, detail=f'Ticket execute failed: {msg[:100]}')
+            raise HTTPException(
+                status_code=400, detail=f"Ticket execute failed: {msg[:100]}"
+            )
         return (
             ticket_added.to_dict(),
-            'Success. Your request has been approved automatically, please go to ticket page for details')
+            "Success. Your request has been approved automatically, please go to ticket page for details",
+        )

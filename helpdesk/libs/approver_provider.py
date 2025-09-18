@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class ApproverProvider:
     source = None
-        
+
     async def get_approver_members(self) -> str:
         raise NotImplementedError
 
@@ -30,7 +30,11 @@ class GroupProvider(ApproverProvider):
         members = []
         group_users = await GroupUser.get_by_group_name(group_name=approver)
         if group_users:
-            members = [users for approvers in group_users for users in approvers.user_str.split(',')]
+            members = [
+                users
+                for approvers in group_users
+                for users in approvers.user_str.split(",")
+            ]
         return ",".join(members)
 
 
@@ -43,18 +47,20 @@ class DepartmentProvider(ApproverProvider):
 
 
 users_providers = {
-    'people': PeopleProvider,
-    'group': GroupProvider,
-    'department': DepartmentProvider,
+    "people": PeopleProvider,
+    "group": GroupProvider,
+    "department": DepartmentProvider,
 }
+
 
 def check_users_providers():
     try:
         from bridge import BridgeOwnerProvider
-        users_providers['app_owner'] = BridgeOwnerProvider
+
+        users_providers["app_owner"] = BridgeOwnerProvider
     except Exception as e:
         print("check_users_providers:%s", e)
-        logger.warning('Get BridgeOwnerProvider error: %s', e)
+        logger.warning("Get BridgeOwnerProvider error: %s", e)
         report()
 
 
@@ -63,4 +69,8 @@ def get_approver_provider(provider, **kw):
     try:
         return users_providers[provider](**kw)
     except Exception as e:
-        raise InitProviderError(error=e, tb=traceback.format_exc(), description=f"Init provider error: {str(e)}")
+        raise InitProviderError(
+            error=e,
+            tb=traceback.format_exc(),
+            description=f"Init provider error: {str(e)}",
+        )

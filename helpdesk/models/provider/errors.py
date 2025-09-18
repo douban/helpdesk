@@ -5,15 +5,12 @@ class ProviderError(Exception):
         self.tb = tb
 
     def __str__(self):
-        return '[{message}] {description}'.format(**self.to_dict())
+        return "[{message}] {description}".format(**self.to_dict())
 
     __repr__ = __str__
 
     def to_dict(self):
-        return {
-            'description': self.description,
-            'message': str(self.error)
-        }
+        return {"description": self.description, "message": str(self.error)}
 
 
 class ResolvePackageError(ProviderError):

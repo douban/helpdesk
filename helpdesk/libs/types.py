@@ -18,27 +18,27 @@ class RunnerType(Enum):
 
 
 class StatusColor(Enum):
-    SUCCESS = 'green'
-    RUNNING = '#00ff00'
-    FAILED = 'red'
-    SKIPPED = '#fecfd7'
-    UPSTREAM_FAILED = '#feba3f'
-    UP_FOR_RESCHEDULE = '#6fe7db'
-    UP_FOR_RETRY = '#fee03f'
-    QUEUED = '#808080'
-    NO_STATUS = '#fafafa'
+    SUCCESS = "green"
+    RUNNING = "#00ff00"
+    FAILED = "red"
+    SKIPPED = "#fecfd7"
+    UPSTREAM_FAILED = "#feba3f"
+    UP_FOR_RESCHEDULE = "#6fe7db"
+    UP_FOR_RETRY = "#fee03f"
+    QUEUED = "#808080"
+    NO_STATUS = "#fafafa"
 
 
 class StatusEmoji(Enum):
-    SUCCESS = '✅'
-    RUNNING = '🏃'
-    FAILED = '❌'
-    SKIPPED = '👉'
-    UPSTREAM_FAILED = '🔺'
-    UP_FOR_RESCHEDULE = '🔁'
-    UP_FOR_RETRY = '🔄'
-    QUEUED = '🫸'
-    NO_STATUS = '🤌'
+    SUCCESS = "✅"
+    RUNNING = "🏃"
+    FAILED = "❌"
+    SKIPPED = "👉"
+    UPSTREAM_FAILED = "🔺"
+    UP_FOR_RESCHEDULE = "🔁"
+    UP_FOR_RETRY = "🔄"
+    QUEUED = "🫸"
+    NO_STATUS = "🤌"
 
 
 class Param(BaseModel):
@@ -86,19 +86,19 @@ class TicketExecInfo(BaseModel):
 
 
 class TicketExecTaskStatus(Enum):
-    REMOVED = 'removed'
-    SCHEDULED = 'scheduled'
-    QUEUED = 'queued'
-    RUNNING = 'running'
-    SUCCESS = 'success'
-    RESTARTING = 'restarting'
-    FAILED = 'failed'
-    UP_FOR_RETRY = 'up_for_retry'
-    UP_FOR_RESCHEDULE = 'up_for_reschedule'
-    UPSTREAM_FAILED = 'upstream_failed'
-    SKIPPED = 'skipped'
-    DEFERRED = 'deferred'
-    NO_STATUS = 'no_status'
+    REMOVED = "removed"
+    SCHEDULED = "scheduled"
+    QUEUED = "queued"
+    RUNNING = "running"
+    SUCCESS = "success"
+    RESTARTING = "restarting"
+    FAILED = "failed"
+    UP_FOR_RETRY = "up_for_retry"
+    UP_FOR_RESCHEDULE = "up_for_reschedule"
+    UPSTREAM_FAILED = "upstream_failed"
+    SKIPPED = "skipped"
+    DEFERRED = "deferred"
+    NO_STATUS = "no_status"
 
 
 class TicketExecStatus(Enum):
@@ -144,13 +144,17 @@ class TicketGraphNode(BaseModel):
 
 class TicketGraphLink(BaseModel):
     to: str
-    from_: str = Field(serialization_alias='from')
+    from_: str = Field(serialization_alias="from")
 
 
 class TicketGraph(BaseModel):
     class_: str = Field(default="GraphLinksModel", serialization_alias="class")
-    nodes: List[TicketGraphNode] = Field(default=None, serialization_alias="nodeDataArray")
-    edges: List[TicketGraphLink] = Field(default=None, serialization_alias="linkDataArray")
+    nodes: List[TicketGraphNode] = Field(
+        default=None, serialization_alias="nodeDataArray"
+    )
+    edges: List[TicketGraphLink] = Field(
+        default=None, serialization_alias="linkDataArray"
+    )
 
 
 class TicketExecResultInfo(BaseModel):

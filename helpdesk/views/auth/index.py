@@ -22,41 +22,45 @@ for provider, info in OPENID_PRIVIDERS.items():
     oauth_clients[provider] = client
 
 
-@router.get('/oauth/{oauth_provider}')
+@router.get("/oauth/{oauth_provider}")
 async def oauth(request: Request):
 
-    oauth_provider = request.path_params.get('oauth_provider', '')
+    oauth_provider = request.path_params.get("oauth_provider", "")
     oauth_client = oauth_clients[oauth_provider]
 
     # FIXME: url_for behind proxy
-    url_path = request.app.router.url_path_for('callback', oauth_provider=oauth_provider)
+    url_path = request.app.router.url_path_for(
+        "callback", oauth_provider=oauth_provider
+    )
     redirect_uri = url_path.make_absolute_url(base_url=DEFAULT_BASE_URL)
 
     return await oauth_client.authorize_redirect(request, str(redirect_uri))
 
 
-@router.get('/callback/{oauth_provider}')
+@router.get("/callback/{oauth_provider}")
 async def callback(oauth_provider: str, request: Request):
     oauth_client = oauth_clients[oauth_provider]
 
     token = await oauth_client.authorize_access_token(request)
-    userinfo = token['userinfo']
+    userinfo = token["userinfo"]
     logger.debug("auth succeed %s", userinfo)
 
     username = oauth_username_func(userinfo)
-    email = userinfo['email']
+    email = userinfo["email"]
 
-    access = userinfo.get('resource_access', {})
-    roles = access.get(oauth_client.client_id, {}).get('roles', [])
+    access = userinfo.get("resource_access", {})
+    roles = access.get(oauth_client.client_id, {}).get("roles", [])
 
-    user = User(name=username, email=email, roles=roles, avatar=userinfo.get('picture', ''))
+    user = User(
+        name=username, email=email, roles=roles, avatar=userinfo.get("picture", "")
+    )
 
-    request.session['user'] = user.json()
+    request.session["user"] = user.json()
 
     return HTMLResponse("<script>window.close()</script>", 200)
 
 
-@router.post('/logout')
+@router.post("/logout")
 async def logout(request: Request):
-    request.session.pop('user', None)
-    return {'success': True, 'msg': ''}
+    request.session.pop("user", None)
+    return {"success": True, "msg": ""}
