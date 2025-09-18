@@ -82,12 +82,17 @@ class AirflowProvider(BaseProvider):
         json_schema的部分放在`helpdesk_ticket_callback_url`这个参数的`description_md`内
 
         这里需要把这些拼成原来的格式
+
+        关于多选:
+        - array + example = 多选 = helpdesk array
+        - array + enum = 单选 = helpdesk string
         """
         params_schema, json_schema = {}, {"type": "object", "properties": {}}
         extra_attrs = {}
 
         for param_name, schema_def in airflow_param.items():
             field_schema = schema_def["schema"]
+            logger.debug("field %s schema: %s", param_name, schema_def)
             extra_json_info = AirflowProvider.EXTRA_INFO_RE.match(field_schema.get("description_md", ""))
 
             immutable = False
@@ -95,6 +100,12 @@ class AirflowProvider(BaseProvider):
 
             airflow_param_type = ftype if not isinstance(ftype, list) else ftype[-1]
             helpdesk_param_type = ParamType(airflow_param_type)
+
+            # 这是helpdesk的单选，helpdesk只关心是否有enum类型, 有就是选择，如果array那就是多选，string那就单选
+            if helpdesk_param_type == ParamType.ARRAY and \
+               field_schema.get("enum") and \
+               not field_schema.get("examples"):
+                helpdesk_param_type = ParamType.STRING
 
             if extra_json_info:
                 extra_info = json.loads(extra_json_info.groups()[0])
@@ -120,7 +131,7 @@ class AirflowProvider(BaseProvider):
                 description=param_desc,
                 type=helpdesk_param_type,
                 required=not isinstance(ftype, list),
-                enum=field_schema.get("enum"),
+                enum=field_schema.get("enum", field_schema.get("examples")),
                 immutable=immutable,
                 default=field_schema.get("value")
             )
@@ -218,6 +229,7 @@ class AirflowProvider(BaseProvider):
         )
 
     def exec_ticket(self, ticket_name: str, parameters: Dict[str, Any], extra_info: str=None) -> Tuple[TicketExecInfo, str]:
+        logger.info("exec airflow dag %s with conf: %s", ticket_name, parameters)
         try:
             trigger_result = self.airflow_client.trigger_dag(ticket_name, conf=parameters, extra_info=extra_info)
             if trigger_result:

@@ -18,7 +18,7 @@ dev: venv env initdb
 
 backend-run: git
 	source /home/project/venv/bin/activate
-	/home/project/venv/bin/python -m uvicorn helpdesk:app --host 0.0.0.0 --port 8123 --log-level debug
+	/home/project/venv/bin/python -m uvicorn helpdesk:app --host 0.0.0.0 --port 8123 --log-level debug --log-config .doubanpde/logging_config.json
 
 .PHONY: frontend
 frontend: git

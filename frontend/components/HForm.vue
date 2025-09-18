@@ -193,44 +193,46 @@ export default {
         if (!err && values) {
           // validate success, let us proceed.
           const submitURL = '/api/action/' + this.actionName
-          const qs = require('qs')
+
+          const jsonFormData = {}
+
+          for (const [name, data] of Object.entries(this.formData)) {
+            if (!data) {
+              continue
+            }
+
+
+            const fieldType = this.actionDefinition.params[name].type
+
+            switch (fieldType) {
+              case 'array':
+                jsonFormData[name] = Array.isArray(data) ? data : [data];
+                break;
+              case 'integer':
+                jsonFormData[name] = parseInt(data);
+                break;
+              case 'number':
+                jsonFormData[name] = Number(data);
+                break;
+              case 'string':
+                jsonFormData[name] = Array.isArray(data) ? data.join(',') : data;
+                break;
+              default:
+                jsonFormData[name] = data;
+                break;
+            }
+          }
 
           // airflow json schema verify
-          if (this.actionDefinition.provider_type==='airflow' && this.actionDefinition.params_json_schema) {
+          if (this.actionDefinition.provider_type === 'airflow' && this.actionDefinition.params_json_schema) {
             let validate
             try {
               validate = this.formAjv.compile(this.actionDefinition.params_json_schema)
             } catch (e) {
               this.$message.error("init json schema failed, please contact sysadmin, " + e)
-              console.log("init json schema failed, please contact sysadmin, " + e) // eslint-disable-line no-console
               return
             }
 
-            const jsonFormData = {}
-            for (const [name, data] of Object.entries(this.formData)) {
-              if (!data) {
-                continue
-              }
-
-              // prevent json schema not covered this field
-              let fieldType
-              if (this.actionDefinition.params_json_schema.properties[name]) {
-                fieldType = this.actionDefinition.params_json_schema.properties[name].type
-              } else {
-                fieldType = null
-              }
-
-              // trans hacked form data to json schema data and validate them
-              if (fieldType === 'array') {
-                jsonFormData[name] = data
-              } else if (fieldType === "integer") {
-                jsonFormData[name] = parseInt(data)
-              } else if (fieldType === "number") {
-                jsonFormData[name] = Number(data)
-              } else {
-                jsonFormData[name] = data
-              }
-            }
             const isvalidate = validate(jsonFormData)
 
             if (!isvalidate) {
@@ -244,9 +246,10 @@ export default {
 
           const options = {
             method: 'POST',
-            headers: { 'content-type': 'application/x-www-form-urlencoded' },
-            data: qs.stringify(this.formData),
-            url: submitURL}
+            headers: { 'content-type': 'application/json' },
+            data: JSON.stringify(jsonFormData),
+            url: submitURL
+          }
           this.$axios(options).then((response) => {
             this.handleSubmitResult(response)
             this.showSubmitOK = true

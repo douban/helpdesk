@@ -156,7 +156,7 @@ class TicketGraph(BaseModel):
 class TicketExecResultInfo(BaseModel):
     ticket_id: str
     status: TicketExecStatus
-    start_timestamp: datetime
+    start_timestamp: Optional[datetime]
     result_url: str
     result: TicketExecTasksResult
     graph: TicketGraph

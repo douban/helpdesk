@@ -15,7 +15,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from fastapi import FastAPI
 
-from helpdesk.libs.auth import SessionAuthBackend, BearerAuthMiddleware
+from helpdesk.libs.auth import BearerAuthMiddleware
 from helpdesk.config import DEBUG, SESSION_SECRET_KEY, SESSION_TTL, SENTRY_DSN, TRUSTED_HOSTS,\
     ALLOW_ORIGINS_REG, ALLOW_ORIGINS
 from helpdesk.views.api import router as api_bp
@@ -29,7 +29,10 @@ def create_app():
         logging.warning('Sentry not configured')
         pass
 
-    logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
+    logging.basicConfig(
+        level=logging.DEBUG if DEBUG else logging.INFO,
+        format='%(asctime)s %(levelname)s %(filename)s:%(lineno)d %(message)s'
+    )
     logging.getLogger('requests').setLevel(logging.INFO)
     logging.getLogger('multipart').setLevel(logging.INFO)
     logging.getLogger('uvicorn').setLevel(logging.INFO)
@@ -57,4 +60,7 @@ def create_app():
 app = create_app()
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8123)
+    log_config = uvicorn.config.LOGGING_CONFIG
+    log_config["formatters"]["access"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
+    log_config["formatters"]["default"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
+    uvicorn.run(app, host="127.0.0.1", port=8123, log_config=log_config)

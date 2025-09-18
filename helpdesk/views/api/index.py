@@ -115,7 +115,13 @@ async def action(target_object: str, request: Request, current_user: User = Depe
         return action.to_dict(provider, current_user)
 
     if request.method == 'POST':
-        form = await request.form()
+        content_type = request.headers.get("Content-Type")
+
+        # for compatibility, support both form and json body
+        if content_type == "application/x-www-form-urlencoded":
+            form = await request.form()
+        else:
+            form = await request.json()
         ticket, msg = await action.run(provider, form, current_user)
         msg_level = 'success' if bool(ticket) else 'error'
         if not bool(ticket):

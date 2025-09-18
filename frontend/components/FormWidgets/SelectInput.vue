@@ -32,7 +32,6 @@ export default {
   },
   watch: {
     value () {
-      console.log(`watch value: ${this.value}`)
       if (!this.value) {
         this.selectedValues = []
       } else if (!Array.isArray(this.value)){
@@ -42,10 +41,11 @@ export default {
   },
   methods: {
     handleInput (event) {
-      console.log(event)
       let realValue;
       if (!Array.isArray(event)) {
         realValue = [event]
+      } else {
+        realValue = event
       }
       this.selectedValues = event
       this.$emit('input', realValue)
