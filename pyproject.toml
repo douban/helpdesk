@@ -1,4 +1,0 @@
-[tool.pyright]
-venvPath='.'
-venv="venv"
-exclude=['venv']
