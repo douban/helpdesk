@@ -5,8 +5,6 @@ from datetime import datetime
 from typing import Dict, Any
 from fastapi import HTTPException
 
-from httpx import HTTPError
-
 from helpdesk.libs.decorators import timed_cache
 from helpdesk.libs.preprocess import get_preprocess
 from helpdesk.libs.rest import DictSerializableClassMixin

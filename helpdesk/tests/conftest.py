@@ -94,7 +94,7 @@ async def test_group():
 
 @pytest.fixture
 def test_action():
-    return Action(name="申请账号", desc="申请账号", provider_object="account_action", provider_name="airflow")
+    return Action(name="申请账号", desc="申请账号", target_object="account_action", provider_type="airflow")
 
 
 @pytest.fixture
@@ -102,12 +102,12 @@ def mock_provider_action(monkeypatch: MonkeyPatch):
     mock_action = {
         'name': "account_action",
         'parameters': {
-            "app": {"description": "应用名称", "required": False, "type": "string" }, 
-            "department": {"description": "部门名称", "required": False, "type": "string" }, 
-            "helpdesk_ticket_callback_url": { "immutable": True, "required": False, "type": "string" }, 
-            "ldap_id": { "immutable": True, "required": True, "type": "string" }, 
-            "reason": { "description": "申请理由", "required": False, "type": "string" }, 
-            "role": { "description": "账号角色类型", "enum": [ "admin", "normal" ], "required": False, "type": "string" } 
+            "app": {"description": "应用名称", "required": False, "type": "string" },
+            "department": {"description": "部门名称", "required": False, "type": "string" },
+            "helpdesk_ticket_callback_url": { "immutable": True, "required": False, "type": "string" },
+            "ldap_id": { "immutable": True, "required": True, "type": "string" },
+            "reason": { "description": "申请理由", "required": False, "type": "string" },
+            "role": { "description": "账号角色类型", "enum": [ "admin", "normal" ], "required": False, "type": "string" }
         },
     }
     mock_get_action = Mock(return_value=mock_action)
