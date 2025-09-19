@@ -98,7 +98,7 @@ export default {
       if (this.isDagAvaliable) {
         this.currentComponent = 'SubTabNoRecursive'
         if (data.result.tasks) {
-          this.activeKey = data.result.tasks[0].id
+          this.activeKey = data.result.tasks[0].task_id
         }
       } else if (Object.keys(this.ticketResult).length === 2 && Object.keys(this.ticketResult).includes('tasks')) {
         this.currentComponent = 'SubTab'

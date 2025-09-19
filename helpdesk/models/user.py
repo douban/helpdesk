@@ -28,7 +28,7 @@ class User(BaseModel):
     def is_admin(self) -> bool:
         return any(role in ADMIN_ROLES for role in self.roles)
 
-    @validator('email')
+    @validator("email")
     def validate_email(cls, v):
         if not v:
             return v
@@ -37,8 +37,8 @@ class User(BaseModel):
                 return v
         raise ValueError("email domain illegal, not inside allowed domains")
 
-    @validator('avatar')
+    @validator("avatar")
     def set_defaults_avatar(cls, v, values):
-        if not v and values.get('email'):
-            return avatar_url_func(values['email'])
+        if not v and values.get("email"):
+            return avatar_url_func(values["email"])
         return v

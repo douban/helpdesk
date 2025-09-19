@@ -11,8 +11,6 @@ from helpdesk.libs.sentry import report
 
 logger = logging.getLogger(__name__)
 
-# objs = {}
-
 
 class ActionTree:
     def __init__(self, tree_config, level=0):
@@ -27,12 +25,16 @@ class ActionTree:
         self.build_from_config(tree_config)
 
     def __str__(self):
-        return 'ActionTree(%s, level=%s)' % (self.config, self.level)
+        return "ActionTree(%s, level=%s)" % (self.config, self.level)
 
     __repr__ = __str__
 
     def build_from_config(self, config):
-        assert type(config) is list, 'expect %s, got %s: %s' % ('list', type(config), config)
+        assert type(config) is list, "expect %s, got %s: %s" % (
+            "list",
+            type(config),
+            config,
+        )
         if not config:
             return
         self.name = config[0]
@@ -44,7 +46,7 @@ class ActionTree:
         else:
             # leaf
             provider_object = config[-1]
-            if provider_object.endswith('.'):
+            if provider_object.endswith("."):
                 # pack
                 pack_sub_tree_config = self.resolve_pack(*config)
                 self.build_from_config(pack_sub_tree_config)
@@ -64,7 +66,7 @@ class ActionTree:
 
         try:
             system_provider = get_provider(provider_type)
-            actions = system_provider.get_actions(pack=pack)
+            actions = system_provider.get_actions_info(pack=pack)
         except (InitProviderError, ResolvePackageError) as e:
             logger.error(f"Resolve pack {name} error:\n{e.tb}")
             # insert a empty children to failed action tree
@@ -72,18 +74,18 @@ class ActionTree:
             # and frontend can check children empty to notify user
             report()
 
-        for a in actions:
-            obj = a.get('name')
-            desc = a.get('description')
-            sub_actions.append([obj, desc, provider_type, a['id']])
+        for action in actions:
+            sub_actions.append(
+                [action.name, action.description, provider_type, action.action_id]
+            )
         return [name, sub_actions]
 
     @cached_property_with_ttl(300)
     def nexts(self):
         # if is pack, re-calc it
         if all(isinstance(c, str) for c in self.config):
-            if self.config[-1].endswith('.'):
-                logger.warn('recalc %s', self)
+            if self.config[-1].endswith("."):
+                logger.warn("recalc %s", self)
                 self._nexts = []
                 pack_sub_tree_config = self.resolve_pack(*self.config)
                 self.build_from_config(pack_sub_tree_config)
@@ -92,7 +94,7 @@ class ActionTree:
 
     @property
     def key(self):
-        return '{level}-{name}'.format(level=self.level, name=self.name)
+        return "{level}-{name}".format(level=self.level, name=self.name)
 
     def first(self):
         if self.action:
@@ -111,11 +113,12 @@ class ActionTree:
             if ret is not None:
                 return ret
 
-    def path_to(self, tree_node, pattern='{level}-{name}'):
+    def path_to(self, tree_node, pattern="{level}-{name}"):
         if not tree_node:
             return []
-        return self.path_to(tree_node.parent,
-                            pattern) + [pattern.format(**tree_node.__dict__) if pattern else tree_node]
+        return self.path_to(tree_node.parent, pattern) + [
+            pattern.format(**tree_node.__dict__) if pattern else tree_node
+        ]
 
     def get_tree_list(self, node_formatter):
         """
@@ -137,7 +140,9 @@ class ActionTree:
         return local_list
 
     def get_action_by_target_obj(self, target_object):
-        action_tree_leaf = self.find(target_object) if target_object != '' else self.first()
+        action_tree_leaf = (
+            self.find(target_object) if target_object != "" else self.first()
+        )
         if not action_tree_leaf:
             return
         return action_tree_leaf.action

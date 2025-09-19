@@ -16,8 +16,9 @@ async def test_flow_non_match(test_action, test_admin_user):
         params=params,
         extra_params={},
         submitter=test_admin_user.name,
-        reason=params.get('reason'),
-        created_at=datetime.now())
+        reason=params.get("reason"),
+        created_at=datetime.now(),
+    )
     policy = await ticket.get_flow_policy()
     assert policy == None
 
@@ -27,15 +28,54 @@ async def test_flow_non_match(test_action, test_admin_user):
     "params, policy_name, approvers, can_view",
     [
         pytest.param({}, "test_policy", "test_user", True),
-        pytest.param({"reason": "test_cc_policy_to_submitter", }, "test_cc_policy_to_submitter", "", False),
-        pytest.param({"reason": "test_cc_policy_to_others"}, "test_cc_policy_to_others", "test_user", True),
-        pytest.param({"reason": "test_approval_policy_by_group"}, "test_approval_policy_by_group", "test_user", True),
+        pytest.param(
+            {
+                "reason": "test_cc_policy_to_submitter",
+            },
+            "test_cc_policy_to_submitter",
+            "",
+            False,
+        ),
+        pytest.param(
+            {"reason": "test_cc_policy_to_others"},
+            "test_cc_policy_to_others",
+            "test_user",
+            True,
+        ),
+        pytest.param(
+            {"reason": "test_approval_policy_by_group"},
+            "test_approval_policy_by_group",
+            "test_user",
+            True,
+        ),
         # pytest.param({"reason": "test_approval_policy_by_app", "app": "test_app"}, "test_approval_policy_by_app", "", False),
-        pytest.param({"reason": "test_approval_policy_by_department", "department": "test_department"}, "test_approval_policy_by_department", "department_user", False),
-        pytest.param({"reason": "test_combined_policy"}, "test_combined_policy", "admin_user, normal_user", True),
-    ]
+        pytest.param(
+            {
+                "reason": "test_approval_policy_by_department",
+                "department": "test_department",
+            },
+            "test_approval_policy_by_department",
+            "department_user",
+            False,
+        ),
+        pytest.param(
+            {"reason": "test_combined_policy"},
+            "test_combined_policy",
+            "admin_user, normal_user",
+            True,
+        ),
+    ],
 )
-async def test_flow_match(test_action, test_admin_user, params, policy_name, approvers, can_view, test_all_policy, test_user):
+async def test_flow_match(
+    test_action,
+    test_admin_user,
+    params,
+    policy_name,
+    approvers,
+    can_view,
+    test_all_policy,
+    test_user,
+):
     # 测试ticket和policy的匹配 - 默认审批流
     ticket = Ticket(
         title="test",
@@ -44,12 +84,17 @@ async def test_flow_match(test_action, test_admin_user, params, policy_name, app
         params=params,
         extra_params={},
         submitter=test_admin_user.name,
-        reason=params.get('reason'),
-        created_at=datetime.now())
+        reason=params.get("reason"),
+        created_at=datetime.now(),
+    )
     policy = await ticket.get_flow_policy()
     assert policy.name == policy_name
     # 测试节点 approver 获取
-    ticket.annotate(nodes=policy.definition.get("nodes") or [], policy=policy.name, approval_log=list())
+    ticket.annotate(
+        nodes=policy.definition.get("nodes") or [],
+        policy=policy.name,
+        approval_log=list(),
+    )
     current_node = ticket.init_node.get("name")
     ticket.annotate(current_node=current_node)
     node_approvers = await ticket.get_node_approvers(current_node)
@@ -62,13 +107,51 @@ async def test_flow_match(test_action, test_admin_user, params, policy_name, app
 @pytest.mark.parametrize(
     "phase, params, mail_approvers, notify_approvers, notify_type, notify_people",
     [
-        pytest.param(TicketPhase.REQUEST, {}, "test_user", "test_user", NodeType.APPROVAL, "test_user"),
-        pytest.param(TicketPhase.APPROVAL, {}, "test_user,admin_user@example.com", "", NodeType.CC, 'test_user,admin_user'),
-        pytest.param(TicketPhase.MARK, {}, "test_user,admin_user@example.com", "", NodeType.CC, 'admin_user'),
-        pytest.param(TicketPhase.REQUEST, {"reason": "test_cc_policy_to_submitter"}, "", "", NodeType.CC, "admin_user"),
-    ]
+        pytest.param(
+            TicketPhase.REQUEST,
+            {},
+            "test_user",
+            "test_user",
+            NodeType.APPROVAL,
+            "test_user",
+        ),
+        pytest.param(
+            TicketPhase.APPROVAL,
+            {},
+            "test_user,admin_user@example.com",
+            "",
+            NodeType.CC,
+            "test_user,admin_user",
+        ),
+        pytest.param(
+            TicketPhase.MARK,
+            {},
+            "test_user,admin_user@example.com",
+            "",
+            NodeType.CC,
+            "admin_user",
+        ),
+        pytest.param(
+            TicketPhase.REQUEST,
+            {"reason": "test_cc_policy_to_submitter"},
+            "",
+            "",
+            NodeType.CC,
+            "admin_user",
+        ),
+    ],
 )
-async def test_mail_notify(test_action, test_admin_user, test_all_policy, phase, params, mail_approvers, notify_approvers, notify_type, notify_people):
+async def test_mail_notify(
+    test_action,
+    test_admin_user,
+    test_all_policy,
+    phase,
+    params,
+    mail_approvers,
+    notify_approvers,
+    notify_type,
+    notify_people,
+):
     # 测试通知
     ticket = Ticket(
         title="test",
@@ -78,9 +161,14 @@ async def test_mail_notify(test_action, test_admin_user, test_all_policy, phase,
         extra_params={},
         submitter=test_admin_user.name,
         reason=params.get("reason"),
-        created_at=datetime.now())
+        created_at=datetime.now(),
+    )
     policy = await ticket.get_flow_policy()
-    ticket.annotate(nodes=policy.definition.get("nodes") or [], policy=policy.name, approval_log=list())
+    ticket.annotate(
+        nodes=policy.definition.get("nodes") or [],
+        policy=policy.name,
+        approval_log=list(),
+    )
     current_node = ticket.init_node.get("name")
     ticket.annotate(current_node=current_node)
     approvers = await ticket.get_node_approvers(current_node)
@@ -109,12 +197,17 @@ async def test_node_transfer(test_action, test_admin_user, test_combined_policy)
         extra_params={},
         submitter=test_admin_user.name,
         reason="test_combined_policy",
-        created_at=datetime.now())
+        created_at=datetime.now(),
+    )
     policy = await ticket.get_flow_policy()
 
-    ticket.annotate(nodes=policy.definition.get("nodes") or [], policy=policy.name, approval_log=list())
+    ticket.annotate(
+        nodes=policy.definition.get("nodes") or [],
+        policy=policy.name,
+        approval_log=list(),
+    )
     current_node = ticket.init_node.get("name")
     ticket.annotate(current_node=current_node)
     ret, msg = await ticket.approve()
     assert ret == True
-    assert msg == 'Success'
+    assert msg == "Success"

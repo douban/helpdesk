@@ -25,14 +25,14 @@ class Validator:
         self.metadata_url = metadata_url
         self.client_id = client_id
         if not self.client_id:
-            raise ValueError('Init validator failed, client_id not set')
-        self.client_kwargs = kwargs.get('client_kwargs')
+            raise ValueError("Init validator failed, client_id not set")
+        self.client_kwargs = kwargs.get("client_kwargs")
         self.fetch_jwk()
 
     def fetch_jwk(self):
         # Fetch the public key for validating Bearer token
         server_metadata = self.get(self.metadata_url)
-        self.jwk = self.get(server_metadata['jwks_uri'])
+        self.jwk = self.get(server_metadata["jwks_uri"])
 
     def get(self, *args, **kwargs):
         if self.client_kwargs:
@@ -57,9 +57,10 @@ class Validator:
                 self.fetch_jwk()
             token = jwt.decode(token, self.jwk)
         except ValueError as e:
-            if str(e) == 'Invalid JWK kid':
+            if str(e) == "Invalid JWK kid":
                 logger.info(
-                    'This token cannot be decoded with current provider, will try another provider if available.')
+                    "This token cannot be decoded with current provider, will try another provider if available."
+                )
                 return True, None
             else:
                 report()
@@ -72,10 +73,10 @@ class Validator:
             token.validate()
             return True, token
         except ExpiredTokenError as e:
-            logger.info('Auth header expired, %s', e)
+            logger.info("Auth header expired, %s", e)
             return False, None
         except JoseError as e:
-            logger.debug('Jose error: %s', e)
+            logger.debug("Jose error: %s", e)
             report()
             return False, None
 
@@ -83,7 +84,7 @@ class Validator:
 registed_validator = {}
 
 for provider, info in OPENID_PRIVIDERS.items():
-    client = Validator(metadata_url=info['server_metadata_url'], **info)
+    client = Validator(metadata_url=info["server_metadata_url"], **info)
     registed_validator[provider] = client
 
 
@@ -91,8 +92,13 @@ for provider, info in OPENID_PRIVIDERS.items():
 class SessionAuthBackend(AuthenticationBackend):
     async def authenticate(self, request):
         from helpdesk.models.user import User
-        logger.debug('request.session: %s, user: %s', request.session, request.session.get('user'))
-        userinfo = request.session.get('user')
+
+        logger.debug(
+            "request.session: %s, user: %s",
+            request.session,
+            request.session.get("user"),
+        )
+        userinfo = request.session.get("user")
         if not userinfo:
             return AuthCredentials([]), UnauthenticatedUser()
 
@@ -118,23 +124,32 @@ class BearerAuthMiddleware(BaseHTTPMiddleware):
                         # not valid in this provider, try next
                         continue
                     # check aud and iss
-                    aud = id_token.get('aud')
-                    if id_token.get('azp') != validator.client_id and (not aud or validator.client_id not in aud):
-                        logger.info('Token is valid, not expired, but not belonged to this client')
+                    aud = id_token.get("aud")
+                    if id_token.get("azp") != validator.client_id and (
+                        not aud or validator.client_id not in aud
+                    ):
+                        logger.info(
+                            "Token is valid, not expired, but not belonged to this client"
+                        )
                         break
                     logger.info("Validate token with %s success", validator_name)
                     username = oauth_username_func(id_token)
-                    email = id_token.get('email', '')
-                    access = id_token.get('resource_access', {})
-                    roles = access.get(validator.client_id, {}).get('roles', [])
+                    email = id_token.get("email", "")
+                    access = id_token.get("resource_access", {})
+                    roles = access.get(validator.client_id, {}).get("roles", [])
 
-                    user = User(name=username, email=email, roles=roles, avatar=id_token.get('picture', ''))
+                    user = User(
+                        name=username,
+                        email=email,
+                        roles=roles,
+                        avatar=id_token.get("picture", ""),
+                    )
 
-                    request.session['user'] = user.json()
+                    request.session["user"] = user.json()
                     break
         response = await call_next(request)
         return response
 
 
 def unauth(request):
-    return request.session.pop('user', None)
+    return request.session.pop("user", None)

@@ -1,8 +1,13 @@
 <template>
   <a-layout>
-    <a-layout-sider  width="300" class="whiteBackground">
+    <a-layout-sider v-model="collapsed" width="300px" class="whiteBackground" collapsible :trigger=null>
       <a-layout class="whiteBackground">
         <h-sider></h-sider>
+        <a-icon
+          class="trigger" style="margin-top: 20px; margin-bottom: 20px"
+          :type="collapsed ? 'menu-unfold' : 'menu-fold'"
+          @click="() => (collapsed = !collapsed)"
+        />
       </a-layout>
     </a-layout-sider>
     <a-layout-content>
@@ -13,7 +18,9 @@
 
 <script>
 export default {
-  name: 'Index'
+  data() {
+    return { collapsed: false };
+  }
 }
 </script>
 

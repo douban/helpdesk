@@ -16,18 +16,14 @@ metadata:
     webEditorType: ""
   name: "helpdesk"
   annotations:
-    pdectl.douban.com/cfg/exec-cmd: '{{ .CliArgs.String "exec-default-cmd" }}'
+    pdectl.douban.com/exec-cmd: '{{ .CliArgs.String "exec-default-cmd" }}'
 spec:
   containers:
     - name: "main"
       env:
         - name: HOSTNAME
           value: "helpdesk-main"
-        - name: PIDLPROXY_CLIENT_HOST
-          value: 10.0.2.2
-        - name: SCRIBE_HOST
-          value: 10.0.2.2
-      image: "docker.douban/sa/pde-python-cli:latest-3.9"
+      image: "docker.douban/sa/pde-python-cli:latest-3.12-v2"
       ports:
       volumeMounts:
         # mount code folder

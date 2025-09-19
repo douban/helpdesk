@@ -32,7 +32,7 @@
         >Reset</a-button>
       </div>
       <a-icon slot="filterIcon" slot-scope="filtered" type='search' :style="{ color: filtered ? '#108ee9' : undefined }" />
-      <template slot="expandedRowRender" slot-scope="record" style="margin: 0">
+      <template slot="expandedRowRender" slot-scope="record" style="margin: 0;">
         <a-spin :spinning="spinning">
           <span v-show="record.traceback !== '' && record.traceback !== undefined">
             <h3><b>traceback:</b></h3>
@@ -84,7 +84,7 @@ export default {
       },
       columns: [
         {
-          title: 'Host',
+          title: 'Task',
           dataIndex: 'name',
           key: 'name',
           scopedSlots: {
@@ -203,17 +203,17 @@ export default {
           if (std[io]) {
             this.spinning = true
             const queryString = io === 'stdout' ? record.stdout.query_string : record.stderr.query_string
-            this.$axios.get('/api/ticket/' + this.ticketId + '/result' + queryString).then(
+            this.$axios.get('/api/ticket/' + this.ticketId + '/result_log' + queryString).then(
               (response) => {
                 // if pretty log then show model
                 if (response.data.pretty_log) {
-                  const prettyLog = response.data.pretty_log[0]
+                  const prettyLog = response.data.pretty_log
                   if (prettyLog) {
                     this.handleFormattedLog(prettyLog)
                     record.prettyLog = prettyLog
                   }
                 }
-                const output = response.data[0] ? response.data[0] : response.data.message[0]
+                const output = response.data.message
                 if (io === 'stdout') {
                   record.stdout = output
                 } else {
@@ -232,7 +232,7 @@ export default {
     },
 
     handleRowKey (record) {
-      return 'tickets-result-' + record.id
+      return 'tickets-result-' + record.task_id
     }
   }
 }

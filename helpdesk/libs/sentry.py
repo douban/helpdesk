@@ -43,22 +43,22 @@ def report(msg=None, **kw):
     if not _hub:
         return
     try:
-        extra = kw.pop('extra', {})
+        extra = kw.pop("extra", {})
 
         with sentry_sdk.push_scope() as scope:
             for k, v in extra.items():
                 scope.set_extra(k, v)
-            scope.level = kw.pop('level', logging.ERROR)
+            scope.level = kw.pop("level", logging.ERROR)
 
-            if 'user' in kw:
-                scope.user = kw.get('user')
+            if "user" in kw:
+                scope.user = kw.get("user")
 
             if msg:
                 _hub.capture_message(msg, level=scope.level)
             else:
                 _hub.capture_exception()
     except Exception:
-        logger.exception('report to sentry failed: ')
+        logger.exception("report to sentry failed: ")
 
 
 def send_sentry(func):
@@ -69,4 +69,5 @@ def send_sentry(func):
         except Exception:
             report()
             raise
+
     return _

@@ -5,4 +5,4 @@ from fastapi import APIRouter
 router = APIRouter()
 
 
-from . import index # NOQA
+from . import index  # NOQA

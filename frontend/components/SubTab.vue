@@ -1,5 +1,5 @@
 <template functional>
-  <a-tabs type="card" :tab-position="props.ticketProvider==='st2' ? 'top':'left'">
+  <a-tabs type="card" :tab-position="left">
     <a-tab-pane v-for="(value, index) in props.resultData.tasks" :key="index">
       <template slot="tab">
         <a-icon v-if="value.state==='succeeded'" type="check-circle" theme="twoTone" two-tone-color="#52c41a" />

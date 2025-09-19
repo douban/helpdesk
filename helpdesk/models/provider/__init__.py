@@ -3,16 +3,10 @@
 import traceback
 
 from helpdesk.libs.decorators import timed_cache
-from helpdesk.models.provider.errors import InitProviderError, ResolvePackageError
-from .st2 import ST2Provider
-from .airflow import AirflowProvider
-from .spincycle import SpinCycleProvider
+from helpdesk.models.provider.errors import InitProviderError
+from helpdesk.models.provider.airflow import AirflowProvider
 
-_providers = {
-    'st2': ST2Provider,
-    'airflow': AirflowProvider,
-    'spincycle': SpinCycleProvider,
-}
+_providers = {"airflow": AirflowProvider}
 
 
 @timed_cache(minutes=15)
@@ -20,4 +14,8 @@ def get_provider(provider, **kw):
     try:
         return _providers[provider](**kw)
     except Exception as e:
-        raise InitProviderError(error=e, tb=traceback.format_exc(), description=f"Init provider error: {str(e)}")
+        raise InitProviderError(
+            error=e,
+            tb=traceback.format_exc(),
+            description=f"Init provider error: {str(e)}",
+        )

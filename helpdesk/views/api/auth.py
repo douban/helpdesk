@@ -9,6 +9,6 @@ from . import router
 logger = logging.getLogger(__name__)
 
 
-@router.get('/auth/providers')
+@router.get("/auth/providers")
 async def index():
     return list(OPENID_PRIVIDERS.keys())

@@ -1,4 +1,3 @@
-
 # coding: utf-8
 
 import logging
@@ -14,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_current_user(request: Request):
-    userinfo = request.session.get('user')
+    userinfo = request.session.get("user")
     if not userinfo:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -27,6 +26,8 @@ def get_current_user(request: Request):
 
 def require_admin(user: User = Depends(get_current_user)):
     if user.roles:
-        if 'admin' in user.roles:
+        if "admin" in user.roles:
             return user
-    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin role required")
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN, detail="Admin role required"
+    )

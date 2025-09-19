@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 class ParamRule(db.Model):
-    __tablename__ = 'param_rule'
-    __table_args__ = {'mysql_charset': 'utf8mb4'}
+    __tablename__ = "param_rule"
+    __table_args__ = {"mysql_charset": "utf8mb4"}
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(length=64))
@@ -29,7 +29,9 @@ class ParamRule(db.Model):
     updated_at = db.Column(db.DateTime)
 
     @classmethod
-    async def get_all_by_provider_object(cls, provider_object, desc=False, limit=None, offset=None):
+    async def get_all_by_provider_object(
+        cls, provider_object, desc=False, limit=None, offset=None
+    ):
         filter_ = cls.__table__.c.provider_object == provider_object
         return await cls.get_all(filter_=filter_, desc=desc, limit=limit, offset=offset)
 
@@ -37,5 +39,7 @@ class ParamRule(db.Model):
         try:
             return Rule(self.rule).match(context)
         except Exception:
-            logger.exception('Failed to match ParamRule: %s, context: %s', self.rule, context)
+            logger.exception(
+                "Failed to match ParamRule: %s, context: %s", self.rule, context
+            )
             return False
