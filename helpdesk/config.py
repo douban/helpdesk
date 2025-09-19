@@ -63,13 +63,10 @@ SYSTEM_USER = "admin"
 SYSTEM_PASSWORD = "password"
 
 AIRFLOW_SERVER_URL = "https://airflow.example.com"
+AIRFLOW_JWT_EXPIRATION_SECONDS=86400
 AIRFLOW_USERNAME = ""
 AIRFLOW_PASSWORD = ""
 AIRFLOW_DEFAULT_DAG_TAG = "helpdesk"
-
-SPINCYCLE_RM_URL = "https://spincycle.example.com"
-SPINCYCLE_USERNAME = ""
-SPINCYCLE_PASSWORD = ""
 
 PREPROCESS_TICKET = [{"type": "test", "actions": ["test"]}]
 

@@ -17,7 +17,7 @@ from typing import List, Dict, Optional, Any, Tuple, Self
 
 from helpdesk.config import (
     AIRFLOW_SERVER_URL,
-    AIRFLOW_JWT_EXPIRATION_TIME,
+    AIRFLOW_JWT_EXPIRATION_SECONDS,
     AIRFLOW_USERNAME,
     AIRFLOW_PASSWORD,
     AIRFLOW_DEFAULT_DAG_TAG,
@@ -85,7 +85,7 @@ class AirflowProvider(BaseProvider):
             username=AIRFLOW_USERNAME,
             passwd=AIRFLOW_PASSWORD,
             server_url=AIRFLOW_SERVER_URL,
-            jwt_expire_seconds=AIRFLOW_JWT_EXPIRATION_TIME,
+            jwt_expire_seconds=AIRFLOW_JWT_EXPIRATION_SECONDS,
         )
         self.default_tag = AIRFLOW_DEFAULT_DAG_TAG
         self.default_status_filter = ()
