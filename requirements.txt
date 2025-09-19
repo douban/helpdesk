@@ -19,3 +19,4 @@ fastapi==0.*
 fastapi_pagination==0.9.3
 apache-airflow-client==3.0.2
 requests
+pytz
