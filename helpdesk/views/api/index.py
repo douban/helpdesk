@@ -363,6 +363,11 @@ async def ticket_result_log(
         raise HTTPException(status_code=404, detail="ticket not found")
 
     ticket_log = ticket.get_result_log(exec_output_id)
+
+    if ticket_log.is_rotated:
+        ticket_log.message = "ticket log expired, contact admin for help"
+        return ticket_log
+
     if not ticket_log.load_success:
         raise HTTPException(status_code=500, detail=ticket_log.message)
     return ticket_log
