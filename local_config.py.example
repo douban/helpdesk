@@ -87,16 +87,16 @@ def avatar_url_func(email):
 example1_subtree = [
     'subtree example1 name',
     [
-        ['Ticket Pack name', 'Ticket Group description', 'pack.'],
-        ['Ticket name', 'Ticket description', ''],
+        ['Ticket Pack name', 'Ticket Group description', 'provider_name', 'pack.'],
+        ['Ticket name', 'Ticket description', 'provider_name', 'action_ref'],
     ]
 ]
 
 example2_subtree = [
     'subtree example2 name',
     [
-        ['Ticket Pack name', 'Ticket Group description', 'pack.'],
-        ['Ticket name', 'Ticket description', ''],
+        ['Ticket Pack name', 'Ticket Group description', 'provider_name', 'pack.'],
+        ['Ticket name', 'Ticket description', 'provider_name', 'action_ref'],
     ]
 ]
 

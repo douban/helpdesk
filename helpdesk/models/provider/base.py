@@ -12,10 +12,28 @@ from helpdesk.libs.types import (
 
 class BaseProvider:
     """
-    action: capbility to execute a seirion of tasks
-    ticket: action with args
+    action: capability to execute a series of tasks.
+    ticket: an action with specified arguments.
+    pack: a collection of actions; the provider needs to provide a way to resolve the action list by pack.
+          This serves as an automatic discovery method for tickets. For example, you can map a pack to an Airflow DAG tag.
+          If anyone writes a DAG with this tag (pack), the helpdesk will show this DAG as a helpdesk action.
+          Pack is defined in action tree config with a dot as postfix.
+    action_name: an internal unique identifier for the action; the provider should offer a way to retrieve the schema
+          by the action_name.
+    ticket_name: same as action_name.
+    execution: when the provider receives a ticket submission, it should send the ticket to the actual backend
+          and return immediately. The provider should not wait for the ticket execution to complete.
+          The provider should save the execution metadata as annotations and wait for the user to request
+          the ticket result.
 
-    if action is class in python, ticket is the instance of this class
+    The provider's call chain is as follows:
+
+    - User requests the action tree list by `get_actions_info`.
+    - User selects a ticket by `get_action_schema`.
+    - User submits a ticket that has been approved via `exec_ticket`.
+    - Provider saves execution metadata using `get_exec_annotation`.
+    - User checks the ticket result by `get_exec_result`.
+    - User checks task logs using `get_exec_log`.
     """
 
     provider_type = None
@@ -41,9 +59,6 @@ class BaseProvider:
 
     def get_actions_info(self, pack: Optional[str]) -> List[ActionInfo]:
         "get actions simple info"
-        raise NotImplementedError()
-
-    def get_actions_schema_by_pack(self, pack_name: str) -> List[ActionSchema]:
         raise NotImplementedError()
 
     def get_action_schema(self, action_name: str) -> Optional[ActionSchema]:

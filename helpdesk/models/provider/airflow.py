@@ -228,30 +228,6 @@ class AirflowProvider(BaseProvider):
             logger.exception(e)
             return None
 
-    def get_actions_schema_by_pack(self, ref: str) -> List[ActionSchema]:
-        """
-        根据dag tag获取dags schema list
-        """
-        try:
-            dag_ids = [ref]
-            # 如果是.结尾表示是tag查询
-            if "." in ref:
-                ref = ref.split(".")[-1]
-                ref_to_dags = self.airflow_client.get_dags(tags=[ref, self.default_tag])
-                dag_ids = [d.dag_id for d in ref_to_dags]
-
-            hform_schemas = []
-            for d in dag_ids:
-                hform_schemas.append(
-                    self._build_action_from_dag_details(
-                        self.airflow_client.get_schema_by_dag_id(d.dag_id), ref
-                    )
-                )
-            return hform_schemas
-        except Exception as e:
-            logging.error("get dag(id or tag) %s schema error: %s", ref, str(e))
-            return []
-
     def get_result_url(self, ticket_name, dag_run_id):
         return self.airflow_client.build_graph_url(ticket_name, dag_run_id)
 
