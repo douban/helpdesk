@@ -457,7 +457,8 @@ class AirflowProvider(BaseProvider):
             logger.debug("log for %s: %s", execution_output_id, data)
             if "content" not in data:
                 return TicketTaskLog(
-                    message="Load log from airflow failed, no content found"
+                    message="Load log from airflow failed, no content found, maybe rotated",
+                    is_rotated=True
                 )
             else:
                 m = []

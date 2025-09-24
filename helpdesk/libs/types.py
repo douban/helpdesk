@@ -169,4 +169,5 @@ class TicketExecResultInfo(BaseModel):
 class TicketTaskLog(BaseModel):
     message: str
     load_success: bool = False
+    is_rotated: bool = False
     pretrty_log: Optional[str] = None

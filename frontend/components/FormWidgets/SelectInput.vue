@@ -6,6 +6,7 @@
     :wrapper-col="{ span: 12 }"
   >
     <v-select
+      v-decorator="decorator()"
       :name="name"
       :options="options"
       :multiple="multiple"
@@ -13,11 +14,10 @@
       :searchable="true"
       :filterable="true"
       :select-on-tab="true"
-      :value="selectedValues"
+      :value="value"
       @input="handleInput"
       @keypress.enter.native.prevent=""
     ></v-select>
-    <input v-decorator="decorator()" type='hidden' :value="value"/>
   </a-form-item>
 </template>
 
@@ -25,30 +25,9 @@
 export default {
   name: 'SelectInput',
   props: ['placeholder', 'label', 'name', 'value', 'options', 'required', 'extra', 'multiple'],
-  data () {
-    return {
-      selectedValues: []
-    }
-  },
-  watch: {
-    value () {
-      if (!this.value) {
-        this.selectedValues = []
-      } else if (!Array.isArray(this.value)){
-          this.selectedValues = [this.value]
-      }
-    }
-  },
   methods: {
     handleInput (event) {
-      let realValue;
-      if (!Array.isArray(event)) {
-        realValue = [event]
-      } else {
-        realValue = event
-      }
-      this.selectedValues = event
-      this.$emit('input', realValue)
+      this.$emit('input', event)
     },
     decorator () {
       return [
