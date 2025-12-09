@@ -441,13 +441,16 @@ class AirflowProvider(BaseProvider):
                 content = data["content"]
                 is_truncated = len(content) > self.MAX_LOG_LINES
 
-                for e in content[-1 * self.MAX_LOG_LINES :]:
+                for e in content[-1 * self.MAX_LOG_LINES:]:
                     if "level" not in e or "timestamp" not in e or "event" not in e:
                         continue
                     else:
                         m.append(
                             f"level={e['level']} time={e['timestamp']} msg=\"{e['event']}\""
                         )
+                        if "error_detail" in e:
+                            for detail in e['error_detail']:
+                                m.append(f"    {detail.get('exc_type', '')}: {detail.get('exc_value', '')}")
 
                 if is_truncated:
                     m.append(
