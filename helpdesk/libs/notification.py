@@ -211,8 +211,9 @@ class WebhookEventNotification(Notification):
             return
         message = self.render()
         r = requests.post(
-            WEBHOOK_EVENT_URL, data=message.model_dump_json().encode("utf-8")
+            WEBHOOK_EVENT_URL, json=message.model_dump(mode="json")
         )
+        print(r.status_code, r.text)
         if r.status_code == 200:
             return
         else:
