@@ -197,7 +197,7 @@ export default {
           const jsonFormData = {}
 
           for (const [name, data] of Object.entries(this.formData)) {
-            if (!data) {
+            if (data === undefined || data === null || data === '') {
               continue
             }
 
