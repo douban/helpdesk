@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "test": "node --test tests/*.test.cjs",
     "dev": "nuxt",
     "build": "nuxt build",
     "start": "nuxt start",

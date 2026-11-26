@@ -93,11 +93,12 @@ class Action(DictSerializableClassMixin):
                 if live_value is not None:
                     logger.warn("get a value for an immutable parameter, ignoring.")
                 continue
-            if v.get("required") and v.get("default") is None and not live_value:
+            missing_value = live_value is None or live_value == "" or live_value == []
+            if v.get("required") and v.get("default") is None and missing_value:
                 msg = "miss a value for a required parameter, aborting."
                 logger.error(msg)
                 return None, msg
-            if live_value is not None:
+            if live_value is not None and live_value != "":
                 if v.get("type") == "boolean":
                     if live_value in ("true", "True", "TRUE", True):
                         live_value = True

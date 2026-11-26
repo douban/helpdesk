@@ -120,7 +120,11 @@ class AirflowProvider(BaseProvider):
             immutable = False
             ftype = field_schema["type"]
 
-            airflow_param_type = ftype if not isinstance(ftype, list) else ftype[-1]
+            airflow_param_type = (
+                next(t for t in ftype if t != "null")
+                if isinstance(ftype, list)
+                else ftype
+            )
             helpdesk_param_type = ParamType(airflow_param_type)
 
             # 这是helpdesk的单选，helpdesk只关心是否有enum类型, 有就是选择，如果array那就是多选，string那就单选
@@ -162,13 +166,17 @@ class AirflowProvider(BaseProvider):
                     .strip()
                 )
 
+            choices = field_schema.get("enum", field_schema.get("examples"))
+            if choices is not None:
+                choices = [choice for choice in choices if choice is not None]
+
             params_schema[param_name] = Param(
                 description=param_desc,
                 type=helpdesk_param_type,
-                required=not isinstance(ftype, list),
-                enum=field_schema.get("enum", field_schema.get("examples")),
+                required="null" not in ftype if isinstance(ftype, list) else True,
+                enum=choices,
                 immutable=immutable,
-                default=field_schema.get("value"),
+                default=schema_def.get("value"),
             )
         return params_schema, json_schema, extra_attrs
 

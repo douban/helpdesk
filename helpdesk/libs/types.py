@@ -47,7 +47,7 @@ class Param(BaseModel):
     enum: Optional[List[str | int | float]] = None
     required: bool = False
     immutable: bool = False
-    default: Optional[str] = None
+    default: Any = None
 
 
 class FormParams(BaseModel):

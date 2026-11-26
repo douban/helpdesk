@@ -25,10 +25,7 @@ export default {
   },
   methods: {
     updateForm (fieldName, v) {
-      if (v===false) {
-        // bool false value, leave it as is
-        this.$set(this.formData, fieldName, v)
-      } else if(!v) {
+      if (v === undefined || v === null || v === '') {
         // empty value, remove it
         this.$delete(this.formData, fieldName)
       } else {
